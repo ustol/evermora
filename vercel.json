@@ -1,3 +1,16 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/memorials/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(facebookexternalhit|facebot|twitterbot|whatsapp|telegrambot|slackbot|linkedinbot|discordbot|skypeuripreview|pinterest|vkshare|redditbot|w3c_validator|embedly|quora link preview|outbrain|nuzzel|google.*snippet|bitlybot).*"
+        }
+      ],
+      "destination": "/api/memorial-preview?slug=:slug"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
