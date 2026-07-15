@@ -16,7 +16,7 @@ export interface MemorialListFilters {
  * memorial-media is a private bucket, so list views need signed URLs too —
  * one batched signing call for the whole page of results.
  */
-async function attachSignedPhotoUrls(
+export async function attachSignedPhotoUrls(
   supabase: SupabaseClient<Database>,
   memorials: MemorialRow[],
   expiresIn = 3600
@@ -115,6 +115,20 @@ export async function getMemorialBySlug(
 
   if (error) throw error
   return data
+}
+
+export async function listMemorialsOwnedBy(
+  supabase: SupabaseClient<Database>,
+  ownerId: string
+) {
+  const { data, error } = await supabase
+    .from("memorials")
+    .select("*")
+    .eq("owner_id", ownerId)
+    .order("updated_at", { ascending: false })
+
+  if (error) throw error
+  return attachSignedPhotoUrls(supabase, data ?? [])
 }
 
 export async function getFuneralEvents(
