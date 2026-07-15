@@ -87,11 +87,15 @@
     /* Evermora brand palette (source of truth — see design brief) */
     --brand-obsidian: #0B0B0D;
     --brand-rich-black: #151517;
-    --brand-heritage-gold: #C6A15B;
+    /* Darkened from the original #C6A15B / #8D8274 — those failed WCAG AA
+       color-contrast against the soft-ivory background (2.28:1 and 3.54:1
+       respectively; text needs 4.5:1). Verified via axe-core, see
+       e2e/accessibility.spec.ts. */
+    --brand-heritage-gold: #8A6A34;
     --brand-warm-gold: #D4AF67;
     --brand-soft-ivory: #FAF8F3;
     --brand-warm-stone: #E8E1D5;
-    --brand-muted-taupe: #8D8274;
+    --brand-muted-taupe: #766B5D;
     --brand-deep-burgundy: #5B2028;
     --brand-success: #357A55;
     --brand-error: #B54747;

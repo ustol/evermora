@@ -59,11 +59,16 @@ export function MediaGallerySection({
                 key={photo.id}
                 type="button"
                 onClick={() => setOpenIndex(index)}
+                aria-label={
+                  photo.altText || photo.caption
+                    ? `View photo: ${photo.altText || photo.caption}`
+                    : `View photo ${index + 1} of ${photos.length}`
+                }
                 className="aspect-square overflow-hidden rounded-lg border border-border bg-muted"
               >
                 <img
                   src={photo.url}
-                  alt={photo.altText ?? ""}
+                  alt=""
                   className="size-full object-cover transition-transform hover:scale-105"
                 />
               </button>
