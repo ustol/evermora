@@ -39,13 +39,13 @@ export default function DashboardMemorialsPage() {
       {isError ? (
         <ErrorState onRetry={() => refetch()} />
       ) : isLoading ? (
-        <div className="flex flex-col gap-4">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 w-full rounded-2xl" />
           ))}
         </div>
       ) : memorials && memorials.length > 0 ? (
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {memorials.map((memorial) => (
             <OwnerMemorialCard key={memorial.id} memorial={memorial} />
           ))}
