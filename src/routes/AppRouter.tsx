@@ -27,6 +27,9 @@ import DashboardProfilePage from "@/pages/dashboard/DashboardProfilePage"
 
 import AdminPage from "@/pages/admin/AdminPage"
 import AdminGiftCatalogPage from "@/pages/admin/AdminGiftCatalogPage"
+import AdminUsersPage from "@/pages/admin/AdminUsersPage"
+import AdminMemorialsPage from "@/pages/admin/AdminMemorialsPage"
+import AdminReportsPage from "@/pages/admin/AdminReportsPage"
 
 export function AppRouter() {
   return (
@@ -69,6 +72,9 @@ export function AppRouter() {
         <Route element={<RequireAdmin />}>
           <Route path="admin" element={<AdminLayout />}>
             <Route index element={<AdminPage />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="memorials" element={<AdminMemorialsPage />} />
+            <Route path="reports" element={<AdminReportsPage />} />
             <Route path="gifts" element={<AdminGiftCatalogPage />} />
           </Route>
         </Route>

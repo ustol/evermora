@@ -2,6 +2,9 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout"
 
 const adminNavLinks = [
   { to: "/admin", label: "Overview", end: true },
+  { to: "/admin/users", label: "Users" },
+  { to: "/admin/memorials", label: "Memorials" },
+  { to: "/admin/reports", label: "Reports" },
   { to: "/admin/gifts", label: "Wreaths & roses" },
 ]
 
