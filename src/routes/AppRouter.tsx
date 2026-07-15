@@ -21,6 +21,7 @@ import DashboardMemorialsPage from "@/pages/dashboard/DashboardMemorialsPage"
 import MemorialWizardPage from "@/pages/dashboard/MemorialWizardPage"
 import MemorialEditPage from "@/pages/dashboard/MemorialEditPage"
 import MemorialContentPage from "@/pages/dashboard/MemorialContentPage"
+import MemorialGalleryPage from "@/pages/dashboard/MemorialGalleryPage"
 import MemorialSettingsPage from "@/pages/dashboard/MemorialSettingsPage"
 import DashboardProfilePage from "@/pages/dashboard/DashboardProfilePage"
 
@@ -53,6 +54,10 @@ export function AppRouter() {
           <Route
             path="memorials/:id/content"
             element={<MemorialContentPage />}
+          />
+          <Route
+            path="memorials/:id/gallery"
+            element={<MemorialGalleryPage />}
           />
           <Route
             path="memorials/:id/settings"

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { UserRound, Eye, Pencil, Settings, MessageSquareText, Trash2 } from "lucide-react"
+import { UserRound, Eye, Pencil, Settings, MessageSquareText, Images, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
@@ -105,6 +105,13 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
         >
           <MessageSquareText className="size-4" aria-hidden="true" />
           Moderate
+        </Link>
+        <Link
+          to={`/dashboard/memorials/${memorial.id}/gallery`}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
+        >
+          <Images className="size-4" aria-hidden="true" />
+          Photos
         </Link>
         <Link
           to={`/dashboard/memorials/${memorial.id}/settings`}

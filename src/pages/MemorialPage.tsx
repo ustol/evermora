@@ -8,6 +8,7 @@ import { ShareMemorialButton } from "@/components/memorial/ShareMemorialButton"
 import { ReportMemorialDialog } from "@/components/memorial/ReportMemorialDialog"
 import { MemorialGiftsSection } from "@/components/memorial/MemorialGiftsSection"
 import { TributesSection } from "@/components/memorial/TributesSection"
+import { MediaGallerySection } from "@/components/memorial/MediaGallerySection"
 import { useMemorialBySlug } from "@/hooks/useMemorials"
 import { calculateAge, formatDayMonthYear, formatLifespanYears } from "@/lib/date"
 
@@ -185,6 +186,13 @@ export default function MemorialPage() {
               </div>
             </section>
           )}
+
+          <MediaGallerySection
+            memorialId={memorial.id}
+            slug={memorial.slug}
+            allowContributorPhotos={memorial.allow_contributor_photos}
+            requireApproval={memorial.require_approval}
+          />
 
           <TributesSection
             memorialId={memorial.id}
