@@ -117,6 +117,20 @@ export async function getMemorialBySlug(
   return data
 }
 
+export async function getMemorialById(
+  supabase: SupabaseClient<Database>,
+  memorialId: string
+) {
+  const { data, error } = await supabase
+    .from("memorials")
+    .select("*")
+    .eq("id", memorialId)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
+}
+
 export async function listMemorialsOwnedBy(
   supabase: SupabaseClient<Database>,
   ownerId: string

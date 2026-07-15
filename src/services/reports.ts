@@ -12,3 +12,15 @@ export async function reportMemorial(
   })
   if (error) throw error
 }
+
+export async function reportContribution(
+  supabase: SupabaseClient<Database>,
+  params: { contributionId: string; reportedBy: string; reason: string }
+) {
+  const { error } = await supabase.from("content_reports").insert({
+    contribution_id: params.contributionId,
+    reported_by: params.reportedBy,
+    reason: params.reason,
+  })
+  if (error) throw error
+}

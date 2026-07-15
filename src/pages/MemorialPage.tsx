@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ShareMemorialButton } from "@/components/memorial/ShareMemorialButton"
 import { ReportMemorialDialog } from "@/components/memorial/ReportMemorialDialog"
 import { MemorialGiftsSection } from "@/components/memorial/MemorialGiftsSection"
+import { TributesSection } from "@/components/memorial/TributesSection"
 import { useMemorialBySlug } from "@/hooks/useMemorials"
 import { calculateAge, formatDayMonthYear, formatLifespanYears } from "@/lib/date"
 
@@ -184,6 +185,16 @@ export default function MemorialPage() {
               </div>
             </section>
           )}
+
+          <TributesSection
+            memorialId={memorial.id}
+            slug={memorial.slug}
+            allowTributes={memorial.allow_tributes}
+            allowCondolences={memorial.allow_condolences}
+            allowContributorPhotos={memorial.allow_contributor_photos}
+            requireApproval={memorial.require_approval}
+            showContributorNames={memorial.show_contributor_names}
+          />
 
           <div className="mt-16 flex justify-center border-t border-border/60 pt-8">
             <ReportMemorialDialog memorialId={memorial.id} slug={memorial.slug} />
