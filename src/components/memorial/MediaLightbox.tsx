@@ -43,7 +43,10 @@ export function MediaLightbox({ photos, index, onClose, onNavigate }: MediaLight
     >
       <button
         type="button"
-        onClick={onClose}
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+        }}
         aria-label="Close"
         className="absolute top-4 right-4 rounded-full p-2 text-white/80 hover:bg-white/10 hover:text-white"
       >
