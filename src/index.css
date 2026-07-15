@@ -1,0 +1,132 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/playfair-display";
+
+@theme inline {
+    --font-sans: 'Inter Variable', system-ui, sans-serif;
+    --font-heading: 'Playfair Display Variable', Georgia, serif;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+
+    /* Evermora brand palette, exposed as Tailwind utilities (bg-obsidian, text-heritage-gold, etc.) */
+    --color-obsidian: var(--brand-obsidian);
+    --color-rich-black: var(--brand-rich-black);
+    --color-heritage-gold: var(--brand-heritage-gold);
+    --color-warm-gold: var(--brand-warm-gold);
+    --color-soft-ivory: var(--brand-soft-ivory);
+    --color-warm-stone: var(--brand-warm-stone);
+    --color-muted-taupe: var(--brand-muted-taupe);
+    --color-deep-burgundy: var(--brand-deep-burgundy);
+    --color-success: var(--brand-success);
+    --color-error: var(--brand-error);
+
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    /* Evermora brand palette (source of truth — see design brief) */
+    --brand-obsidian: #0B0B0D;
+    --brand-rich-black: #151517;
+    --brand-heritage-gold: #C6A15B;
+    --brand-warm-gold: #D4AF67;
+    --brand-soft-ivory: #FAF8F3;
+    --brand-warm-stone: #E8E1D5;
+    --brand-muted-taupe: #8D8274;
+    --brand-deep-burgundy: #5B2028;
+    --brand-success: #357A55;
+    --brand-error: #B54747;
+
+    --background: var(--brand-soft-ivory);
+    --foreground: var(--brand-obsidian);
+    --card: #FFFFFF;
+    --card-foreground: var(--brand-obsidian);
+    --popover: #FFFFFF;
+    --popover-foreground: var(--brand-obsidian);
+    --primary: var(--brand-obsidian);
+    --primary-foreground: var(--brand-soft-ivory);
+    --secondary: var(--brand-warm-stone);
+    --secondary-foreground: var(--brand-obsidian);
+    --muted: var(--brand-warm-stone);
+    --muted-foreground: var(--brand-muted-taupe);
+    --accent: var(--brand-heritage-gold);
+    --accent-foreground: var(--brand-obsidian);
+    --destructive: var(--brand-error);
+    --border: color-mix(in oklch, var(--brand-obsidian) 12%, transparent);
+    --input: color-mix(in oklch, var(--brand-obsidian) 16%, transparent);
+    --ring: var(--brand-heritage-gold);
+    --chart-1: var(--brand-heritage-gold);
+    --chart-2: var(--brand-deep-burgundy);
+    --chart-3: var(--brand-muted-taupe);
+    --chart-4: var(--brand-success);
+    --chart-5: var(--brand-rich-black);
+    --radius: 0.75rem;
+    --sidebar: var(--brand-rich-black);
+    --sidebar-foreground: var(--brand-soft-ivory);
+    --sidebar-primary: var(--brand-heritage-gold);
+    --sidebar-primary-foreground: var(--brand-obsidian);
+    --sidebar-accent: color-mix(in oklch, var(--brand-soft-ivory) 10%, transparent);
+    --sidebar-accent-foreground: var(--brand-soft-ivory);
+    --sidebar-border: color-mix(in oklch, var(--brand-soft-ivory) 14%, transparent);
+    --sidebar-ring: var(--brand-heritage-gold);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    }
+  h1, h2, h3, h4 {
+    @apply font-heading;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
