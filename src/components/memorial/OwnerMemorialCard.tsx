@@ -80,39 +80,6 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
           </div>
           {lifespan && <p className="text-sm text-muted-foreground">{lifespan}</p>}
         </div>
-
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <button
-                type="button"
-                aria-label={`Delete ${memorial.display_name}`}
-                className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-              />
-            }
-          >
-            <Trash2 className="size-4" aria-hidden="true" />
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete this memorial?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete "{memorial.display_name}" along
-                with its tributes, photos, and gifts. This can't be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                variant="destructive"
-                disabled={deleteMutation.isPending}
-                onClick={() => deleteMutation.mutate()}
-              >
-                {deleteMutation.isPending ? "Deleting…" : "Delete"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
 
       <div className="flex flex-wrap gap-2 border-t border-border/60 bg-muted/30 px-5 py-3">
@@ -146,6 +113,40 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
           <Settings className="size-4" aria-hidden="true" />
           Settings
         </Link>
+
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={
+              <button
+                type="button"
+                aria-label={`Delete ${memorial.display_name}`}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-destructive hover:text-destructive/80"
+              />
+            }
+          >
+            <Trash2 className="size-4" aria-hidden="true" />
+            Delete
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this memorial?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete "{memorial.display_name}" along
+                with its tributes, photos, and gifts. This can't be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate()}
+              >
+                {deleteMutation.isPending ? "Deleting…" : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )
