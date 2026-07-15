@@ -25,6 +25,7 @@ export type NotificationType =
   | "contribution_rejected"
   | "new_report"
   | "memorial_published"
+export type GiftPurchaseStatus = "pending" | "paid" | "failed"
 
 export interface Database {
   public: {
@@ -357,6 +358,64 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["app_settings"]["Insert"]>
         Relationships: []
       }
+      gift_catalog: {
+        Row: {
+          id: string
+          name: string
+          image_path: string
+          price: number
+          currency: string
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          image_path: string
+          price: number
+          currency?: string
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["gift_catalog"]["Insert"]>
+        Relationships: []
+      }
+      gift_purchases: {
+        Row: {
+          id: string
+          memorial_id: string
+          gift_catalog_id: string
+          purchaser_profile_id: string
+          purchaser_display_name: string
+          amount: number
+          currency: string
+          paystack_reference: string
+          status: GiftPurchaseStatus
+          paid_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          memorial_id: string
+          gift_catalog_id: string
+          purchaser_profile_id: string
+          purchaser_display_name: string
+          amount?: number
+          currency?: string
+          paystack_reference: string
+          status?: GiftPurchaseStatus
+          paid_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["gift_purchases"]["Insert"]>
+        Relationships: []
+      }
     }
     Views: {
       public_profiles: {
@@ -405,6 +464,7 @@ export interface Database {
       report_status: ReportStatus
       collaborator_role: CollaboratorRole
       notification_type: NotificationType
+      gift_purchase_status: GiftPurchaseStatus
     }
   }
 }

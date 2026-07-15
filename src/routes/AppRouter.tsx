@@ -25,6 +25,7 @@ import MemorialSettingsPage from "@/pages/dashboard/MemorialSettingsPage"
 import DashboardProfilePage from "@/pages/dashboard/DashboardProfilePage"
 
 import AdminPage from "@/pages/admin/AdminPage"
+import AdminGiftCatalogPage from "@/pages/admin/AdminGiftCatalogPage"
 
 export function AppRouter() {
   return (
@@ -63,6 +64,7 @@ export function AppRouter() {
         <Route element={<RequireAdmin />}>
           <Route path="admin" element={<AdminLayout />}>
             <Route index element={<AdminPage />} />
+            <Route path="gifts" element={<AdminGiftCatalogPage />} />
           </Route>
         </Route>
       </Route>

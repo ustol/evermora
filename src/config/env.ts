@@ -7,6 +7,7 @@ const requiredEnvVars = [
   "VITE_CLERK_PUBLISHABLE_KEY",
   "VITE_SUPABASE_URL",
   "VITE_SUPABASE_PUBLISHABLE_KEY",
+  "VITE_PAYSTACK_PUBLIC_KEY",
 ] as const
 
 type RequiredEnvVar = (typeof requiredEnvVars)[number]

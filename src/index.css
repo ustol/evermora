@@ -1,12 +1,35 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/playfair-display";
+
+/* Self-hosted (not Fontsource — Chillax/Supreme aren't published there;
+   these are the actual variable-font files from Fontshare's own CDN,
+   downloaded once rather than loaded from a third party at runtime). */
+@font-face {
+  font-family: 'Chillax';
+  src: url('./assets/fonts/chillax-variable.woff2') format('woff2');
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Supreme';
+  src: url('./assets/fonts/supreme-variable.woff2') format('woff2');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Supreme';
+  src: url('./assets/fonts/supreme-variable-italic.woff2') format('woff2');
+  font-weight: 100 800;
+  font-style: italic;
+  font-display: swap;
+}
 
 @theme inline {
-    --font-sans: 'Inter Variable', system-ui, sans-serif;
-    --font-heading: 'Playfair Display Variable', Georgia, serif;
+    --font-sans: 'Supreme', system-ui, sans-serif;
+    --font-heading: 'Chillax', Georgia, serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
