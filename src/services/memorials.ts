@@ -131,6 +131,18 @@ export async function listMemorialsOwnedBy(
   return attachSignedPhotoUrls(supabase, data ?? [])
 }
 
+export async function deleteMemorial(
+  supabase: SupabaseClient<Database>,
+  memorialId: string
+) {
+  const { error } = await supabase
+    .from("memorials")
+    .delete()
+    .eq("id", memorialId)
+
+  if (error) throw error
+}
+
 export async function getFuneralEvents(
   supabase: SupabaseClient<Database>,
   memorialId: string

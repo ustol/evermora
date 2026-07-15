@@ -1,7 +1,22 @@
 import { Link } from "react-router-dom"
-import { UserRound, Eye, Pencil, Settings, MessageSquareText } from "lucide-react"
+import { UserRound, Eye, Pencil, Settings, MessageSquareText, Trash2 } from "lucide-react"
+import { toast } from "sonner"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { formatLifespanYears } from "@/lib/date"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
+import { deleteMemorial } from "@/services/memorials"
 import type { MemorialWithPhoto } from "@/services/memorials"
 
 interface OwnerMemorialCardProps {
@@ -22,10 +37,24 @@ const statusLabels: Record<string, string> = {
 
 export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
   const lifespan = formatLifespanYears(memorial.date_of_birth, memorial.date_of_death)
+  const supabase = useSupabaseClient()
+  const queryClient = useQueryClient()
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteMemorial(supabase, memorial.id),
+    onSuccess: () => {
+      toast.success(`"${memorial.display_name}" has been deleted.`)
+      queryClient.invalidateQueries({ queryKey: ["owner-memorials"] })
+      queryClient.invalidateQueries({ queryKey: ["owner-dashboard-stats"] })
+    },
+    onError: () => {
+      toast.error("Couldn't delete this memorial. Please try again.")
+    },
+  })
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="flex items-center gap-4 p-5">
+      <div className="flex items-start gap-4 p-5">
         <div className="size-16 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
           {memorial.photoUrl ? (
             <img
@@ -51,6 +80,39 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
           </div>
           {lifespan && <p className="text-sm text-muted-foreground">{lifespan}</p>}
         </div>
+
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={
+              <button
+                type="button"
+                aria-label={`Delete ${memorial.display_name}`}
+                className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              />
+            }
+          >
+            <Trash2 className="size-4" aria-hidden="true" />
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this memorial?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete "{memorial.display_name}" along
+                with its tributes, photos, and gifts. This can't be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate()}
+              >
+                {deleteMutation.isPending ? "Deleting…" : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <div className="flex flex-wrap gap-2 border-t border-border/60 bg-muted/30 px-5 py-3">
