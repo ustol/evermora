@@ -9,6 +9,7 @@ import { ReportMemorialDialog } from "@/components/memorial/ReportMemorialDialog
 import { MemorialGiftsSection } from "@/components/memorial/MemorialGiftsSection"
 import { TributesSection } from "@/components/memorial/TributesSection"
 import { MediaGallerySection } from "@/components/memorial/MediaGallerySection"
+import { TruncatedWriteup } from "@/components/memorial/TruncatedWriteup"
 import { useMemorialBySlug } from "@/hooks/useMemorials"
 import { calculateAge, formatDayMonthYear, formatLifespanYears } from "@/lib/date"
 
@@ -111,8 +112,24 @@ export default function MemorialPage() {
             <section className="mt-12">
               <h2 className="font-heading text-xl text-foreground">Life story</h2>
               <div className="mt-4 flex flex-col gap-4 text-foreground/90">
-                {memorial.biography && <p>{memorial.biography}</p>}
-                {memorial.obituary && <p>{memorial.obituary}</p>}
+                {memorial.biography && (
+                  <TruncatedWriteup
+                    text={memorial.biography}
+                    label="Life story"
+                    memorialName={memorial.display_name}
+                    photoUrl={photoUrl}
+                    photoAlt={memorial.primary_photo_alt}
+                  />
+                )}
+                {memorial.obituary && (
+                  <TruncatedWriteup
+                    text={memorial.obituary}
+                    label="Life story"
+                    memorialName={memorial.display_name}
+                    photoUrl={photoUrl}
+                    photoAlt={memorial.primary_photo_alt}
+                  />
+                )}
               </div>
             </section>
           )}
@@ -122,7 +139,15 @@ export default function MemorialPage() {
               <h2 className="font-heading text-lg text-foreground">
                 A message from the family
               </h2>
-              <p className="mt-2 text-foreground/90">{memorial.family_message}</p>
+              <div className="mt-2 text-foreground/90">
+                <TruncatedWriteup
+                  text={memorial.family_message}
+                  label="A message from the family"
+                  memorialName={memorial.display_name}
+                  photoUrl={photoUrl}
+                  photoAlt={memorial.primary_photo_alt}
+                />
+              </div>
             </section>
           )}
 
