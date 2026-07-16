@@ -31,9 +31,14 @@ import { cn, sanitizeRedirectPath } from "@/lib/utils"
 interface PurchaseGiftDialogProps {
   memorialId: string
   slug: string
+  onPurchased?: (purchaseId: string) => void
 }
 
-export function PurchaseGiftDialog({ memorialId, slug }: PurchaseGiftDialogProps) {
+export function PurchaseGiftDialog({
+  memorialId,
+  slug,
+  onPurchased,
+}: PurchaseGiftDialogProps) {
   const { isSignedIn } = useUser()
   const { data: profile } = useProfile()
   const supabase = useSupabaseClient()
@@ -85,8 +90,13 @@ export function PurchaseGiftDialog({ memorialId, slug }: PurchaseGiftDialogProps
           try {
             const result = await verifyGiftPurchase(supabase, purchase.id)
             if (result.ok) {
-              toast.success("Thank you — your gift now appears on the memorial.")
-              queryClient.invalidateQueries({ queryKey: ["memorial-gifts", memorialId] })
+              toast.success(
+                `Your ${gift.name.toLowerCase()} has been successfully placed on the memorial.`
+              )
+              await queryClient.invalidateQueries({
+                queryKey: ["memorial-gifts", memorialId],
+              })
+              onPurchased?.(purchase.id)
               setOpen(false)
               setSelectedGiftId(null)
             } else {
