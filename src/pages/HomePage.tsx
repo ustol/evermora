@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Lock,
   Search,
+  Flower2,
 } from "lucide-react"
 import { Container } from "@/components/layout/Container"
 import { EmptyState } from "@/components/layout/EmptyState"
@@ -37,6 +38,12 @@ const features = [
     title: "Photograph galleries",
     description:
       "Bring together photographs from a lifetime, with captions and a respectful, uncluttered layout.",
+  },
+  {
+    icon: Flower2,
+    title: "Wreaths & roses",
+    description:
+      "Well-wishers can lay a virtual wreath or rose in the deceased's honour, shown on the memorial with their name.",
   },
   {
     icon: Share2,
@@ -176,6 +183,7 @@ export default function HomePage() {
                       dateOfDeath: memorial.date_of_death,
                       hometown: memorial.hometown,
                       shortAnnouncement: memorial.announcement,
+                      giftCount: memorial.giftCount,
                     }}
                   />
                 ))}

@@ -13,4 +13,5 @@ export interface MemorialCardData {
   dateOfDeath: string
   hometown?: string | null
   shortAnnouncement?: string | null
+  giftCount?: number
 }

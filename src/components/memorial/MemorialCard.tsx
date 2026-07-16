@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { MapPin, UserRound } from "lucide-react"
+import { MapPin, UserRound, Flower2 } from "lucide-react"
 import { formatLifespanYears } from "@/lib/date"
 import type { MemorialCardData } from "@/types/memorial"
 
@@ -42,6 +42,15 @@ export function MemorialCard({ memorial }: MemorialCardProps) {
         <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
           <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
           {memorial.hometown}
+        </p>
+      )}
+      {(memorial.giftCount ?? 0) > 0 && (
+        <p
+          className="mt-1 flex items-center gap-1 text-sm text-destructive"
+          title={`${memorial.giftCount} wreath${memorial.giftCount === 1 ? "" : "s"} laid`}
+        >
+          <Flower2 className="size-3.5 shrink-0" aria-hidden="true" />
+          {memorial.giftCount}
         </p>
       )}
       {memorial.shortAnnouncement && (

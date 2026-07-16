@@ -82,6 +82,29 @@ export async function listPublicMemorials(
   }
 }
 
+async function attachGiftCounts<T extends { id: string }>(
+  supabase: SupabaseClient<Database>,
+  memorials: T[]
+): Promise<(T & { giftCount: number })[]> {
+  const memorialIds = memorials.map((m) => m.id)
+  const countByMemorialId = new Map<string, number>()
+
+  if (memorialIds.length > 0) {
+    const { data, error } = await supabase
+      .from("gift_purchases")
+      .select("memorial_id")
+      .in("memorial_id", memorialIds)
+      .eq("status", "paid")
+
+    if (error) throw error
+    for (const row of data ?? []) {
+      countByMemorialId.set(row.memorial_id, (countByMemorialId.get(row.memorial_id) ?? 0) + 1)
+    }
+  }
+
+  return memorials.map((m) => ({ ...m, giftCount: countByMemorialId.get(m.id) ?? 0 }))
+}
+
 /**
  * Homepage highlights: admin-featured memorials first, then the most
  * recently published, public ones. Unlisted/private never appear here.
@@ -100,7 +123,8 @@ export async function listHighlightedMemorials(
     .limit(limit)
 
   if (error) throw error
-  return attachSignedPhotoUrls(supabase, data ?? [])
+  const withPhotos = await attachSignedPhotoUrls(supabase, data ?? [])
+  return attachGiftCounts(supabase, withPhotos)
 }
 
 export async function getMemorialBySlug(
