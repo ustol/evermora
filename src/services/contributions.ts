@@ -17,8 +17,11 @@ export interface ContributionWithAuthor {
   photoUrl: string | null
 }
 
+// profiles!author_id disambiguates the embed: contributions has two FKs to
+// profiles (author_id and reviewed_by), so an unqualified profiles(...)
+// embed is ambiguous to PostgREST and returns a 300 Multiple Choices error.
 const CONTRIBUTION_SELECT =
-  "id, type, relationship, title, message, status, created_at, author_name, author:profiles(display_name, avatar_url), photo:memorial_media(storage_path)"
+  "id, type, relationship, title, message, status, created_at, author_name, author:profiles!author_id(display_name, avatar_url), photo:memorial_media(storage_path)"
 
 type ContributionRow = {
   id: string
