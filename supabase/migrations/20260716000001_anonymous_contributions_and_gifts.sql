@@ -14,7 +14,7 @@
 -- contributions: author_id becomes optional, backed by author_name.
 -- -------------------------------------------------------------------------
 alter table public.contributions alter column author_id drop not null;
-alter table public.contributions add column author_name text;
+alter table public.contributions add column if not exists author_name text;
 
 alter table public.contributions drop constraint if exists contributions_author_identity_check;
 alter table public.contributions add constraint contributions_author_identity_check
