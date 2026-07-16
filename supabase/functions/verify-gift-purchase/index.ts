@@ -1,8 +1,14 @@
 // Called by the client immediately after Paystack's popup reports success.
 // Trusts nothing from that report — independently re-verifies with Paystack
-// using the secret key before marking anything paid. verify_jwt defaults to
-// true for this function (see supabase/config.toml), so only a signed-in
-// Evermora user can reach this code at all.
+// using the secret key before marking anything paid. verify_jwt is on for
+// this function (see supabase/config.toml), but that only checks the
+// bearer token is *some* valid Supabase JWT — the anon key itself qualifies,
+// so anonymous (signed-out) purchases reach this code too. Ownership is
+// only enforced when the purchase is actually tied to a signed-in profile;
+// an anonymous purchase has no session to prove ownership of in the first
+// place, so anyone holding its (unguessable) purchaseId may trigger
+// verification — that's safe because verification only ever flips status
+// based on Paystack's own independent confirmation, never the caller's say-so.
 //
 // Deliberately self-contained (no shared/imported module with
 // paystack-webhook) — the Supabase Dashboard's browser-based function
@@ -82,9 +88,6 @@ Deno.serve(async (req) => {
     }
 
     const clerkSub = getClerkSubFromRequest(req)
-    if (!clerkSub) {
-      return json({ error: "Not signed in" }, 401)
-    }
 
     const secretKey = Deno.env.get("PAYSTACK_SECRET_KEY")
     if (!secretKey) throw new Error("PAYSTACK_SECRET_KEY is not configured")
@@ -96,7 +99,9 @@ Deno.serve(async (req) => {
 
     const { data: purchase, error } = await supabaseAdmin
       .from("gift_purchases")
-      .select("id, paystack_reference, amount, currency, status, profiles!inner(clerk_user_id)")
+      .select(
+        "id, paystack_reference, amount, currency, status, purchaser_profile_id, profiles(clerk_user_id)"
+      )
       .eq("id", purchaseId)
       .maybeSingle()
 
@@ -105,10 +110,15 @@ Deno.serve(async (req) => {
       return json({ error: "Purchase not found" }, 404)
     }
 
-    const ownerClerkId = (purchase as { profiles?: { clerk_user_id?: string } })
-      .profiles?.clerk_user_id
-    if (ownerClerkId !== clerkSub) {
-      return json({ error: "Not your purchase" }, 403)
+    // Only a purchase tied to a signed-in profile needs an ownership check —
+    // an anonymous purchase (purchaser_profile_id null) has no owner to
+    // match against, so any caller with its purchaseId may verify it.
+    if (purchase.purchaser_profile_id) {
+      const ownerClerkId = (purchase as { profiles?: { clerk_user_id?: string } })
+        .profiles?.clerk_user_id
+      if (!clerkSub || ownerClerkId !== clerkSub) {
+        return json({ error: "Not your purchase" }, 403)
+      }
     }
 
     if (purchase.status === "paid") {

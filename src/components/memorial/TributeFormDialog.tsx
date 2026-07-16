@@ -1,6 +1,4 @@
 import { useRef, useState } from "react"
-import { Link } from "react-router-dom"
-import { useUser } from "@clerk/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { HeartHandshake, ImagePlus, X } from "lucide-react"
 import { toast } from "sonner"
@@ -13,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -24,7 +22,6 @@ import {
   createContribution,
   uploadContributionPhoto,
 } from "@/services/contributions"
-import { cn, sanitizeRedirectPath } from "@/lib/utils"
 import type { Database } from "@/types/supabase"
 
 type ContributionType = Database["public"]["Enums"]["contribution_type"]
@@ -43,13 +40,11 @@ interface TributeFormDialogProps {
 
 export function TributeFormDialog({
   memorialId,
-  slug,
   allowTributes,
   allowCondolences,
   allowPhotos,
   requireApproval,
 }: TributeFormDialogProps) {
-  const { isSignedIn } = useUser()
   const { data: profile } = useProfile()
   const supabase = useSupabaseClient()
   const queryClient = useQueryClient()
@@ -59,6 +54,7 @@ export function TributeFormDialog({
   const [type, setType] = useState<ContributionType>(
     allowTributes ? "tribute" : "condolence"
   )
+  const [authorName, setAuthorName] = useState("")
   const [relationship, setRelationship] = useState("")
   const [title, setTitle] = useState("")
   const [message, setMessage] = useState("")
@@ -68,10 +64,8 @@ export function TributeFormDialog({
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!profile) throw new Error("Not signed in")
-
       let photoMediaId: string | undefined
-      if (file) {
+      if (file && profile) {
         photoMediaId = await uploadContributionPhoto(supabase, {
           memorialId,
           uploaderProfileId: profile.id,
@@ -81,7 +75,8 @@ export function TributeFormDialog({
 
       await createContribution(supabase, {
         memorialId,
-        authorId: profile.id,
+        authorId: profile?.id,
+        authorName: profile ? undefined : authorName.trim(),
         type,
         relationship: relationship.trim() || undefined,
         title: title.trim() || undefined,
@@ -105,6 +100,7 @@ export function TributeFormDialog({
   })
 
   function resetForm() {
+    setAuthorName("")
     setRelationship("")
     setTitle("")
     setMessage("")
@@ -139,6 +135,10 @@ export function TributeFormDialog({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!profile && !authorName.trim()) {
+      setError("Please enter your name.")
+      return
+    }
     if (message.trim().length < 5) {
       setError("Please write a few words for your message.")
       return
@@ -153,19 +153,6 @@ export function TributeFormDialog({
       : allowCondolences
         ? "Leave a condolence"
         : "Leave a tribute"
-
-  if (!isSignedIn) {
-    const redirectUrl = sanitizeRedirectPath(`/memorials/${slug}`)
-    return (
-      <Link
-        to={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
-        className={cn(buttonVariants())}
-      >
-        <HeartHandshake className="size-4" aria-hidden="true" />
-        {triggerLabel}
-      </Link>
-    )
-  }
 
   return (
     <Dialog
@@ -198,6 +185,18 @@ export function TributeFormDialog({
                   <TabsTrigger value="condolence">Condolence</TabsTrigger>
                 </TabsList>
               </Tabs>
+            )}
+
+            {!profile && (
+              <Field data-invalid={!!error}>
+                <FieldLabel htmlFor="tribute-author-name">Your name</FieldLabel>
+                <Input
+                  id="tribute-author-name"
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
+                  placeholder="e.g. your name, or a group like &quot;The Mensah Family&quot;"
+                />
+              </Field>
             )}
 
             <Field>
@@ -234,7 +233,7 @@ export function TributeFormDialog({
               {error && <FieldError>{error}</FieldError>}
             </Field>
 
-            {allowPhotos && (
+            {allowPhotos && profile && (
               <Field>
                 <FieldLabel>Photo (optional)</FieldLabel>
                 <FieldDescription>
@@ -272,6 +271,11 @@ export function TributeFormDialog({
                   </Button>
                 )}
               </Field>
+            )}
+            {allowPhotos && !profile && (
+              <p className="text-xs text-muted-foreground">
+                Sign in if you'd like to attach a photo to your message.
+              </p>
             )}
           </div>
 

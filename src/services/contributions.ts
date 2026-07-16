@@ -18,7 +18,7 @@ export interface ContributionWithAuthor {
 }
 
 const CONTRIBUTION_SELECT =
-  "id, type, relationship, title, message, status, created_at, author:profiles(display_name, avatar_url), photo:memorial_media(storage_path)"
+  "id, type, relationship, title, message, status, created_at, author_name, author:profiles(display_name, avatar_url), photo:memorial_media(storage_path)"
 
 type ContributionRow = {
   id: string
@@ -28,6 +28,7 @@ type ContributionRow = {
   message: string
   status: ModerationStatus
   created_at: string
+  author_name: string | null
   author: unknown
   photo: unknown
 }
@@ -55,7 +56,7 @@ async function mapContribution(
     message: row.message,
     status: row.status,
     createdAt: row.created_at,
-    authorDisplayName: author?.display_name ?? "A well-wisher",
+    authorDisplayName: author?.display_name ?? row.author_name ?? "A well-wisher",
     authorAvatarUrl: author?.avatar_url ?? null,
     photoUrl,
   }
@@ -92,11 +93,20 @@ export async function listContributionsForModeration(
   return Promise.all((data ?? []).map((row) => mapContribution(supabase, row as ContributionRow)))
 }
 
+/**
+ * authorId is omitted for anonymous (signed-out) submissions, in which case
+ * authorName is required — the DB enforces this pairing via a check
+ * constraint mirrored by the RLS insert policy. Deliberately no .select()
+ * here: an anonymous author can never satisfy the SELECT policy for their
+ * own pending row (no session to prove ownership), so requesting the row
+ * back would fail RLS even though the insert itself succeeded.
+ */
 export async function createContribution(
   supabase: SupabaseClient<Database>,
   params: {
     memorialId: string
-    authorId: string
+    authorId?: string
+    authorName?: string
     type: ContributionType
     relationship?: string
     title?: string
@@ -106,7 +116,8 @@ export async function createContribution(
 ) {
   const { error } = await supabase.from("contributions").insert({
     memorial_id: params.memorialId,
-    author_id: params.authorId,
+    author_id: params.authorId || null,
+    author_name: params.authorName || null,
     type: params.type,
     relationship: params.relationship || null,
     title: params.title || null,

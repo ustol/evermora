@@ -216,7 +216,8 @@ export interface Database {
         Row: {
           id: string
           memorial_id: string
-          author_id: string
+          author_id: string | null
+          author_name: string | null
           type: ContributionType
           relationship: string | null
           title: string | null
@@ -231,7 +232,8 @@ export interface Database {
         Insert: {
           id?: string
           memorial_id: string
-          author_id: string
+          author_id?: string | null
+          author_name?: string | null
           type: ContributionType
           relationship?: string | null
           title?: string | null
@@ -389,7 +391,7 @@ export interface Database {
           id: string
           memorial_id: string
           gift_catalog_id: string
-          purchaser_profile_id: string
+          purchaser_profile_id: string | null
           purchaser_display_name: string
           amount: number
           currency: string
@@ -403,7 +405,7 @@ export interface Database {
           id?: string
           memorial_id: string
           gift_catalog_id: string
-          purchaser_profile_id: string
+          purchaser_profile_id?: string | null
           purchaser_display_name: string
           amount?: number
           currency?: string

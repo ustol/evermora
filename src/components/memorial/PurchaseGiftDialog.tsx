@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
-import { useUser } from "@clerk/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Flower2 } from "lucide-react"
 import { toast } from "sonner"
@@ -14,8 +12,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Field, FieldLabel, FieldDescription } from "@/components/ui/field"
+import { Button } from "@/components/ui/button"
+import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
@@ -26,7 +24,9 @@ import {
   verifyGiftPurchase,
 } from "@/services/gifts"
 import { env } from "@/config/env"
-import { cn, sanitizeRedirectPath } from "@/lib/utils"
+import { cn } from "@/lib/utils"
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 interface PurchaseGiftDialogProps {
   memorialId: string
@@ -34,12 +34,7 @@ interface PurchaseGiftDialogProps {
   onPurchased?: (purchaseId: string) => void
 }
 
-export function PurchaseGiftDialog({
-  memorialId,
-  slug,
-  onPurchased,
-}: PurchaseGiftDialogProps) {
-  const { isSignedIn } = useUser()
+export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDialogProps) {
   const { data: profile } = useProfile()
   const supabase = useSupabaseClient()
   const queryClient = useQueryClient()
@@ -47,6 +42,8 @@ export function PurchaseGiftDialog({
   const [open, setOpen] = useState(false)
   const [selectedGiftId, setSelectedGiftId] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState("")
+  const [email, setEmail] = useState("")
+  const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const { data: catalog, isLoading } = useQuery({
@@ -56,35 +53,44 @@ export function PurchaseGiftDialog({
   })
 
   useEffect(() => {
-    if (open && profile && !displayName) {
-      setDisplayName(profile.display_name)
+    if (open && profile) {
+      if (!displayName) setDisplayName(profile.display_name)
+      if (!email && profile.email) setEmail(profile.email)
     }
-  }, [open, profile, displayName])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, profile])
 
   async function handlePurchase() {
-    if (!selectedGiftId || !profile) return
+    if (!selectedGiftId) return
     const gift = catalog?.find((g) => g.id === selectedGiftId)
     if (!gift) return
+
     if (!displayName.trim()) {
-      toast.error("Please enter a name to show with your gift.")
+      setError("Please enter a name to show with your gift.")
       return
     }
+    const purchaserEmail = profile?.email ?? email.trim()
+    if (!EMAIL_PATTERN.test(purchaserEmail)) {
+      setError("Please enter a valid email so we can send a payment receipt.")
+      return
+    }
+    setError(null)
 
     setSubmitting(true)
     try {
       const purchase = await createPendingGiftPurchase(supabase, {
         memorialId,
         giftCatalogId: selectedGiftId,
-        purchaserProfileId: profile.id,
+        purchaserProfileId: profile?.id,
         purchaserDisplayName: displayName.trim(),
       })
 
       const paystack = new PaystackPop()
       paystack.newTransaction({
         key: env.VITE_PAYSTACK_PUBLIC_KEY,
-        email: profile.email ?? "",
-        amount: Math.round(purchase.amount * 100),
-        currency: purchase.currency,
+        email: purchaserEmail,
+        amount: Math.round(gift.price * 100),
+        currency: gift.currency,
         reference: purchase.paystackReference,
         onSuccess: async () => {
           try {
@@ -124,19 +130,6 @@ export function PurchaseGiftDialog({
     }
   }
 
-  if (!isSignedIn) {
-    const redirectUrl = sanitizeRedirectPath(`/memorials/${slug}`)
-    return (
-      <Link
-        to={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
-        className={cn(buttonVariants(), "w-full")}
-      >
-        <Flower2 className="size-4" aria-hidden="true" />
-        Send a wreath or rose
-      </Link>
-    )
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button className="w-full" />}>
@@ -148,7 +141,7 @@ export function PurchaseGiftDialog({
           <DialogTitle>Send a wreath or rose</DialogTitle>
           <DialogDescription>
             A virtual tribute shown on the memorial page, bearing whatever
-            name you choose.
+            name you choose. No account needed.
           </DialogDescription>
         </DialogHeader>
 
@@ -192,17 +185,36 @@ export function PurchaseGiftDialog({
           )}
 
           {selectedGiftId && (
-            <Field>
-              <FieldLabel htmlFor="purchaser-display-name">Show this name</FieldLabel>
-              <FieldDescription>
-                e.g. your name, or a group like "The Mensah Family"
-              </FieldDescription>
-              <Input
-                id="purchaser-display-name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
-            </Field>
+            <>
+              <Field data-invalid={!!error}>
+                <FieldLabel htmlFor="purchaser-display-name">Show this name</FieldLabel>
+                <FieldDescription>
+                  e.g. your name, or a group like "The Mensah Family"
+                </FieldDescription>
+                <Input
+                  id="purchaser-display-name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                />
+              </Field>
+
+              {!profile?.email && (
+                <Field data-invalid={!!error}>
+                  <FieldLabel htmlFor="purchaser-email">Your email</FieldLabel>
+                  <FieldDescription>
+                    For your payment receipt only — never shown on the memorial.
+                  </FieldDescription>
+                  <Input
+                    id="purchaser-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </Field>
+              )}
+
+              {error && <FieldError>{error}</FieldError>}
+            </>
           )}
         </div>
 

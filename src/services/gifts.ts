@@ -66,36 +66,40 @@ export async function listPaidGiftsForMemorial(
   })
 }
 
+/**
+ * purchaserProfileId is omitted for anonymous (signed-out) purchases. Both
+ * id and paystackReference are generated client-side and returned as-is
+ * (not re-selected after insert): an anonymous purchaser can never satisfy
+ * the SELECT policy for their own pending row (no session to prove
+ * ownership), so requesting it back would fail RLS even though the insert
+ * succeeds. amount/currency are deliberately NOT returned from the
+ * database here — the server-side pricing trigger is an anti-tamper check,
+ * not the client's source of truth; the caller already knows the price
+ * from the catalog it fetched before opening this purchase.
+ */
 export async function createPendingGiftPurchase(
   supabase: SupabaseClient<Database>,
   params: {
     memorialId: string
     giftCatalogId: string
-    purchaserProfileId: string
+    purchaserProfileId?: string
     purchaserDisplayName: string
   }
-): Promise<{ id: string; amount: number; currency: string; paystackReference: string }> {
+): Promise<{ id: string; paystackReference: string }> {
+  const id = crypto.randomUUID()
   const paystackReference = `evermora_${crypto.randomUUID()}`
 
-  const { data, error } = await supabase
-    .from("gift_purchases")
-    .insert({
-      memorial_id: params.memorialId,
-      gift_catalog_id: params.giftCatalogId,
-      purchaser_profile_id: params.purchaserProfileId,
-      purchaser_display_name: params.purchaserDisplayName,
-      paystack_reference: paystackReference,
-    })
-    .select("id, amount, currency, paystack_reference")
-    .single()
+  const { error } = await supabase.from("gift_purchases").insert({
+    id,
+    memorial_id: params.memorialId,
+    gift_catalog_id: params.giftCatalogId,
+    purchaser_profile_id: params.purchaserProfileId || null,
+    purchaser_display_name: params.purchaserDisplayName,
+    paystack_reference: paystackReference,
+  })
 
   if (error) throw error
-  return {
-    id: data.id,
-    amount: data.amount,
-    currency: data.currency,
-    paystackReference: data.paystack_reference,
-  }
+  return { id, paystackReference }
 }
 
 export async function verifyGiftPurchase(
