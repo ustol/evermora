@@ -30,6 +30,7 @@ import AdminGiftCatalogPage from "@/pages/admin/AdminGiftCatalogPage"
 import AdminUsersPage from "@/pages/admin/AdminUsersPage"
 import AdminMemorialsPage from "@/pages/admin/AdminMemorialsPage"
 import AdminReportsPage from "@/pages/admin/AdminReportsPage"
+import AdminHeroImagesPage from "@/pages/admin/AdminHeroImagesPage"
 
 export function AppRouter() {
   return (
@@ -75,6 +76,7 @@ export function AppRouter() {
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="memorials" element={<AdminMemorialsPage />} />
             <Route path="reports" element={<AdminReportsPage />} />
+            <Route path="hero-images" element={<AdminHeroImagesPage />} />
             <Route path="gifts" element={<AdminGiftCatalogPage />} />
           </Route>
         </Route>

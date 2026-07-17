@@ -418,6 +418,22 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["gift_purchases"]["Insert"]>
         Relationships: []
       }
+      hero_images: {
+        Row: {
+          id: string
+          storage_path: string
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          storage_path: string
+          sort_order?: number
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["hero_images"]["Insert"]>
+        Relationships: []
+      }
     }
     Views: {
       public_profiles: {

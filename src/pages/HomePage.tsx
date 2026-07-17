@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
 import {
   Megaphone,
   MessageCircleHeart,
@@ -15,8 +16,11 @@ import { MemorialCard } from "@/components/memorial/MemorialCard"
 import { MemorialCardSkeleton } from "@/components/memorial/MemorialCardSkeleton"
 import { FeatureCard } from "@/components/marketing/FeatureCard"
 import { StepCard } from "@/components/marketing/StepCard"
+import { HeroBackground } from "@/components/marketing/HeroBackground"
 import { buttonVariants } from "@/components/ui/button"
 import { useHighlightedMemorials } from "@/hooks/useMemorials"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
+import { listHeroImages } from "@/services/heroImages"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 
@@ -85,32 +89,57 @@ const steps = [
 
 export default function HomePage() {
   const { data: highlighted, isLoading } = useHighlightedMemorials()
+  const supabase = useSupabaseClient()
+  const { data: heroImages } = useQuery({
+    queryKey: ["hero-images", "public"],
+    queryFn: () => listHeroImages(supabase),
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+  const hasHeroImages = !!heroImages && heroImages.length > 0
 
   return (
     <div>
       {/* Hero */}
-      <section className="border-b border-border/60 bg-soft-ivory">
-        <Container className="flex flex-col items-center gap-6 py-20 text-center sm:py-28">
-          <p className="text-sm font-medium tracking-wide text-heritage-gold uppercase">
+      <section className="relative overflow-hidden border-b border-border/60 bg-soft-ivory">
+        {hasHeroImages && <HeroBackground images={heroImages} />}
+        <Container className="relative z-10 flex flex-col items-center gap-6 py-20 text-center sm:py-28">
+          <p
+            className={cn(
+              "text-sm font-medium tracking-wide uppercase",
+              hasHeroImages ? "text-warm-gold" : "text-heritage-gold"
+            )}
+          >
             {siteConfig.tagline}
           </p>
-          <h1 className="max-w-2xl font-heading text-4xl text-foreground sm:text-5xl">
+          <h1
+            className={cn(
+              "max-w-2xl font-heading text-4xl sm:text-5xl",
+              hasHeroImages ? "text-white" : "text-foreground"
+            )}
+          >
             A dignified place to announce a funeral and gather the memories
             that matter
           </h1>
-          <p className="max-w-xl text-muted-foreground">
+          <p className={cn("max-w-xl", hasHeroImages ? "text-white/80" : "text-muted-foreground")}>
             {siteConfig.description}
           </p>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <Link
               to="/dashboard/memorials/new"
-              className={cn(buttonVariants({ size: "lg" }))}
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                hasHeroImages && "bg-warm-gold text-obsidian hover:bg-warm-gold/90"
+              )}
             >
               Create a Memorial
             </Link>
             <Link
               to="/memorials"
-              className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                hasHeroImages && "border-white/40 bg-white/10 text-white hover:bg-white/20"
+              )}
             >
               Find a Memorial
             </Link>
