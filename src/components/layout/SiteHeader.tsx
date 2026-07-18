@@ -7,6 +7,7 @@ import { siteConfig } from "@/config/site"
 
 const navLinks = [
   { to: "/memorials", label: "Find a memorial" },
+  { to: "/vendors", label: "Vendors" },
   { to: "/about", label: "About" },
 ]
 

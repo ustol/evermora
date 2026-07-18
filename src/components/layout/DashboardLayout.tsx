@@ -6,6 +6,7 @@ import { siteConfig } from "@/config/site"
 const dashboardNavLinks = [
   { to: "/dashboard", label: "Overview", end: true },
   { to: "/dashboard/memorials", label: "Your memorials" },
+  { to: "/dashboard/vendor", label: "Vendor" },
   { to: "/dashboard/profile", label: "Profile" },
 ]
 

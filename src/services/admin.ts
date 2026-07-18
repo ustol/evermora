@@ -370,3 +370,71 @@ export async function resolveReport(
     .eq("id", params.reportId)
   if (error) throw error
 }
+
+// --- Vendors ---
+
+type VendorStatus = Database["public"]["Enums"]["vendor_status"]
+type VendorCategory = Database["public"]["Enums"]["vendor_category"]
+
+export interface AdminVendor {
+  id: string
+  slug: string
+  businessName: string
+  category: VendorCategory
+  status: VendorStatus
+  rejectionReason: string | null
+  ownerDisplayName: string
+  phone: string | null
+  email: string | null
+  createdAt: string
+}
+
+export async function listAllVendors(
+  supabase: SupabaseClient<Database>
+): Promise<AdminVendor[]> {
+  const { data, error } = await supabase
+    .from("vendors")
+    .select("*")
+    .order("created_at", { ascending: false })
+
+  if (error) throw error
+  const vendors = data ?? []
+
+  const ownerIds = [...new Set(vendors.map((v) => v.owner_id))]
+  const ownerNameById = new Map<string, string>()
+  if (ownerIds.length > 0) {
+    const { data: owners, error: ownersError } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", ownerIds)
+    if (ownersError) throw ownersError
+    for (const o of owners ?? []) ownerNameById.set(o.id, o.display_name)
+  }
+
+  return vendors.map((v) => ({
+    id: v.id,
+    slug: v.slug,
+    businessName: v.business_name,
+    category: v.category,
+    status: v.status,
+    rejectionReason: v.rejection_reason,
+    ownerDisplayName: ownerNameById.get(v.owner_id) ?? "Unknown",
+    phone: v.phone,
+    email: v.email,
+    createdAt: v.created_at,
+  }))
+}
+
+export async function setVendorStatus(
+  supabase: SupabaseClient<Database>,
+  vendorId: string,
+  status: VendorStatus,
+  rejectionReason?: string
+) {
+  const { error } = await supabase.rpc("admin_update_vendor_status", {
+    p_vendor_id: vendorId,
+    p_status: status,
+    p_rejection_reason: rejectionReason ?? null,
+  })
+  if (error) throw error
+}

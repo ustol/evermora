@@ -10,6 +10,8 @@ import HomePage from "@/pages/HomePage"
 import AboutPage from "@/pages/AboutPage"
 import MemorialsDirectoryPage from "@/pages/MemorialsDirectoryPage"
 import MemorialPage from "@/pages/MemorialPage"
+import VendorsDirectoryPage from "@/pages/VendorsDirectoryPage"
+import VendorPage from "@/pages/VendorPage"
 import SignInPage from "@/pages/SignInPage"
 import SignUpPage from "@/pages/SignUpPage"
 import PrivacyPage from "@/pages/PrivacyPage"
@@ -24,6 +26,7 @@ import MemorialContentPage from "@/pages/dashboard/MemorialContentPage"
 import MemorialGalleryPage from "@/pages/dashboard/MemorialGalleryPage"
 import MemorialSettingsPage from "@/pages/dashboard/MemorialSettingsPage"
 import DashboardProfilePage from "@/pages/dashboard/DashboardProfilePage"
+import VendorDashboardPage from "@/pages/dashboard/VendorDashboardPage"
 
 import AdminPage from "@/pages/admin/AdminPage"
 import AdminGiftCatalogPage from "@/pages/admin/AdminGiftCatalogPage"
@@ -31,6 +34,7 @@ import AdminUsersPage from "@/pages/admin/AdminUsersPage"
 import AdminMemorialsPage from "@/pages/admin/AdminMemorialsPage"
 import AdminReportsPage from "@/pages/admin/AdminReportsPage"
 import AdminHeroImagesPage from "@/pages/admin/AdminHeroImagesPage"
+import AdminVendorsPage from "@/pages/admin/AdminVendorsPage"
 
 export function AppRouter() {
   return (
@@ -40,6 +44,8 @@ export function AppRouter() {
         <Route path="about" element={<AboutPage />} />
         <Route path="memorials" element={<MemorialsDirectoryPage />} />
         <Route path="memorials/:slug" element={<MemorialPage />} />
+        <Route path="vendors" element={<VendorsDirectoryPage />} />
+        <Route path="vendors/:slug" element={<VendorPage />} />
         <Route path="privacy" element={<PrivacyPage />} />
         <Route path="terms" element={<TermsPage />} />
       </Route>
@@ -68,6 +74,7 @@ export function AppRouter() {
             element={<MemorialSettingsPage />}
           />
           <Route path="profile" element={<DashboardProfilePage />} />
+          <Route path="vendor" element={<VendorDashboardPage />} />
         </Route>
 
         <Route element={<RequireAdmin />}>
@@ -77,6 +84,7 @@ export function AppRouter() {
             <Route path="memorials" element={<AdminMemorialsPage />} />
             <Route path="reports" element={<AdminReportsPage />} />
             <Route path="hero-images" element={<AdminHeroImagesPage />} />
+            <Route path="vendors" element={<AdminVendorsPage />} />
             <Route path="gifts" element={<AdminGiftCatalogPage />} />
           </Route>
         </Route>
