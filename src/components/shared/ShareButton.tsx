@@ -3,24 +3,22 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { siteConfig } from "@/config/site"
 
-interface ShareMemorialButtonProps {
-  slug: string
-  displayName: string
+interface ShareButtonProps {
+  /** Site-relative path, e.g. "/memorials/some-slug" or "/blog/some-slug". */
+  path: string
+  title: string
 }
 
 const canUseWebShare = typeof navigator !== "undefined" && "share" in navigator
 
-export function ShareMemorialButton({
-  slug,
-  displayName,
-}: ShareMemorialButtonProps) {
+export function ShareButton({ path, title }: ShareButtonProps) {
   async function handleShare() {
-    const url = `${siteConfig.url}/memorials/${slug}`
+    const url = `${siteConfig.url}${path}`
 
     if (canUseWebShare) {
       try {
         await navigator.share({
-          title: `${displayName} — ${siteConfig.name}`,
+          title: `${title} — ${siteConfig.name}`,
           url,
         })
       } catch {

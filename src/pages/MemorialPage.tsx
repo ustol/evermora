@@ -4,7 +4,7 @@ import { Container } from "@/components/layout/Container"
 import { EmptyState } from "@/components/layout/EmptyState"
 import { ErrorState } from "@/components/layout/ErrorState"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ShareMemorialButton } from "@/components/memorial/ShareMemorialButton"
+import { ShareButton } from "@/components/shared/ShareButton"
 import { ReportMemorialDialog } from "@/components/memorial/ReportMemorialDialog"
 import { MemorialGiftsSection } from "@/components/memorial/MemorialGiftsSection"
 import { TributesSection } from "@/components/memorial/TributesSection"
@@ -95,10 +95,7 @@ export default function MemorialPage() {
             )}
 
             <div className="mt-6 flex items-center gap-3">
-              <ShareMemorialButton
-                slug={memorial.slug}
-                displayName={memorial.display_name}
-              />
+              <ShareButton path={`/memorials/${memorial.slug}`} title={memorial.display_name} />
             </div>
           </div>
 

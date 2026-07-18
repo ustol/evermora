@@ -5,6 +5,7 @@ import { Container } from "@/components/layout/Container"
 import { EmptyState } from "@/components/layout/EmptyState"
 import { ErrorState } from "@/components/layout/ErrorState"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ShareButton } from "@/components/shared/ShareButton"
 import { MediaLightbox } from "@/components/memorial/MediaLightbox"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { getPublishedPostBySlug, listPostImages } from "@/services/blog"
@@ -72,11 +73,14 @@ export default function BlogPostPage() {
         />
       )}
 
-      {post.published_at && (
-        <p className="mt-6 text-sm text-muted-foreground">
-          {formatDayMonthYear(post.published_at)}
-        </p>
-      )}
+      <div className="mt-6 flex items-center justify-between gap-4">
+        {post.published_at ? (
+          <p className="text-sm text-muted-foreground">{formatDayMonthYear(post.published_at)}</p>
+        ) : (
+          <span />
+        )}
+        <ShareButton path={`/blog/${post.slug}`} title={post.title} />
+      </div>
       <h1 className="mt-2 font-heading text-3xl text-foreground sm:text-4xl">{post.title}</h1>
 
       <div className="mt-8 whitespace-pre-wrap text-foreground/90">{post.content}</div>
