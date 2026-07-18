@@ -37,6 +37,7 @@ export type VendorCategory =
   | "photography_videography"
   | "music_choir"
   | "other"
+export type BlogPostStatus = "draft" | "published"
 
 export interface Database {
   public: {
@@ -513,6 +514,56 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["vendor_listings"]["Insert"]>
         Relationships: []
       }
+      blog_posts: {
+        Row: {
+          id: string
+          author_id: string
+          slug: string
+          title: string
+          excerpt: string | null
+          content: string
+          cover_image_path: string | null
+          status: BlogPostStatus
+          published_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          author_id: string
+          slug: string
+          title: string
+          excerpt?: string | null
+          content: string
+          cover_image_path?: string | null
+          status?: BlogPostStatus
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["blog_posts"]["Insert"]>
+        Relationships: []
+      }
+      blog_post_images: {
+        Row: {
+          id: string
+          post_id: string
+          storage_path: string
+          caption: string | null
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          storage_path: string
+          caption?: string | null
+          sort_order?: number
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["blog_post_images"]["Insert"]>
+        Relationships: []
+      }
     }
     Views: {
       public_profiles: {
@@ -572,6 +623,7 @@ export interface Database {
       gift_purchase_status: GiftPurchaseStatus
       vendor_status: VendorStatus
       vendor_category: VendorCategory
+      blog_post_status: BlogPostStatus
     }
   }
 }

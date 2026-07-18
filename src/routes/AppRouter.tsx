@@ -12,6 +12,8 @@ import MemorialsDirectoryPage from "@/pages/MemorialsDirectoryPage"
 import MemorialPage from "@/pages/MemorialPage"
 import VendorsDirectoryPage from "@/pages/VendorsDirectoryPage"
 import VendorPage from "@/pages/VendorPage"
+import BlogListPage from "@/pages/BlogListPage"
+import BlogPostPage from "@/pages/BlogPostPage"
 import SignInPage from "@/pages/SignInPage"
 import SignUpPage from "@/pages/SignUpPage"
 import PrivacyPage from "@/pages/PrivacyPage"
@@ -35,6 +37,8 @@ import AdminMemorialsPage from "@/pages/admin/AdminMemorialsPage"
 import AdminReportsPage from "@/pages/admin/AdminReportsPage"
 import AdminHeroImagesPage from "@/pages/admin/AdminHeroImagesPage"
 import AdminVendorsPage from "@/pages/admin/AdminVendorsPage"
+import AdminBlogPage from "@/pages/admin/AdminBlogPage"
+import AdminBlogEditorPage from "@/pages/admin/AdminBlogEditorPage"
 
 export function AppRouter() {
   return (
@@ -46,6 +50,8 @@ export function AppRouter() {
         <Route path="memorials/:slug" element={<MemorialPage />} />
         <Route path="vendors" element={<VendorsDirectoryPage />} />
         <Route path="vendors/:slug" element={<VendorPage />} />
+        <Route path="blog" element={<BlogListPage />} />
+        <Route path="blog/:slug" element={<BlogPostPage />} />
         <Route path="privacy" element={<PrivacyPage />} />
         <Route path="terms" element={<TermsPage />} />
       </Route>
@@ -85,6 +91,9 @@ export function AppRouter() {
             <Route path="reports" element={<AdminReportsPage />} />
             <Route path="hero-images" element={<AdminHeroImagesPage />} />
             <Route path="vendors" element={<AdminVendorsPage />} />
+            <Route path="blog" element={<AdminBlogPage />} />
+            <Route path="blog/new" element={<AdminBlogEditorPage />} />
+            <Route path="blog/:id/edit" element={<AdminBlogEditorPage />} />
             <Route path="gifts" element={<AdminGiftCatalogPage />} />
           </Route>
         </Route>

@@ -7,6 +7,7 @@ const adminNavLinks = [
   { to: "/admin/reports", label: "Reports" },
   { to: "/admin/hero-images", label: "Hero images" },
   { to: "/admin/vendors", label: "Vendors" },
+  { to: "/admin/blog", label: "Blog" },
   { to: "/admin/gifts", label: "Wreaths & roses" },
 ]
 

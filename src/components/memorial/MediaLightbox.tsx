@@ -1,10 +1,18 @@
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
-import type { MediaItem } from "@/services/media"
+
+// Structural subset of MediaItem (and any similarly-shaped image record,
+// e.g. blog post images) — this component only ever reads these fields.
+export interface LightboxPhoto {
+  id: string
+  url: string
+  altText?: string | null
+  caption?: string | null
+}
 
 interface MediaLightboxProps {
-  photos: MediaItem[]
+  photos: LightboxPhoto[]
   index: number
   onClose: () => void
   onNavigate: (index: number) => void
