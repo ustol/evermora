@@ -75,6 +75,8 @@ export default function AdminBlogEditorPage() {
   const [excerpt, setExcerpt] = useState("")
   const [content, setContent] = useState("")
   const [status, setStatus] = useState<BlogPostStatus>("draft")
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
 
   useEffect(() => {
     if (post) {
@@ -82,12 +84,14 @@ export default function AdminBlogEditorPage() {
       setExcerpt(post.excerpt ?? "")
       setContent(post.content)
       setStatus(post.status)
+      setCoverPreview((current) => current ?? post.coverImageUrl)
     }
   }, [post])
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!profile) throw new Error("Not signed in")
+      let postId: string
       if (isNew) {
         const created = await createPost(supabase, {
           authorId: profile.id,
@@ -96,16 +100,23 @@ export default function AdminBlogEditorPage() {
           content: content.trim(),
           status,
         })
-        return created.id
+        postId = created.id
+      } else {
+        await updatePost(supabase, id!, {
+          title: title.trim(),
+          excerpt: excerpt.trim() || undefined,
+          content: content.trim(),
+          status,
+          currentPublishedAt: post?.published_at ?? null,
+        })
+        postId = id!
       }
-      await updatePost(supabase, id!, {
-        title: title.trim(),
-        excerpt: excerpt.trim() || undefined,
-        content: content.trim(),
-        status,
-        currentPublishedAt: post?.published_at ?? null,
-      })
-      return id!
+
+      if (coverFile) {
+        await uploadCoverImage(supabase, postId, coverFile)
+      }
+
+      return postId
     },
     onSuccess: (postId) => {
       toast.success(isNew ? "Post created." : "Post saved.")
@@ -115,17 +126,9 @@ export default function AdminBlogEditorPage() {
       } else {
         queryClient.invalidateQueries({ queryKey: ["blog-post", "admin", id] })
       }
+      setCoverFile(null)
     },
     onError: () => toast.error("Couldn't save this post. Please try again."),
-  })
-
-  const coverMutation = useMutation({
-    mutationFn: (file: File) => uploadCoverImage(supabase, id!, file),
-    onSuccess: () => {
-      toast.success("Cover image updated.")
-      queryClient.invalidateQueries({ queryKey: ["blog-post", "admin", id] })
-    },
-    onError: () => toast.error("Couldn't upload the cover image."),
   })
 
   const addImageMutation = useMutation({
@@ -210,6 +213,37 @@ export default function AdminBlogEditorPage() {
         </Field>
 
         <Field>
+          <FieldLabel htmlFor="post-cover-upload">Cover image (optional)</FieldLabel>
+          <FieldDescription>Shown at the top of the post and on the blog listing card.</FieldDescription>
+          <div className="mt-1 flex items-center gap-4">
+            <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+              {coverPreview ? (
+                <img src={coverPreview} alt="" className="size-full object-cover" />
+              ) : (
+                <ImagePlus className="size-6 text-muted-foreground" aria-hidden="true" />
+              )}
+            </div>
+            <Input
+              ref={coverInputRef}
+              type="file"
+              accept={ALLOWED_TYPES.join(",")}
+              className="hidden"
+              id="post-cover-upload"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (!file || !validateFile(file)) return
+                setCoverFile(file)
+                setCoverPreview(URL.createObjectURL(file))
+              }}
+            />
+            <Button type="button" variant="outline" onClick={() => coverInputRef.current?.click()}>
+              <ImagePlus className="size-4" aria-hidden="true" />
+              {coverPreview ? "Replace cover" : "Add cover image"}
+            </Button>
+          </div>
+        </Field>
+
+        <Field>
           <FieldLabel htmlFor="post-content">Content</FieldLabel>
           <Textarea
             id="post-content"
@@ -243,37 +277,6 @@ export default function AdminBlogEditorPage() {
 
       {!isNew && (
         <>
-          <section className="flex flex-col gap-4">
-            <h2 className="font-heading text-xl text-foreground">Cover image</h2>
-            <div className="flex items-center gap-4">
-              <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
-                {post?.coverImageUrl && (
-                  <img src={post.coverImageUrl} alt="" className="size-full object-cover" />
-                )}
-              </div>
-              <Input
-                ref={coverInputRef}
-                type="file"
-                accept={ALLOWED_TYPES.join(",")}
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file && validateFile(file)) coverMutation.mutate(file)
-                  if (coverInputRef.current) coverInputRef.current.value = ""
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => coverInputRef.current?.click()}
-                disabled={coverMutation.isPending}
-              >
-                <ImagePlus className="size-4" aria-hidden="true" />
-                {post?.coverImageUrl ? "Replace cover" : "Add cover image"}
-              </Button>
-            </div>
-          </section>
-
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="font-heading text-xl text-foreground">Related pictures</h2>
