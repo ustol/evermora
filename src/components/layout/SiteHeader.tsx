@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom"
 import { Show, UserButton } from "@clerk/react"
 import { buttonVariants } from "@/components/ui/button"
-import { Container } from "@/components/layout/Container"
 import { cn } from "@/lib/utils"
 import { siteConfig } from "@/config/site"
 
@@ -13,8 +12,8 @@ const navLinks = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <Container className="flex h-16 items-center justify-between">
+    <header className="sticky top-3 z-40 mt-3 px-3 sm:top-4 sm:mt-4 sm:px-4">
+      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 rounded-full border border-border/60 bg-background/80 px-4 shadow-lg shadow-black/5 backdrop-blur-md supports-backdrop-filter:bg-background/70 sm:px-6">
         <Link
           to="/"
           className="font-heading text-xl tracking-tight text-foreground"
@@ -63,7 +62,7 @@ export function SiteHeader() {
             <UserButton />
           </div>
         </Show>
-      </Container>
+      </div>
     </header>
   )
 }
