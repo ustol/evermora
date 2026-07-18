@@ -100,8 +100,10 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border/60 bg-soft-ivory">
+      {/* Hero — pulled up under the fixed floating header (which main's
+          pt-24 otherwise clears) so the background image reaches the true
+          top edge; pt-24 here restores the same content position. */}
+      <section className="relative -mt-24 overflow-hidden border-b border-border/60 bg-soft-ivory pt-24">
         {hasHeroImages && <HeroBackground images={heroImages} />}
         <Container className="relative z-10 flex flex-col items-center gap-6 py-20 text-center sm:py-28">
           <p
