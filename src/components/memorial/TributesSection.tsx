@@ -1,20 +1,12 @@
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { HeartHandshake, UserRound } from "lucide-react"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { HeartHandshake } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TributeFormDialog } from "@/components/memorial/TributeFormDialog"
-import { TributePhoto } from "@/components/memorial/TributePhoto"
-import { ReportContributionButton } from "@/components/memorial/ReportContributionButton"
+import { TributeCard } from "@/components/memorial/TributeCard"
+import { TributeDetailDialog } from "@/components/memorial/TributeDetailDialog"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { listApprovedContributions } from "@/services/contributions"
-import { formatDayMonthYear } from "@/lib/date"
-
-const typeLabels: Record<string, string> = {
-  tribute: "Tribute",
-  condolence: "Condolence",
-  memory: "Memory",
-}
+import { listApprovedContributions, type ContributionWithAuthor } from "@/services/contributions"
 
 interface TributesSectionProps {
   memorialId: string
@@ -36,6 +28,7 @@ export function TributesSection({
   showContributorNames,
 }: TributesSectionProps) {
   const supabase = useSupabaseClient()
+  const [selected, setSelected] = useState<ContributionWithAuthor | null>(null)
 
   const { data: contributions, isLoading } = useQuery({
     queryKey: ["memorial-contributions", memorialId],
@@ -67,69 +60,24 @@ export function TributesSection({
         )}
       </div>
 
-      <div className="mt-6 flex flex-col gap-4">
+      <div className="mt-6">
         {isLoading ? (
-          Array.from({ length: 2 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 w-full rounded-2xl" />
-          ))
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-56 w-full rounded-2xl" />
+            ))}
+          </div>
         ) : contributions && contributions.length > 0 ? (
-          contributions.map((contribution) => (
-            <div
-              key={contribution.id}
-              className="rounded-2xl border border-border bg-card p-5"
-            >
-              <div className="flex items-start gap-3">
-                <Avatar size="lg">
-                  {showContributorNames && contribution.authorAvatarUrl && (
-                    <AvatarImage
-                      src={contribution.authorAvatarUrl}
-                      alt=""
-                    />
-                  )}
-                  <AvatarFallback>
-                    <UserRound className="size-5" aria-hidden="true" />
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-foreground">
-                      {showContributorNames
-                        ? contribution.authorDisplayName
-                        : "A well-wisher"}
-                    </p>
-                    {showContributorNames && contribution.relationship && (
-                      <span className="text-sm text-muted-foreground">
-                        · {contribution.relationship}
-                      </span>
-                    )}
-                    <Badge variant="secondary">
-                      {typeLabels[contribution.type] ?? contribution.type}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDayMonthYear(contribution.createdAt)}
-                  </p>
-
-                  {contribution.title && (
-                    <p className="mt-2 font-medium text-foreground">
-                      {contribution.title}
-                    </p>
-                  )}
-
-                  {contribution.photoUrl && <TributePhoto url={contribution.photoUrl} />}
-
-                  <p className="mt-1 whitespace-pre-wrap text-foreground/90">
-                    {contribution.message}
-                  </p>
-
-                  <div className="mt-3 clear-both">
-                    <ReportContributionButton contributionId={contribution.id} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {contributions.map((contribution) => (
+              <TributeCard
+                key={contribution.id}
+                contribution={contribution}
+                showContributorNames={showContributorNames}
+                onOpen={() => setSelected(contribution)}
+              />
+            ))}
+          </div>
         ) : (
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border py-10 text-center">
             <HeartHandshake className="size-6 text-muted-foreground" aria-hidden="true" />
@@ -139,6 +87,12 @@ export function TributesSection({
           </div>
         )}
       </div>
+
+      <TributeDetailDialog
+        contribution={selected}
+        showContributorNames={showContributorNames}
+        onClose={() => setSelected(null)}
+      />
     </section>
   )
 }

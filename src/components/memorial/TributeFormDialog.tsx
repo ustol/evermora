@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { HeartHandshake, ImagePlus, X } from "lucide-react"
 import { toast } from "sonner"
@@ -60,7 +60,15 @@ export function TributeFormDialog({
   const [message, setMessage] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [nameError, setNameError] = useState<string | null>(null)
+  const [messageError, setMessageError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open && profile && !authorName) {
+      setAuthorName(profile.display_name)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, profile])
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -76,7 +84,7 @@ export function TributeFormDialog({
       await createContribution(supabase, {
         memorialId,
         authorId: profile?.id,
-        authorName: profile ? undefined : authorName.trim(),
+        authorName: authorName.trim(),
         type,
         relationship: relationship.trim() || undefined,
         title: title.trim() || undefined,
@@ -106,7 +114,8 @@ export function TributeFormDialog({
     setMessage("")
     setFile(null)
     setPreviewUrl(null)
-    setError(null)
+    setNameError(null)
+    setMessageError(null)
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
@@ -135,15 +144,11 @@ export function TributeFormDialog({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!profile && !authorName.trim()) {
-      setError("Please enter your name.")
-      return
-    }
-    if (message.trim().length < 5) {
-      setError("Please write a few words for your message.")
-      return
-    }
-    setError(null)
+    const hasNameError = !authorName.trim()
+    const hasMessageError = message.trim().length < 5
+    setNameError(hasNameError ? "Please enter your name." : null)
+    setMessageError(hasMessageError ? "Please write a few words for your message." : null)
+    if (hasNameError || hasMessageError) return
     mutation.mutate()
   }
 
@@ -187,17 +192,16 @@ export function TributeFormDialog({
               </Tabs>
             )}
 
-            {!profile && (
-              <Field data-invalid={!!error}>
-                <FieldLabel htmlFor="tribute-author-name">Your name</FieldLabel>
-                <Input
-                  id="tribute-author-name"
-                  value={authorName}
-                  onChange={(e) => setAuthorName(e.target.value)}
-                  placeholder="e.g. your name, or a group like &quot;The Mensah Family&quot;"
-                />
-              </Field>
-            )}
+            <Field data-invalid={!!nameError}>
+              <FieldLabel htmlFor="tribute-author-name">Your name</FieldLabel>
+              <Input
+                id="tribute-author-name"
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
+                placeholder="e.g. your name, or a group like &quot;The Mensah Family&quot;"
+              />
+              {nameError && <FieldError>{nameError}</FieldError>}
+            </Field>
 
             <Field>
               <FieldLabel htmlFor="tribute-relationship">
@@ -221,7 +225,7 @@ export function TributeFormDialog({
               />
             </Field>
 
-            <Field data-invalid={!!error}>
+            <Field data-invalid={!!messageError}>
               <FieldLabel htmlFor="tribute-message">Your message</FieldLabel>
               <Textarea
                 id="tribute-message"
@@ -230,7 +234,7 @@ export function TributeFormDialog({
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Share a memory, tribute, or words of comfort…"
               />
-              {error && <FieldError>{error}</FieldError>}
+              {messageError && <FieldError>{messageError}</FieldError>}
             </Field>
 
             {allowPhotos && profile && (

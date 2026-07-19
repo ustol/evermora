@@ -59,7 +59,11 @@ async function mapContribution(
     message: row.message,
     status: row.status,
     createdAt: row.created_at,
-    authorDisplayName: author?.display_name ?? row.author_name ?? "A well-wisher",
+    // author_name (what the poster actually typed, pre-filled from their
+    // profile name when signed in but editable) wins over the linked
+    // profile's display_name — a signed-in poster may want to appear as
+    // e.g. "The Mensah Family" rather than their personal account name.
+    authorDisplayName: row.author_name ?? author?.display_name ?? "A well-wisher",
     authorAvatarUrl: author?.avatar_url ?? null,
     photoUrl,
   }
