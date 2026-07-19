@@ -9,9 +9,12 @@ import {
   Lock,
   Search,
   Flower2,
+  Clock,
+  BookOpen,
 } from "lucide-react"
 import { Container } from "@/components/layout/Container"
 import { EmptyState } from "@/components/layout/EmptyState"
+import { Skeleton } from "@/components/ui/skeleton"
 import { MemorialCard } from "@/components/memorial/MemorialCard"
 import { MemorialCardSkeleton } from "@/components/memorial/MemorialCardSkeleton"
 import { FeatureCard } from "@/components/marketing/FeatureCard"
@@ -21,6 +24,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { useHighlightedMemorials } from "@/hooks/useMemorials"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { listHeroImages } from "@/services/heroImages"
+import { getPublicStats } from "@/services/publicStats"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 
@@ -98,6 +102,36 @@ export default function HomePage() {
   })
   const hasHeroImages = !!heroImages && heroImages.length > 0
 
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["public-stats"],
+    queryFn: () => getPublicStats(supabase),
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+
+  const statTiles = [
+    {
+      icon: MessageCircleHeart,
+      value: stats?.tributeCount,
+      label: "Tributes & condolences shared",
+    },
+    {
+      icon: Flower2,
+      value: stats?.giftCount,
+      label: "Wreaths & roses laid",
+    },
+    {
+      icon: BookOpen,
+      value: stats?.blogPostCount,
+      label: "Blog posts published",
+    },
+    {
+      icon: Clock,
+      value: "24/7",
+      label: "Always available",
+    },
+  ]
+
   return (
     <div>
       {/* Hero — pulled up under the fixed floating header (which main's
@@ -145,6 +179,29 @@ export default function HomePage() {
             >
               Find a Memorial
             </Link>
+          </div>
+        </Container>
+      </section>
+
+      {/* By the numbers */}
+      <section className="py-16">
+        <Container>
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+            {statTiles.map(({ icon: Icon, value, label }) => (
+              <div key={label} className="flex flex-col items-center gap-3 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full bg-muted text-heritage-gold">
+                  <Icon className="size-5" aria-hidden="true" />
+                </div>
+                {statsLoading && typeof value !== "string" ? (
+                  <Skeleton className="h-9 w-16" />
+                ) : (
+                  <p className="font-heading text-3xl text-foreground sm:text-4xl">
+                    {value ?? 0}
+                  </p>
+                )}
+                <p className="max-w-[12rem] text-sm text-muted-foreground">{label}</p>
+              </div>
+            ))}
           </div>
         </Container>
       </section>
