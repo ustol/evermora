@@ -166,7 +166,7 @@ export function TributeFormDialog({
         <HeartHandshake className="size-4" aria-hidden="true" />
         {triggerLabel}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{triggerLabel}</DialogTitle>
