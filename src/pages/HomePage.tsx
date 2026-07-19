@@ -186,16 +186,19 @@ export default function HomePage() {
       {/* By the numbers */}
       <section className="py-16">
         <Container>
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {statTiles.map(({ icon: Icon, value, label }) => (
-              <div key={label} className="flex flex-col items-center gap-3 text-center">
-                <div className="flex size-12 items-center justify-center rounded-full bg-muted text-heritage-gold">
+              <div
+                key={label}
+                className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 text-center"
+              >
+                <div className="flex size-12 items-center justify-center rounded-full border border-heritage-gold text-heritage-gold">
                   <Icon className="size-5" aria-hidden="true" />
                 </div>
                 {statsLoading && typeof value !== "string" ? (
                   <Skeleton className="h-9 w-16" />
                 ) : (
-                  <p className="font-heading text-3xl text-foreground sm:text-4xl">
+                  <p className="font-heading text-3xl text-heritage-gold sm:text-4xl">
                     {value ?? 0}
                   </p>
                 )}
