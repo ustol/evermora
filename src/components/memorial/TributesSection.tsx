@@ -4,6 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TributeFormDialog } from "@/components/memorial/TributeFormDialog"
+import { TributePhoto } from "@/components/memorial/TributePhoto"
 import { ReportContributionButton } from "@/components/memorial/ReportContributionButton"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { listApprovedContributions } from "@/services/contributions"
@@ -115,19 +116,14 @@ export function TributesSection({
                       {contribution.title}
                     </p>
                   )}
+
+                  {contribution.photoUrl && <TributePhoto url={contribution.photoUrl} />}
+
                   <p className="mt-1 whitespace-pre-wrap text-foreground/90">
                     {contribution.message}
                   </p>
 
-                  {contribution.photoUrl && (
-                    <img
-                      src={contribution.photoUrl}
-                      alt=""
-                      className="mt-3 max-h-64 rounded-lg object-cover"
-                    />
-                  )}
-
-                  <div className="mt-3">
+                  <div className="mt-3 clear-both">
                     <ReportContributionButton contributionId={contribution.id} />
                   </div>
                 </div>

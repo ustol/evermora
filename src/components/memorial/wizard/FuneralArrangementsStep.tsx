@@ -13,6 +13,7 @@ import {
   type FuneralArrangementsValues,
   type FuneralEventValues,
 } from "@/types/memorial-form"
+import { ghanaRegionOptions } from "@/lib/ghanaRegions"
 
 interface FuneralArrangementsStepProps {
   defaultValues: FuneralEventValues[]
@@ -142,10 +143,12 @@ export function FuneralArrangementsStep({
                     label="Town or city"
                     required
                   />
-                  <TextField
+                  <SelectField
                     control={form.control}
                     name={`events.${index}.region`}
-                    label="Region or state"
+                    label="Region"
+                    options={ghanaRegionOptions}
+                    placeholder="Select a region"
                   />
                   <TextField
                     control={form.control}
