@@ -62,13 +62,13 @@ export function TributesSection({
 
       <div className="mt-6">
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-56 w-full rounded-2xl" />
             ))}
           </div>
         ) : contributions && contributions.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {contributions.map((contribution) => (
               <TributeCard
                 key={contribution.id}
