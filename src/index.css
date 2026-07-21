@@ -62,7 +62,7 @@
     --color-foreground: var(--foreground);
     --color-background: var(--background);
 
-    /* Evermora brand palette, exposed as Tailwind utilities (bg-obsidian, text-heritage-gold, etc.) */
+    /* Akornafa brand palette, exposed as Tailwind utilities (bg-obsidian, text-heritage-gold, etc.) */
     --color-obsidian: var(--brand-obsidian);
     --color-rich-black: var(--brand-rich-black);
     --color-heritage-gold: var(--brand-heritage-gold);
@@ -84,7 +84,7 @@
 }
 
 :root {
-    /* Evermora brand palette (source of truth — see design brief) */
+    /* Akornafa brand palette (source of truth — see design brief) */
     --brand-obsidian: #0B0B0D;
     --brand-rich-black: #151517;
     /* Darkened from the original #C6A15B / #8D8274 — those failed WCAG AA

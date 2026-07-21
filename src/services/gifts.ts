@@ -87,7 +87,7 @@ export async function createPendingGiftPurchase(
   }
 ): Promise<{ id: string; paystackReference: string }> {
   const id = crypto.randomUUID()
-  const paystackReference = `evermora_${crypto.randomUUID()}`
+  const paystackReference = `akornafa_${crypto.randomUUID()}`
 
   const { error } = await supabase.from("gift_purchases").insert({
     id,

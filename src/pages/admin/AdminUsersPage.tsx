@@ -146,7 +146,7 @@ export default function AdminUsersPage() {
     <Container className="flex flex-col gap-8 py-10">
       <PageHeader
         title="Users"
-        description="Every account on Evermora. Changing a role or status takes effect immediately."
+        description="Every account on Akornafa. Changing a role or status takes effect immediately."
       />
 
       {isError ? (

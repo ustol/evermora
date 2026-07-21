@@ -35,7 +35,7 @@ export default function AdminPage() {
     <Container className="flex flex-col gap-8 py-10">
       <PageHeader
         title="Platform administration"
-        description="An overview of Evermora across every memorial and account."
+        description="An overview of Akornafa across every memorial and account."
       />
 
       {isLoading ? (

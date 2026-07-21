@@ -187,7 +187,7 @@ export default function AdminBlogEditorPage() {
     <Container className="flex flex-col gap-8 py-10">
       <PageHeader
         title={isNew ? "New post" : "Edit post"}
-        description="Posts are only ever written by an Evermora administrator."
+        description="Posts are only ever written by an Akornafa administrator."
       />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6">

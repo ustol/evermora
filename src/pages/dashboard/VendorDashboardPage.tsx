@@ -57,7 +57,7 @@ const statusStyles: Record<string, string> = {
 }
 
 const statusMessages: Record<string, string> = {
-  pending: "Your application is awaiting review by an Evermora administrator.",
+  pending: "Your application is awaiting review by an Akornafa administrator.",
   approved: "Your business is live. You can manage your listings below.",
   rejected: "Your application was not approved. You can update your details below.",
   suspended: "Your vendor account has been suspended. Contact support for details.",

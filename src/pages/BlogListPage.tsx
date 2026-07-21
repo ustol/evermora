@@ -26,7 +26,7 @@ export default function BlogListPage() {
   return (
     <Container className="flex flex-col gap-8 py-12 sm:py-16">
       <PageHeader
-        title="From Evermora"
+        title="From Akornafa"
         description="Guidance, stories, and updates on honouring a life well lived."
       />
 
@@ -77,7 +77,7 @@ export default function BlogListPage() {
         <EmptyState
           icon={Newspaper}
           title="No posts yet"
-          description="Check back soon for guidance and stories from Evermora."
+          description="Check back soon for guidance and stories from Akornafa."
         />
       )}
     </Container>

@@ -6,7 +6,7 @@ test("homepage renders brand chrome with no console errors", async ({ page }) =>
   await page.goto("/")
 
   const header = page.getByRole("banner")
-  await expect(header.getByRole("link", { name: "Evermora" })).toBeVisible()
+  await expect(header.getByRole("link", { name: "Akornafa" })).toBeVisible()
   await expect(header.getByRole("link", { name: "Find a memorial" })).toBeVisible()
   await expect(page.getByRole("link", { name: "Create a memorial" }).first()).toBeVisible()
   await expect(

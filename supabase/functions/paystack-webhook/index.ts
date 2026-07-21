@@ -1,4 +1,4 @@
-// Public endpoint — Paystack calls this directly, with no Evermora/Clerk
+// Public endpoint — Paystack calls this directly, with no Akornafa/Clerk
 // session. verify_jwt = false for this function (see supabase/config.toml);
 // the x-paystack-signature check below is the only authentication there is.
 // This is the reliability backstop for verify-gift-purchase: if a buyer

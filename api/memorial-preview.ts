@@ -1,4 +1,4 @@
-// Vercel serverless function. Evermora is a client-only SPA (no SSR), so
+// Vercel serverless function. Akornafa is a client-only SPA (no SSR), so
 // social/messaging link-preview crawlers — which never execute JS — would
 // otherwise all see the same static index.html with no per-memorial image.
 // vercel.json routes crawler user agents hitting /memorials/:slug here
@@ -10,7 +10,7 @@
 // resolve besides node_modules.
 import { createClient } from "@supabase/supabase-js"
 
-const SITE_NAME = "Evermora"
+const SITE_NAME = "Akornafa"
 const FALLBACK_DESCRIPTION =
   "A dignified place to announce a funeral, share a memorial page, and gather tributes and condolences."
 

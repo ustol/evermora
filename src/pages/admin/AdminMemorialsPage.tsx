@@ -126,7 +126,7 @@ export default function AdminMemorialsPage() {
     <Container className="flex flex-col gap-8 py-10">
       <PageHeader
         title="Memorials"
-        description="Every memorial on Evermora, regardless of owner or privacy setting."
+        description="Every memorial on Akornafa, regardless of owner or privacy setting."
       />
 
       {isError ? (

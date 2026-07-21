@@ -1,8 +1,8 @@
-# Evermora
+# Akornafa
 
 **Honouring lives. Preserving memories.**
 
-Evermora is a dignified, mobile-first platform for funeral announcements and
+Akornafa is a dignified, mobile-first platform for funeral announcements and
 memorial pages. Families can announce a passing, share funeral arrangements,
 gather tributes, condolences, and photographs from loved ones near and far,
 and let visitors send a virtual wreath or rose — all under the family's
