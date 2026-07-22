@@ -34,10 +34,15 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <p className="mt-10 text-xs text-soft-ivory/50">
-          &copy; {new Date().getFullYear()} {siteConfig.name}. All rights
-          reserved.
-        </p>
+        <div className="mt-10 flex flex-col gap-1 text-xs text-soft-ivory/50">
+          <p>
+            &copy; {new Date().getFullYear()} {siteConfig.name}. All rights
+            reserved.
+          </p>
+          <p>
+            {siteConfig.name} is a product of {siteConfig.parentCompany}
+          </p>
+        </div>
       </Container>
     </footer>
   )

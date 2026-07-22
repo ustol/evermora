@@ -16,6 +16,7 @@ export const siteConfig = {
       : (import.meta.env.VITE_APP_URL ?? "http://localhost:5173"),
   locale: "en",
   region: "Ghana",
+  parentCompany: "Hoganam Ltd.",
 } as const
 
 export const legalConfig = {
