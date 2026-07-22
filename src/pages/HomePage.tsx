@@ -5,7 +5,6 @@ import {
   MessageCircleHeart,
   Images,
   Share2,
-  ShieldCheck,
   Lock,
   Search,
   Flower2,
@@ -27,6 +26,10 @@ import { listHeroImages } from "@/services/heroImages"
 import { getPublicStats } from "@/services/publicStats"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
+
+// Hidden per request — kept in place (data still loads) rather than removed,
+// so it can be turned back on by flipping this flag.
+const SHOW_STATS_SECTION = false
 
 const features = [
   {
@@ -58,12 +61,6 @@ const features = [
     title: "Simple sharing",
     description:
       "Every memorial gets a clean, memorable link that's easy to share by message, email, or social media.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Full moderation control",
-    description:
-      "Choose whether submissions need your approval before they appear, and remove anything at any time.",
   },
   {
     icon: Lock,
@@ -184,30 +181,32 @@ export default function HomePage() {
       </section>
 
       {/* By the numbers */}
-      <section className="py-16">
-        <Container>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {statTiles.map(({ icon: Icon, value, label }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 text-center"
-              >
-                <div className="flex size-12 items-center justify-center rounded-full border border-heritage-gold text-heritage-gold">
-                  <Icon className="size-5" aria-hidden="true" />
+      {SHOW_STATS_SECTION && (
+        <section className="py-16">
+          <Container>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {statTiles.map(({ icon: Icon, value, label }) => (
+                <div
+                  key={label}
+                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 text-center"
+                >
+                  <div className="flex size-12 items-center justify-center rounded-full border border-heritage-gold text-heritage-gold">
+                    <Icon className="size-5" aria-hidden="true" />
+                  </div>
+                  {statsLoading && typeof value !== "string" ? (
+                    <Skeleton className="h-9 w-16" />
+                  ) : (
+                    <p className="font-heading text-3xl text-heritage-gold sm:text-4xl">
+                      {value ?? 0}
+                    </p>
+                  )}
+                  <p className="max-w-[12rem] text-sm text-muted-foreground">{label}</p>
                 </div>
-                {statsLoading && typeof value !== "string" ? (
-                  <Skeleton className="h-9 w-16" />
-                ) : (
-                  <p className="font-heading text-3xl text-heritage-gold sm:text-4xl">
-                    {value ?? 0}
-                  </p>
-                )}
-                <p className="max-w-[12rem] text-sm text-muted-foreground">{label}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
 
       {/* How it works */}
       <section className="py-20">
