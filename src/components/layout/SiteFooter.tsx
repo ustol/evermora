@@ -4,6 +4,7 @@ import { siteConfig } from "@/config/site"
 
 const footerLinks = [
   { to: "/about", label: "About" },
+  { to: "/services", label: "Services" },
   { to: "/memorials", label: "Find a memorial" },
   { to: "/privacy", label: "Privacy policy" },
   { to: "/terms", label: "Terms & conditions" },
