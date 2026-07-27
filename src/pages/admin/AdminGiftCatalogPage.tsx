@@ -1,15 +1,32 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Gift } from "lucide-react"
+import { Gift, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import { Container } from "@/components/layout/Container"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { EmptyState } from "@/components/layout/EmptyState"
 import { ErrorState } from "@/components/layout/ErrorState"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
+import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { AddGiftCatalogItemDialog } from "@/components/admin/AddGiftCatalogItemDialog"
 import { EditGiftCatalogItemDialog } from "@/components/admin/EditGiftCatalogItemDialog"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { listAllGiftCatalog, setGiftCatalogItemActive } from "@/services/gifts"
+import {
+  listAllGiftCatalog,
+  setGiftCatalogItemActive,
+  deleteGiftCatalogItem,
+} from "@/services/gifts"
 
 export default function AdminGiftCatalogPage() {
   const supabase = useSupabaseClient()
@@ -25,6 +42,24 @@ export default function AdminGiftCatalogPage() {
       setGiftCatalogItemActive(supabase, id, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gift-catalog", "admin"] })
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteGiftCatalogItem(supabase, id),
+    onSuccess: () => {
+      toast.success("Gift deleted.")
+      queryClient.invalidateQueries({ queryKey: ["gift-catalog", "admin"] })
+    },
+    onError: (error: unknown) => {
+      const code = (error as { code?: string })?.code
+      if (code === "23503") {
+        toast.error(
+          "This gift has already been purchased before, so it can't be deleted — deactivate it instead."
+        )
+      } else {
+        toast.error("Couldn't delete this gift. Please try again.")
+      }
     },
   })
 
@@ -64,6 +99,41 @@ export default function AdminGiftCatalogPage() {
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <EditGiftCatalogItemDialog item={item} />
+
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-destructive hover:text-destructive/80"
+                      />
+                    }
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                    <span className="sr-only">Delete {item.name}</span>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this gift?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        "{item.name}" will no longer be available for
+                        visitors to purchase. This can't be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        variant="destructive"
+                        disabled={deleteMutation.isPending}
+                        onClick={() => deleteMutation.mutate(item.id)}
+                      >
+                        {deleteMutation.isPending ? "Deleting…" : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
                 <Switch
                   checked={item.isActive}
                   onCheckedChange={(checked) =>

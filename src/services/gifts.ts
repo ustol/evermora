@@ -185,3 +185,17 @@ export async function setGiftCatalogItemActive(
     .eq("id", id)
   if (error) throw error
 }
+
+/**
+ * gift_purchases.gift_catalog_id references this table ON DELETE RESTRICT,
+ * so deleting an item that has ever been purchased fails at the database
+ * level (postgres error 23503) rather than silently orphaning purchase
+ * history — callers should catch that and suggest deactivating instead.
+ */
+export async function deleteGiftCatalogItem(
+  supabase: SupabaseClient<Database>,
+  id: string
+) {
+  const { error } = await supabase.from("gift_catalog").delete().eq("id", id)
+  if (error) throw error
+}
