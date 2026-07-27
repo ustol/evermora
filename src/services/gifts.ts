@@ -158,6 +158,22 @@ export async function createGiftCatalogItem(
   if (error) throw error
 }
 
+export async function updateGiftCatalogItem(
+  supabase: SupabaseClient<Database>,
+  id: string,
+  params: { name: string; price: number; imagePath?: string }
+) {
+  const { error } = await supabase
+    .from("gift_catalog")
+    .update({
+      name: params.name,
+      price: params.price,
+      ...(params.imagePath ? { image_path: params.imagePath } : {}),
+    })
+    .eq("id", id)
+  if (error) throw error
+}
+
 export async function setGiftCatalogItemActive(
   supabase: SupabaseClient<Database>,
   id: string,

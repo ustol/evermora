@@ -7,6 +7,7 @@ import { ErrorState } from "@/components/layout/ErrorState"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { AddGiftCatalogItemDialog } from "@/components/admin/AddGiftCatalogItemDialog"
+import { EditGiftCatalogItemDialog } from "@/components/admin/EditGiftCatalogItemDialog"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { listAllGiftCatalog, setGiftCatalogItemActive } from "@/services/gifts"
 
@@ -61,13 +62,16 @@ export default function AdminGiftCatalogPage() {
                   {item.currency} {item.price.toFixed(2)}
                 </p>
               </div>
-              <Switch
-                checked={item.isActive}
-                onCheckedChange={(checked) =>
-                  toggleMutation.mutate({ id: item.id, isActive: checked })
-                }
-                aria-label={`${item.isActive ? "Deactivate" : "Activate"} ${item.name}`}
-              />
+              <div className="flex shrink-0 items-center gap-3">
+                <EditGiftCatalogItemDialog item={item} />
+                <Switch
+                  checked={item.isActive}
+                  onCheckedChange={(checked) =>
+                    toggleMutation.mutate({ id: item.id, isActive: checked })
+                  }
+                  aria-label={`${item.isActive ? "Deactivate" : "Activate"} ${item.name}`}
+                />
+              </div>
             </div>
           ))}
         </div>
