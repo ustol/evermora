@@ -5,11 +5,11 @@
 -- corresponding database objects: storage, tables, RPC, and enums.
 -- =========================================================================
 
--- Storage: remove all objects before the bucket, and the policies that
--- reference the vendors table before the table itself.
-delete from storage.objects where bucket_id = 'vendor-assets';
-delete from storage.buckets where id = 'vendor-assets';
-
+-- Storage: Supabase blocks direct DELETE on storage.objects/storage.buckets
+-- from SQL (storage.protect_delete() trigger — "Use the Storage API
+-- instead"). Drop the vendor-assets bucket from the Supabase Dashboard's
+-- Storage section by hand; this migration only removes the policies that
+-- reference the vendors table (must go before the table itself).
 drop policy if exists "vendor_assets_storage_select" on storage.objects;
 drop policy if exists "vendor_assets_storage_insert" on storage.objects;
 drop policy if exists "vendor_assets_storage_update" on storage.objects;
