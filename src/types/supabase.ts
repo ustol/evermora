@@ -26,17 +26,6 @@ export type NotificationType =
   | "new_report"
   | "memorial_published"
 export type GiftPurchaseStatus = "pending" | "paid" | "failed"
-export type VendorStatus = "pending" | "approved" | "rejected" | "suspended"
-export type VendorCategory =
-  | "caterers"
-  | "florists"
-  | "transport"
-  | "printing"
-  | "event_planning"
-  | "mortuary_services"
-  | "photography_videography"
-  | "music_choir"
-  | "other"
 export type BlogPostStatus = "draft" | "published"
 
 export interface Database {
@@ -446,74 +435,6 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["hero_images"]["Insert"]>
         Relationships: []
       }
-      vendors: {
-        Row: {
-          id: string
-          owner_id: string
-          slug: string
-          business_name: string
-          category: VendorCategory
-          description: string | null
-          phone: string | null
-          email: string | null
-          whatsapp: string | null
-          location: string | null
-          logo_path: string | null
-          status: VendorStatus
-          rejection_reason: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          owner_id: string
-          slug: string
-          business_name: string
-          category: VendorCategory
-          description?: string | null
-          phone?: string | null
-          email?: string | null
-          whatsapp?: string | null
-          location?: string | null
-          logo_path?: string | null
-          status?: VendorStatus
-          rejection_reason?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: Partial<Database["public"]["Tables"]["vendors"]["Insert"]>
-        Relationships: []
-      }
-      vendor_listings: {
-        Row: {
-          id: string
-          vendor_id: string
-          name: string
-          description: string | null
-          price: number | null
-          currency: string
-          image_path: string | null
-          is_active: boolean
-          sort_order: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          vendor_id: string
-          name: string
-          description?: string | null
-          price?: number | null
-          currency?: string
-          image_path?: string | null
-          is_active?: boolean
-          sort_order?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: Partial<Database["public"]["Tables"]["vendor_listings"]["Insert"]>
-        Relationships: []
-      }
       blog_posts: {
         Row: {
           id: string
@@ -600,14 +521,6 @@ export interface Database {
         Args: { p_memorial_id: string; p_suspend: boolean }
         Returns: void
       }
-      admin_update_vendor_status: {
-        Args: {
-          p_vendor_id: string
-          p_status: VendorStatus
-          p_rejection_reason?: string | null
-        }
-        Returns: void
-      }
     }
     Enums: {
       user_role: UserRole
@@ -621,8 +534,6 @@ export interface Database {
       collaborator_role: CollaboratorRole
       notification_type: NotificationType
       gift_purchase_status: GiftPurchaseStatus
-      vendor_status: VendorStatus
-      vendor_category: VendorCategory
       blog_post_status: BlogPostStatus
     }
   }

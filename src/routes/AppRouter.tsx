@@ -11,8 +11,6 @@ import AboutPage from "@/pages/AboutPage"
 import ServicesPage from "@/pages/ServicesPage"
 import MemorialsDirectoryPage from "@/pages/MemorialsDirectoryPage"
 import MemorialPage from "@/pages/MemorialPage"
-import VendorsDirectoryPage from "@/pages/VendorsDirectoryPage"
-import VendorPage from "@/pages/VendorPage"
 import BlogListPage from "@/pages/BlogListPage"
 import BlogPostPage from "@/pages/BlogPostPage"
 import SignInPage from "@/pages/SignInPage"
@@ -29,7 +27,6 @@ import MemorialContentPage from "@/pages/dashboard/MemorialContentPage"
 import MemorialGalleryPage from "@/pages/dashboard/MemorialGalleryPage"
 import MemorialSettingsPage from "@/pages/dashboard/MemorialSettingsPage"
 import DashboardProfilePage from "@/pages/dashboard/DashboardProfilePage"
-import VendorDashboardPage from "@/pages/dashboard/VendorDashboardPage"
 
 import AdminPage from "@/pages/admin/AdminPage"
 import AdminGiftCatalogPage from "@/pages/admin/AdminGiftCatalogPage"
@@ -37,7 +34,6 @@ import AdminUsersPage from "@/pages/admin/AdminUsersPage"
 import AdminMemorialsPage from "@/pages/admin/AdminMemorialsPage"
 import AdminReportsPage from "@/pages/admin/AdminReportsPage"
 import AdminHeroImagesPage from "@/pages/admin/AdminHeroImagesPage"
-import AdminVendorsPage from "@/pages/admin/AdminVendorsPage"
 import AdminBlogPage from "@/pages/admin/AdminBlogPage"
 import AdminBlogEditorPage from "@/pages/admin/AdminBlogEditorPage"
 
@@ -50,8 +46,6 @@ export function AppRouter() {
         <Route path="services" element={<ServicesPage />} />
         <Route path="memorials" element={<MemorialsDirectoryPage />} />
         <Route path="memorials/:slug" element={<MemorialPage />} />
-        <Route path="vendors" element={<VendorsDirectoryPage />} />
-        <Route path="vendors/:slug" element={<VendorPage />} />
         <Route path="blog" element={<BlogListPage />} />
         <Route path="blog/:slug" element={<BlogPostPage />} />
         <Route path="privacy" element={<PrivacyPage />} />
@@ -82,7 +76,6 @@ export function AppRouter() {
             element={<MemorialSettingsPage />}
           />
           <Route path="profile" element={<DashboardProfilePage />} />
-          <Route path="vendor" element={<VendorDashboardPage />} />
         </Route>
 
         <Route element={<RequireAdmin />}>
@@ -92,7 +85,6 @@ export function AppRouter() {
             <Route path="memorials" element={<AdminMemorialsPage />} />
             <Route path="reports" element={<AdminReportsPage />} />
             <Route path="hero-images" element={<AdminHeroImagesPage />} />
-            <Route path="vendors" element={<AdminVendorsPage />} />
             <Route path="blog" element={<AdminBlogPage />} />
             <Route path="blog/new" element={<AdminBlogEditorPage />} />
             <Route path="blog/:id/edit" element={<AdminBlogEditorPage />} />
