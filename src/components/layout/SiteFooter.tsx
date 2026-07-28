@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom"
 import { Container } from "@/components/layout/Container"
 import { siteConfig } from "@/config/site"
+import { SHOW_SERVICES_PAGE } from "@/config/featureFlags"
 
 const footerLinks = [
   { to: "/about", label: "About" },
-  { to: "/services", label: "Services" },
+  ...(SHOW_SERVICES_PAGE ? [{ to: "/services", label: "Services" }] : []),
   { to: "/memorials", label: "Find a memorial" },
   { to: "/privacy", label: "Privacy policy" },
   { to: "/terms", label: "Terms & conditions" },

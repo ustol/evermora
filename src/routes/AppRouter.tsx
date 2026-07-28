@@ -18,6 +18,7 @@ import SignUpPage from "@/pages/SignUpPage"
 import PrivacyPage from "@/pages/PrivacyPage"
 import TermsPage from "@/pages/TermsPage"
 import NotFoundPage from "@/pages/NotFoundPage"
+import { SHOW_SERVICES_PAGE } from "@/config/featureFlags"
 
 import DashboardPage from "@/pages/dashboard/DashboardPage"
 import DashboardMemorialsPage from "@/pages/dashboard/DashboardMemorialsPage"
@@ -43,7 +44,9 @@ export function AppRouter() {
       <Route element={<RootLayout />}>
         <Route index element={<HomePage />} />
         <Route path="about" element={<AboutPage />} />
-        <Route path="services" element={<ServicesPage />} />
+        {SHOW_SERVICES_PAGE && (
+          <Route path="services" element={<ServicesPage />} />
+        )}
         <Route path="memorials" element={<MemorialsDirectoryPage />} />
         <Route path="memorials/:slug" element={<MemorialPage />} />
         <Route path="blog" element={<BlogListPage />} />

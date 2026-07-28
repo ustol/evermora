@@ -3,12 +3,13 @@ import { Show, UserButton } from "@clerk/react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { siteConfig } from "@/config/site"
+import { SHOW_SERVICES_PAGE } from "@/config/featureFlags"
 
 const navLinks = [
   { to: "/memorials", label: "Find a memorial" },
   { to: "/blog", label: "Blog" },
   { to: "/about", label: "About" },
-  { to: "/services", label: "Services" },
+  ...(SHOW_SERVICES_PAGE ? [{ to: "/services", label: "Services" }] : []),
 ]
 
 export function SiteHeader() {
