@@ -18,7 +18,14 @@ import { createClient } from "npm:@supabase/supabase-js@2"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type, apikey",
+  // x-client-info and x-supabase-api-version are sent automatically by
+  // supabase-js on every request — omitting them from the allow-list makes
+  // the browser's CORS preflight fail, so the POST never reaches this
+  // function at all. The client then sees a generic network failure,
+  // indistinguishable from an actual verification failure (this is what
+  // was behind the "We couldn't confirm your payment" errors).
+  "Access-Control-Allow-Headers":
+    "authorization, content-type, apikey, x-client-info, x-supabase-api-version",
 }
 
 interface PaystackVerifyResult {
