@@ -131,6 +131,7 @@ export async function createPost(
   supabase: SupabaseClient<Database>,
   params: {
     authorId: string
+    authorName?: string
     title: string
     excerpt?: string
     content: string
@@ -143,6 +144,7 @@ export async function createPost(
     .from("blog_posts")
     .insert({
       author_id: params.authorId,
+      author_name: params.authorName || null,
       slug,
       title: params.title,
       excerpt: params.excerpt || null,
@@ -162,6 +164,7 @@ export async function updatePost(
   id: string,
   params: {
     title: string
+    authorName?: string
     excerpt?: string
     content: string
     status: BlogPostStatus
@@ -172,6 +175,7 @@ export async function updatePost(
     .from("blog_posts")
     .update({
       title: params.title,
+      author_name: params.authorName || null,
       excerpt: params.excerpt || null,
       content: params.content,
       status: params.status,

@@ -72,6 +72,7 @@ export default function AdminBlogEditorPage() {
   })
 
   const [title, setTitle] = useState("")
+  const [authorName, setAuthorName] = useState("")
   const [excerpt, setExcerpt] = useState("")
   const [content, setContent] = useState("")
   const [status, setStatus] = useState<BlogPostStatus>("draft")
@@ -81,12 +82,20 @@ export default function AdminBlogEditorPage() {
   useEffect(() => {
     if (post) {
       setTitle(post.title)
+      setAuthorName(post.author_name ?? "")
       setExcerpt(post.excerpt ?? "")
       setContent(post.content)
       setStatus(post.status)
       setCoverPreview((current) => current ?? post.coverImageUrl)
     }
   }, [post])
+
+  useEffect(() => {
+    if (isNew && profile && !authorName) {
+      setAuthorName(profile.display_name)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNew, profile])
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -95,6 +104,7 @@ export default function AdminBlogEditorPage() {
       if (isNew) {
         const created = await createPost(supabase, {
           authorId: profile.id,
+          authorName: authorName.trim() || undefined,
           title: title.trim(),
           excerpt: excerpt.trim() || undefined,
           content: content.trim(),
@@ -104,6 +114,7 @@ export default function AdminBlogEditorPage() {
       } else {
         await updatePost(supabase, id!, {
           title: title.trim(),
+          authorName: authorName.trim() || undefined,
           excerpt: excerpt.trim() || undefined,
           content: content.trim(),
           status,
@@ -198,6 +209,17 @@ export default function AdminBlogEditorPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Planning a dignified funeral on a budget"
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="post-author-name">Writer</FieldLabel>
+          <FieldDescription>Shown as the byline on the published post.</FieldDescription>
+          <Input
+            id="post-author-name"
+            value={authorName}
+            onChange={(e) => setAuthorName(e.target.value)}
+            placeholder="e.g. the writer's name"
           />
         </Field>
 

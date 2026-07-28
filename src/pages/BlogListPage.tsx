@@ -60,9 +60,11 @@ export default function BlogListPage() {
                 )}
               </div>
               <div className="flex flex-1 flex-col gap-2 p-5">
-                {post.published_at && (
+                {(post.author_name || post.published_at) && (
                   <p className="text-xs text-muted-foreground">
-                    {formatDayMonthYear(post.published_at)}
+                    {post.author_name && <>By {post.author_name}</>}
+                    {post.author_name && post.published_at && " · "}
+                    {post.published_at && formatDayMonthYear(post.published_at)}
                   </p>
                 )}
                 <h2 className="font-heading text-lg text-foreground">{post.title}</h2>

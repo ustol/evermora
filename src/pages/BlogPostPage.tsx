@@ -74,11 +74,11 @@ export default function BlogPostPage() {
       )}
 
       <div className="mt-6 flex items-center justify-between gap-4">
-        {post.published_at ? (
-          <p className="text-sm text-muted-foreground">{formatDayMonthYear(post.published_at)}</p>
-        ) : (
-          <span />
-        )}
+        <p className="text-sm text-muted-foreground">
+          {post.author_name && <>By {post.author_name}</>}
+          {post.author_name && post.published_at && " · "}
+          {post.published_at && formatDayMonthYear(post.published_at)}
+        </p>
         <ShareButton path={`/blog/${post.slug}`} title={post.title} />
       </div>
       <h1 className="mt-2 font-heading text-3xl text-foreground sm:text-4xl">{post.title}</h1>

@@ -439,6 +439,7 @@ export interface Database {
         Row: {
           id: string
           author_id: string
+          author_name: string | null
           slug: string
           title: string
           excerpt: string | null
@@ -452,6 +453,7 @@ export interface Database {
         Insert: {
           id?: string
           author_id: string
+          author_name?: string | null
           slug: string
           title: string
           excerpt?: string | null
