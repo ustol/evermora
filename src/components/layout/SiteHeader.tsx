@@ -16,11 +16,12 @@ export function SiteHeader() {
   return (
     <header className="fixed top-3 right-0 left-0 z-40 px-3 sm:top-4 sm:px-4">
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 rounded-full border border-border/60 bg-background/80 px-4 shadow-lg shadow-black/5 backdrop-blur-md supports-backdrop-filter:bg-background/70 sm:px-6">
-        <Link
-          to="/"
-          className="font-heading text-xl tracking-tight text-foreground"
-        >
-          {siteConfig.name}
+        <Link to="/" className="shrink-0">
+          <img
+            src="/logo.png"
+            alt={siteConfig.name}
+            className="h-10 w-36 rounded-lg object-cover object-center sm:h-11 sm:w-40"
+          />
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">

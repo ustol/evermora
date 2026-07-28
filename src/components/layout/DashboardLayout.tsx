@@ -25,8 +25,12 @@ export function DashboardLayout({
   return (
     <div className="flex min-h-svh flex-col md:flex-row">
       <aside className="flex shrink-0 flex-col gap-1 border-b border-white/10 bg-rich-black px-4 py-6 text-soft-ivory md:w-64 md:border-b-0 md:border-r">
-        <Link to="/" className="mb-6 font-heading text-lg">
-          {siteConfig.name}
+        <Link to="/" className="mb-6 inline-block w-fit rounded-lg bg-soft-ivory p-1.5">
+          <img
+            src="/logo.png"
+            alt={siteConfig.name}
+            className="h-9 w-32 rounded object-cover object-center"
+          />
         </Link>
         <p className="mb-2 px-3 text-xs font-medium tracking-wide text-soft-ivory/50 uppercase">
           {title}

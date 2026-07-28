@@ -17,8 +17,14 @@ export function SiteFooter() {
       <Container className="py-12">
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="font-heading text-lg">{siteConfig.name}</p>
-            <p className="mt-2 max-w-xs text-sm text-soft-ivory/70">
+            <div className="inline-block rounded-lg bg-soft-ivory p-1.5">
+              <img
+                src="/logo.png"
+                alt={siteConfig.name}
+                className="h-9 w-32 rounded object-cover object-center"
+              />
+            </div>
+            <p className="mt-3 max-w-xs text-sm text-soft-ivory/70">
               {siteConfig.tagline}
             </p>
           </div>
