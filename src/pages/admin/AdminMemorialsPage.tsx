@@ -24,7 +24,7 @@ const statusStyles: Record<string, string> = {
   archived: "bg-muted-taupe/10 text-muted-taupe",
 }
 
-function MemorialRow({ memorial }: { memorial: AdminMemorial }) {
+function MemorialTile({ memorial }: { memorial: AdminMemorial }) {
   const supabase = useSupabaseClient()
   const queryClient = useQueryClient()
 
@@ -51,15 +51,15 @@ function MemorialRow({ memorial }: { memorial: AdminMemorial }) {
   })
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5">
       <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to={`/memorials/${memorial.slug}`}
-            className="font-medium text-foreground hover:text-heritage-gold"
-          >
-            {memorial.displayName}
-          </Link>
+        <Link
+          to={`/memorials/${memorial.slug}`}
+          className="block truncate font-medium text-foreground hover:text-heritage-gold"
+        >
+          {memorial.displayName}
+        </Link>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <Badge className={statusStyles[memorial.status]}>{memorial.status}</Badge>
           <Badge variant="outline">{memorial.privacy}</Badge>
           {memorial.isFeatured && <Badge variant="secondary">Featured</Badge>}
@@ -67,13 +67,14 @@ function MemorialRow({ memorial }: { memorial: AdminMemorial }) {
             <Badge className="bg-destructive/10 text-destructive">Suspended</Badge>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
-          Owned by {memorial.ownerDisplayName} · Created{" "}
-          {formatDayMonthYear(memorial.createdAt)}
+        <p className="mt-2 text-sm text-muted-foreground">
+          Owned by {memorial.ownerDisplayName}
+          <br />
+          Created {formatDayMonthYear(memorial.createdAt)}
         </p>
       </div>
 
-      <div className="flex shrink-0 flex-wrap gap-2">
+      <div className="mt-auto flex flex-wrap gap-2 border-t border-border/60 pt-3">
         <Button
           size="sm"
           variant="outline"
@@ -132,15 +133,15 @@ export default function AdminMemorialsPage() {
       {isError ? (
         <ErrorState onRetry={() => refetch()} />
       ) : isLoading ? (
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+            <Skeleton key={i} className="h-44 w-full rounded-2xl" />
           ))}
         </div>
       ) : memorials && memorials.length > 0 ? (
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {memorials.map((memorial) => (
-            <MemorialRow key={memorial.id} memorial={memorial} />
+            <MemorialTile key={memorial.id} memorial={memorial} />
           ))}
         </div>
       ) : (
