@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import MemorialWizardPage from "@/lib/pages/dashboard/MemorialWizardPage";
+import MemorialWizardPage from "@/lib/page-modules/dashboard/MemorialWizardPage";
 
 export default function Page() {
   return (

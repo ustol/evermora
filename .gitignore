@@ -38,3 +38,6 @@ playwright/.cache
 supabase/.temp/.env
 .env
 .next
+
+# clerk configuration (can include secrets)
+/.clerk/

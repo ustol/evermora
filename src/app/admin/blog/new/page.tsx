@@ -1,6 +1,6 @@
 "use client";
 
-import AdminBlogEditorPage from "@/lib/pages/admin/AdminBlogEditorPage";
+import AdminBlogEditorPage from "@/lib/page-modules/admin/AdminBlogEditorPage";
 
 export default function Page() {
   return <AdminBlogEditorPage />;

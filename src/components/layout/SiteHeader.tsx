@@ -1,5 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link"
+import { usePathname } from "next/navigation";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { Menu, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { siteConfig } from "@/config/site"
@@ -13,6 +18,9 @@ const navLinks = [
 ];
 
 export function SiteHeader() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
   return (
     <header className="fixed top-3 right-0 left-0 z-40 px-3 sm:top-4 sm:px-4">
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 rounded-full border border-border/60 bg-background/80 px-4 shadow-lg shadow-black/5 backdrop-blur-md supports-backdrop-filter:bg-background/70 sm:px-6">
@@ -29,42 +37,123 @@ export function SiteHeader() {
             <Link
               key={link.to}
               href={link.to}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className={cn(
+                "text-sm font-medium transition-colors",
+                pathname === link.to || (link.to !== "/" && pathname.startsWith(link.to))
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <SignedOut>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/sign-in"
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/dashboard/memorials/new"
-              className={cn(buttonVariants({ size: "sm" }))}
-            >
-              Create a memorial
-            </Link>
-          </div>
-        </SignedOut>
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex sm:items-center sm:gap-2">
+            <SignedOut>
+              <Link
+                href="/sign-in"
+                className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/dashboard/memorials/new"
+                className={cn(buttonVariants({ size: "sm" }))}
+              >
+                Create a memorial
+              </Link>
+            </SignedOut>
 
-        <SignedIn>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard/memorials/new"
-              className={cn(buttonVariants({ size: "sm" }))}
-            >
-              Create a memorial
-            </Link>
-            <UserButton />
+            <SignedIn>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/dashboard/memorials/new"
+                  className={cn(buttonVariants({ size: "sm" }))}
+                >
+                  Create a memorial
+                </Link>
+                <UserButton />
+              </div>
+            </SignedIn>
           </div>
-        </SignedIn>
+
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-full p-2 text-muted-foreground hover:bg-muted md:hidden"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
       </div>
+
+      {mobileOpen && (
+        <div className="mx-auto mt-2 w-full max-w-5xl rounded-2xl border border-border/60 bg-background p-4 shadow-lg backdrop-blur-md md:hidden">
+          <nav className="flex flex-col gap-2">
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                href={link.to}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  pathname === link.to || (link.to !== "/" && pathname.startsWith(link.to))
+                    ? "bg-heritage-gold/10 text-heritage-gold"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="mt-3 border-t border-border pt-3">
+            <SignedOut>
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/sign-in"
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(buttonVariants({ variant: "ghost" }))}
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/dashboard/memorials/new"
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(buttonVariants())}
+                >
+                  Create a memorial
+                </Link>
+              </div>
+            </SignedOut>
+
+            <SignedIn>
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(buttonVariants())}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/dashboard/memorials/new"
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(buttonVariants({ variant: "outline" }))}
+                >
+                  Create a memorial
+                </Link>
+                <div className="mt-2 flex items-center gap-3">
+                  <UserButton />
+                  <span className="text-sm text-muted-foreground">Your account</span>
+                </div>
+              </div>
+            </SignedIn>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

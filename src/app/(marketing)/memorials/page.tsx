@@ -1,6 +1,6 @@
 "use client";
 
-import MemorialsDirectoryPage from "@/lib/pages/MemorialsDirectoryPage";
+import MemorialsDirectoryPage from "@/lib/page-modules/MemorialsDirectoryPage";
 
 export default function Page() {
   return <MemorialsDirectoryPage />;

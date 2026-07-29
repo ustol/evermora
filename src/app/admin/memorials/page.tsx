@@ -1,6 +1,6 @@
 "use client";
 
-import AdminMemorialsPage from "@/lib/pages/admin/AdminMemorialsPage";
+import AdminMemorialsPage from "@/lib/page-modules/admin/AdminMemorialsPage";
 
 export default function Page() {
   return <AdminMemorialsPage />;
