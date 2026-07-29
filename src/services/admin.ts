@@ -370,3 +370,75 @@ export async function resolveReport(
     .eq("id", params.reportId)
   if (error) throw error
 }
+
+// --- Gift purchases ---
+
+type GiftPurchaseStatus = Database["public"]["Enums"]["gift_purchase_status"]
+
+export interface AdminGiftPurchase {
+  id: string
+  memorialId: string
+  memorialDisplayName: string
+  memorialSlug: string
+  giftName: string
+  purchaserDisplayName: string
+  amount: number
+  currency: string
+  status: GiftPurchaseStatus
+  paystackReference: string
+  createdAt: string
+  paidAt: string | null
+}
+
+export async function listAllGiftPurchases(
+  supabase: SupabaseClient<Database>
+): Promise<AdminGiftPurchase[]> {
+  const { data, error } = await supabase
+    .from("gift_purchases")
+    .select("*")
+    .order("created_at", { ascending: false })
+
+  if (error) throw error
+  const purchases = data ?? []
+
+  const memorialIds = [...new Set(purchases.map((p) => p.memorial_id))]
+  const memorialById = new Map<string, { display_name: string; slug: string }>()
+  if (memorialIds.length > 0) {
+    const { data: memorials, error: memorialsError } = await supabase
+      .from("memorials")
+      .select("id, display_name, slug")
+      .in("id", memorialIds)
+    if (memorialsError) throw memorialsError
+    for (const m of memorials ?? [])
+      memorialById.set(m.id, { display_name: m.display_name, slug: m.slug })
+  }
+
+  const giftCatalogIds = [...new Set(purchases.map((p) => p.gift_catalog_id))]
+  const giftNameById = new Map<string, string>()
+  if (giftCatalogIds.length > 0) {
+    const { data: giftItems, error: giftError } = await supabase
+      .from("gift_catalog")
+      .select("id, name")
+      .in("id", giftCatalogIds)
+    if (giftError) throw giftError
+    for (const g of giftItems ?? []) giftNameById.set(g.id, g.name)
+  }
+
+  return purchases.map((p) => {
+    const memorial = memorialById.get(p.memorial_id)
+    return {
+      id: p.id,
+      memorialId: p.memorial_id,
+      memorialDisplayName: memorial?.display_name ?? "Unknown",
+      memorialSlug: memorial?.slug ?? "",
+      giftName: giftNameById.get(p.gift_catalog_id) ?? "Gift",
+      purchaserDisplayName: p.purchaser_display_name,
+      amount: Number(p.amount),
+      currency: p.currency,
+      status: p.status,
+      paystackReference: p.paystack_reference,
+      createdAt: p.created_at,
+      paidAt: p.paid_at,
+    }
+  })
+}

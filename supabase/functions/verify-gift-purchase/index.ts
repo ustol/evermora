@@ -119,11 +119,25 @@ Deno.serve(async (req) => {
 
     // Only a purchase tied to a signed-in profile needs an ownership check —
     // an anonymous purchase (purchaser_profile_id null) has no owner to
-    // match against, so any caller with its purchaseId may verify it.
+    // match against, so any caller with its purchaseId may verify it. An
+    // admin may also re-verify any purchase (e.g. reconciling one stuck at
+    // pending from before a config fix), not just their own.
     if (purchase.purchaser_profile_id) {
       const ownerClerkId = (purchase as { profiles?: { clerk_user_id?: string } })
         .profiles?.clerk_user_id
-      if (!clerkSub || ownerClerkId !== clerkSub) {
+      const isOwner = !!clerkSub && ownerClerkId === clerkSub
+
+      let isAdmin = false
+      if (!isOwner && clerkSub) {
+        const { data: callerProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("role")
+          .eq("clerk_user_id", clerkSub)
+          .maybeSingle()
+        isAdmin = callerProfile?.role === "admin"
+      }
+
+      if (!isOwner && !isAdmin) {
         return json({ error: "Not your purchase" }, 403)
       }
     }

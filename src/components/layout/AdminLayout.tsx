@@ -8,6 +8,7 @@ const adminNavLinks = [
   { to: "/admin/hero-images", label: "Hero images" },
   { to: "/admin/blog", label: "Blog" },
   { to: "/admin/gifts", label: "Wreaths & roses" },
+  { to: "/admin/gift-purchases", label: "Gift purchases" },
 ]
 
 export function AdminLayout() {

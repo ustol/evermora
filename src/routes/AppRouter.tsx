@@ -31,6 +31,7 @@ import DashboardProfilePage from "@/pages/dashboard/DashboardProfilePage"
 
 import AdminPage from "@/pages/admin/AdminPage"
 import AdminGiftCatalogPage from "@/pages/admin/AdminGiftCatalogPage"
+import AdminGiftPurchasesPage from "@/pages/admin/AdminGiftPurchasesPage"
 import AdminUsersPage from "@/pages/admin/AdminUsersPage"
 import AdminMemorialsPage from "@/pages/admin/AdminMemorialsPage"
 import AdminReportsPage from "@/pages/admin/AdminReportsPage"
@@ -92,6 +93,7 @@ export function AppRouter() {
             <Route path="blog/new" element={<AdminBlogEditorPage />} />
             <Route path="blog/:id/edit" element={<AdminBlogEditorPage />} />
             <Route path="gifts" element={<AdminGiftCatalogPage />} />
+            <Route path="gift-purchases" element={<AdminGiftPurchasesPage />} />
           </Route>
         </Route>
       </Route>
