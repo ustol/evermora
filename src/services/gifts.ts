@@ -109,8 +109,26 @@ export async function verifyGiftPurchase(
   const { data, error } = await supabase.functions.invoke("verify-gift-purchase", {
     body: { purchaseId },
   })
-  if (error) throw error
-  return data as { ok: boolean; reason?: string }
+  // Regardless of HTTP status code, the function always returns structured
+  // JSON. When data is present (2xx response), return it directly.
+  if (data && typeof data === "object") {
+    return data as { ok: boolean; reason?: string }
+  }
+  // For non-2xx responses, supabase-js sets error (FunctionsHttpError)
+  // and data is null. Parse the response body from the error context.
+  if (error) {
+    try {
+      const context = (error as { context?: Response }).context
+      const body = context ? await context.clone().json() : null
+      if (body && typeof body === "object") {
+        return body as { ok: boolean; reason?: string }
+      }
+    } catch {
+      // fall through to throw
+    }
+    throw error
+  }
+  return { ok: false, reason: "unknown" }
 }
 
 // --- Admin catalog management ---
