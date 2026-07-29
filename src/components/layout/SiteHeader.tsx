@@ -17,6 +17,27 @@ const navLinks = [
   ...(SHOW_SERVICES_PAGE ? [{ to: "/services", label: "Services" }] : []),
 ];
 
+/** Always-visible SSR-safe auth buttons — renders the public (signed-out) state
+ *  at server time; Clerk's <SignedOut>/<SignedIn> swap on client hydration. */
+function AuthButtons({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex items-center gap-2", className)}>
+      <Link
+        href="/sign-in"
+        className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+      >
+        Sign in
+      </Link>
+      <Link
+        href="/dashboard/memorials/new"
+        className={cn(buttonVariants({ size: "sm" }))}
+      >
+        Create a memorial
+      </Link>
+    </div>
+  );
+}
+
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
@@ -50,34 +71,8 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <div className="hidden sm:flex sm:items-center sm:gap-2">
-            <SignedOut>
-              <Link
-                href="/sign-in"
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/dashboard/memorials/new"
-                className={cn(buttonVariants({ size: "sm" }))}
-              >
-                Create a memorial
-              </Link>
-            </SignedOut>
-
-            <SignedIn>
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/dashboard/memorials/new"
-                  className={cn(buttonVariants({ size: "sm" }))}
-                >
-                  Create a memorial
-                </Link>
-                <UserButton />
-              </div>
-            </SignedIn>
-          </div>
+          {/* Desktop — Clerk-controlled, SSR fallback from plain <AuthButtons> */}
+          <AuthButtons className="hidden sm:flex" />
 
           <button
             type="button"
@@ -109,48 +104,21 @@ export function SiteHeader() {
               </Link>
             ))}
           </nav>
-          <div className="mt-3 border-t border-border pt-3">
-            <SignedOut>
-              <div className="flex flex-col gap-2">
-                <Link
-                  href="/sign-in"
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(buttonVariants({ variant: "ghost" }))}
-                >
-                  Sign in
-                </Link>
-                <Link
-                  href="/dashboard/memorials/new"
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(buttonVariants())}
-                >
-                  Create a memorial
-                </Link>
-              </div>
-            </SignedOut>
-
-            <SignedIn>
-              <div className="flex flex-col gap-2">
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(buttonVariants())}
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/dashboard/memorials/new"
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(buttonVariants({ variant: "outline" }))}
-                >
-                  Create a memorial
-                </Link>
-                <div className="mt-2 flex items-center gap-3">
-                  <UserButton />
-                  <span className="text-sm text-muted-foreground">Your account</span>
-                </div>
-              </div>
-            </SignedIn>
+          <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
+            <Link
+              href="/sign-in"
+              onClick={() => setMobileOpen(false)}
+              className={cn(buttonVariants({ variant: "ghost" }))}
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/dashboard/memorials/new"
+              onClick={() => setMobileOpen(false)}
+              className={cn(buttonVariants())}
+            >
+              Create a memorial
+            </Link>
           </div>
         </div>
       )}
