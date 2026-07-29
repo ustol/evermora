@@ -1,8 +1,0 @@
-{
-  "pages": {},
-  "app": {
-    "[project]/src/app/(marketing)/blog/page": []
-  },
-  "appUsingSizeAdjust": false,
-  "pagesUsingSizeAdjust": false
-}

@@ -1,8 +1,0 @@
-{
-  "pages": {},
-  "app": {
-    "[project]/src/app/admin/gift-purchases/page": []
-  },
-  "appUsingSizeAdjust": false,
-  "pagesUsingSizeAdjust": false
-}

@@ -1,3 +1,0 @@
-module.exports=[85685,a=>{"use strict";var b=a.i(44326),c=a.i(68995),d=a.i(53563),e=a.i(18e3),f=a.i(68114);function g(){let a=(0,e.useSearchParams)(),c=(0,f.sanitizeRedirectPath)(a?.get("redirect_url"));return(0,b.jsx)(d.SignIn,{fallbackRedirectUrl:"/dashboard",forceRedirectUrl:c})}a.s(["default",0,function(){return(0,b.jsx)(c.Suspense,{fallback:(0,b.jsx)("div",{className:"flex justify-center py-20",children:"Loading…"}),children:(0,b.jsx)(g,{})})}])}];
-
-//# sourceMappingURL=src_app_%28auth%29_sign-in_page_tsx_1j4-gxo._.js.map

@@ -1,1 +1,0 @@
-(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,53523,t=>{"use strict";t.s(["ReactQueryDevtools",0,function(){return null},"ReactQueryDevtoolsPanel",0,function(){return null}])}]);
