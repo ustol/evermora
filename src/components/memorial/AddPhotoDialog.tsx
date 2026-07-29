@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
-import { Link } from "react-router-dom"
-import { useUser } from "@clerk/react"
+import Link from "next/link"
+import { useUser } from "@clerk/nextjs"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { ImagePlus } from "lucide-react"
 import { toast } from "sonner"
@@ -108,7 +108,7 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
     const redirectUrl = sanitizeRedirectPath(`/memorials/${slug}`)
     return (
       <Link
-        to={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
+        href={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
         className={cn(buttonVariants({ variant: "outline" }))}
       >
         <ImagePlus className="size-4" aria-hidden="true" />

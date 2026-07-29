@@ -1,0 +1,6 @@
+{
+  "/(marketing)/about/page": "app/(marketing)/about/page.js",
+  "/(marketing)/page": "app/(marketing)/page.js",
+  "/api/verify-gift-purchase/route": "app/api/verify-gift-purchase/route.js",
+  "/dashboard/page": "app/dashboard/page.js"
+}

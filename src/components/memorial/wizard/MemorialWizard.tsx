@@ -1,5 +1,5 @@
+import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
 import { Container } from "@/components/layout/Container"
@@ -62,8 +62,8 @@ function toFuneralEventValues(event: FuneralEvent): FuneralEventValues {
 }
 
 export function MemorialWizard({ memorialId }: MemorialWizardProps) {
-  const navigate = useNavigate()
-  const location = useLocation()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = useSupabaseClient()
   const { data: profile, isLoading: profileLoading } = useProfile()
 
@@ -71,8 +71,10 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
   // mounts a fresh wizard instance — the step to resume at rides along in
   // navigation state so the user lands on step 2 instead of back on step 1.
   const [step, setStep] = useState<number>(() => {
-    const state = location.state as { step?: number } | null
-    return state?.step ?? 1
+    const initialStep = searchParams?.get("step")
+      ? Number(searchParams.get("step"))
+      : undefined
+    return initialStep ?? 1
   })
   const [memorial, setMemorial] = useState<Memorial | null>(null)
   const [events, setEvents] = useState<FuneralEventValues[]>([])
@@ -118,10 +120,7 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
           slug
         )
         setMemorial(created)
-        navigate(`/dashboard/memorials/${created.id}/edit`, {
-          replace: true,
-          state: { step: 2 },
-        })
+        router.replace(`/dashboard/memorials/${created.id}/edit?step=2`)
       } else {
         const updated = await updateMemorial(
           supabase,
@@ -216,7 +215,7 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
         privacySettingsToPatch(values)
       )
       toast.success("Draft saved. You can come back and finish it any time.")
-      navigate("/dashboard/memorials")
+      router.push("/dashboard/memorials")
     } catch {
       toast.error("Couldn't save your settings. Please try again.")
     } finally {
@@ -245,7 +244,7 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
       } else {
         toast.success("Memorial published.")
       }
-      navigate(`/memorials/${values.slug}`)
+      router.push(`/memorials/${values.slug}`)
     } catch {
       toast.error("Couldn't publish this memorial. Please try again.")
     } finally {

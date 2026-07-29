@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/dashboard/layout,_N_T_/dashboard/memorials/layout,_N_T_/dashboard/memorials/new/layout,_N_T_/dashboard/memorials/new/page,_N_T_/dashboard/memorials/new"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/dashboard/memorials/new/__PAGE__",
+    "/dashboard/memorials/new",
+    "/dashboard/memorials",
+    "/dashboard",
+    "/_index",
+    "/_head"
+  ]
+}

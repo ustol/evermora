@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/react"
+import { useUser } from "@clerk/nextjs"
 import { useQuery } from "@tanstack/react-query"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import type { Database } from "@/types/supabase"

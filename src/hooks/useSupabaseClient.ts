@@ -1,7 +1,6 @@
 import { useMemo } from "react"
-import { useSession } from "@clerk/react"
+import { useSession } from "@clerk/nextjs"
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
-import { env } from "@/config/env"
 import type { Database } from "@/types/supabase"
 
 /**
@@ -15,8 +14,9 @@ export function useSupabaseClient(): SupabaseClient<Database> {
   return useMemo(
     () =>
       createClient<Database>(
-        env.VITE_SUPABASE_URL,
-        env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        // These NEXT_PUBLIC_ vars are exposed to the browser
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
         {
           async accessToken() {
             return (await session?.getToken()) ?? null

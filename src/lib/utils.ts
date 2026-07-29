@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
  * `?redirect_url=` query param) so an attacker can't craft a sign-in link
  * that bounces an authenticated user off-site.
  */
-export function sanitizeRedirectPath(path: string | null): string | undefined {
+export function sanitizeRedirectPath(path: string | null | undefined): string | undefined {
   if (!path) return undefined
   if (!path.startsWith("/") || path.startsWith("//")) return undefined
   if (path.includes("://")) return undefined

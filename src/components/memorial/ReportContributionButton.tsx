@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Flag } from "lucide-react"
-import { useUser } from "@clerk/react"
+import { useUser } from "@clerk/nextjs"
 import { toast } from "sonner"
 import { useMutation } from "@tanstack/react-query"
 import {

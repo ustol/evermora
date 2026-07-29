@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Flag } from "lucide-react"
-import { useUser } from "@clerk/react"
-import { Link } from "react-router-dom"
+import { useUser } from "@clerk/nextjs"
+import Link from "next/link"
 import { toast } from "sonner"
 import { useMutation } from "@tanstack/react-query"
 import {
@@ -70,7 +70,7 @@ export function ReportMemorialDialog({
     const redirectUrl = sanitizeRedirectPath(`/memorials/${slug}`)
     return (
       <Link
-        to={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
+        href={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <Flag className="size-3.5" aria-hidden="true" />

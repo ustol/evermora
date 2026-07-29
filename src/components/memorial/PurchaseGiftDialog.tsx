@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Flower2 } from "lucide-react"
 import { toast } from "sonner"
-import PaystackPop from "@paystack/inline-js"
 import {
   Dialog,
   DialogContent,
@@ -23,7 +22,6 @@ import {
   createPendingGiftPurchase,
   verifyGiftPurchase,
 } from "@/services/gifts"
-import { env } from "@/config/env"
 import { cn } from "@/lib/utils"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -85,9 +83,10 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
         purchaserDisplayName: displayName.trim(),
       })
 
+      const PaystackPop = (await import("@paystack/inline-js")).default
       const paystack = new PaystackPop()
       paystack.newTransaction({
-        key: env.VITE_PAYSTACK_PUBLIC_KEY,
+        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
         email: purchaserEmail,
         amount: Math.round(gift.price * 100),
         currency: gift.currency,

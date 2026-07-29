@@ -1,8 +1,11 @@
-import { Link } from "react-router-dom"
-import { UserRound, Eye, Pencil, Settings, MessageSquareText, Images, Trash2 } from "lucide-react"
-import { toast } from "sonner"
+import Link from "next/link"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
+import { formatLifespanYears } from "@/lib/date"
+import { cn } from "@/lib/utils"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
+import { deleteMemorial } from "@/services/memorials"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,69 +17,91 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { formatLifespanYears } from "@/lib/date"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { deleteMemorial } from "@/services/memorials"
+import {
+  Eye,
+  Pencil,
+  MessageSquareText,
+  Images,
+  Settings,
+  Trash2,
+  Globe,
+  Lock,
+  EyeOff,
+} from "lucide-react"
+
 import type { MemorialWithPhoto } from "@/services/memorials"
 
 interface OwnerMemorialCardProps {
-  memorial: MemorialWithPhoto
+  memorial: MemorialWithPhoto & {
+    visibility?: "public" | "unlisted" | "private"
+  }
 }
 
-const statusStyles: Record<string, string> = {
-  draft: "bg-muted text-muted-foreground",
-  published: "bg-success/10 text-success",
-  archived: "bg-muted-taupe/10 text-muted-taupe",
-}
-
-const statusLabels: Record<string, string> = {
-  draft: "Draft",
-  published: "Published",
-  archived: "Archived",
-}
-
+/**
+ * A card for the dashboard showing a memorial the current user owns, with
+ * action links for edit/moderate/photos/settings and a delete confirmation.
+ */
 export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
-  const lifespan = formatLifespanYears(memorial.date_of_birth, memorial.date_of_death)
   const supabase = useSupabaseClient()
   const queryClient = useQueryClient()
+
+  const lifespan = formatLifespanYears(memorial.date_of_birth, memorial.date_of_death)
+
+  const visibilityIcon = {
+    public: Globe,
+    unlisted: EyeOff,
+    private: Lock,
+  } as const
+  const VisibilityIcon = memorial.visibility
+    ? visibilityIcon[memorial.visibility]
+    : undefined
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteMemorial(supabase, memorial.id),
     onSuccess: () => {
-      toast.success(`"${memorial.display_name}" has been deleted.`)
       queryClient.invalidateQueries({ queryKey: ["owner-memorials"] })
-      queryClient.invalidateQueries({ queryKey: ["owner-dashboard-stats"] })
+      toast.success("Memorial deleted")
     },
-    onError: () => {
-      toast.error("Couldn't delete this memorial. Please try again.")
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to delete memorial")
     },
   })
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="flex items-start gap-4 p-5">
-        <div className="size-16 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex gap-5 p-5">
+        <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-muted sm:size-24">
           {memorial.photoUrl ? (
             <img
               src={memorial.photoUrl}
-              alt=""
+              alt={memorial.primary_photo_alt ?? memorial.display_name}
               className="size-full object-cover"
             />
           ) : (
             <div className="flex size-full items-center justify-center text-muted-foreground">
-              <UserRound className="size-7" aria-hidden="true" />
+              <Images className="size-8" aria-hidden="true" />
             </div>
           )}
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-center gap-2">
             <h3 className="truncate font-heading text-lg text-foreground">
               {memorial.display_name}
             </h3>
-            <Badge className={statusStyles[memorial.status]}>
-              {statusLabels[memorial.status]}
-            </Badge>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                memorial.status === "published" && "bg-success/10 text-success",
+                memorial.status === "draft" && "bg-muted text-muted-foreground",
+                (memorial.status as string) === "unpublished" && "bg-destructive/10 text-destructive"
+              )}
+            >
+              {memorial.status}
+            </span>
+            {memorial.visibility !== "public" && memorial.visibility && VisibilityIcon && (
+              <VisibilityIcon className="size-3.5 shrink-0 text-muted-foreground" aria-label={memorial.visibility} />
+            )}
           </div>
           {lifespan && <p className="text-sm text-muted-foreground">{lifespan}</p>}
         </div>
@@ -85,7 +110,7 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
       <div className="flex flex-wrap gap-2 border-t border-border/60 bg-muted/30 px-5 py-3">
         {memorial.status === "published" && (
           <Link
-            to={`/memorials/${memorial.slug}`}
+            href={`/memorials/${memorial.slug}`}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
           >
             <Eye className="size-4" aria-hidden="true" />
@@ -93,28 +118,28 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
           </Link>
         )}
         <Link
-          to={`/dashboard/memorials/${memorial.id}/edit`}
+          href={`/dashboard/memorials/${memorial.id}/edit`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
         >
           <Pencil className="size-4" aria-hidden="true" />
           Edit
         </Link>
         <Link
-          to={`/dashboard/memorials/${memorial.id}/content`}
+          href={`/dashboard/memorials/${memorial.id}/content`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
         >
           <MessageSquareText className="size-4" aria-hidden="true" />
           Moderate
         </Link>
         <Link
-          to={`/dashboard/memorials/${memorial.id}/gallery`}
+          href={`/dashboard/memorials/${memorial.id}/gallery`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
         >
           <Images className="size-4" aria-hidden="true" />
           Photos
         </Link>
         <Link
-          to={`/dashboard/memorials/${memorial.id}/settings`}
+          href={`/dashboard/memorials/${memorial.id}/settings`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
         >
           <Settings className="size-4" aria-hidden="true" />
@@ -154,6 +179,27 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+      </div>
+    </div>
+  )
+}
+
+export function OwnerMemorialCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="flex gap-5 p-5">
+        <Skeleton className="size-20 shrink-0 rounded-xl sm:size-24" />
+        <div className="flex flex-1 flex-col gap-2">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+      <div className="flex gap-3 border-t border-border/60 bg-muted/30 px-5 py-3">
+        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-4 w-14" />
+        <Skeleton className="h-4 w-16" />
       </div>
     </div>
   )

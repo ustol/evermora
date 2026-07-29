@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import Link from "next/link"
 import { Container } from "@/components/layout/Container"
 import { siteConfig } from "@/config/site"
 import { SHOW_SERVICES_PAGE } from "@/config/featureFlags"
@@ -33,7 +33,7 @@ export function SiteFooter() {
             {footerLinks.map((link) => (
               <Link
                 key={link.to}
-                to={link.to}
+                href={link.to}
                 className="text-sm text-soft-ivory/80 transition-colors hover:text-heritage-gold"
               >
                 {link.label}

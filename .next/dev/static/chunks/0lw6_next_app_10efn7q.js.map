@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["file:///__modal/volumes/vo-Mc7QHR01D6bv3d9EG7h6uq/node_modules/.pnpm/next%4016.2.12_%40babel%2Bcore%407.29.7_supports-color%407.2.0__%40playwright%2Btest%401.62.0_react-dom_9af59b2006eaf5f49a6177e590ea8081/node_modules/next/app.js"],"sourcesContent":["module.exports = require('./dist/pages/_app')\n"],"names":["module","exports"],"mappings":"AAAAA,OAAOC,OAAO","ignoreList":[0]}}]
+}
