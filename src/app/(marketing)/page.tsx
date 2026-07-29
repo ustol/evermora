@@ -100,6 +100,8 @@ export default function HomePage() {
     retry: false,
   })
   const hasHeroImages = !!heroImages && heroImages.length > 0
+  // Always show the dark hero backdrop (images or gradient fallback)
+  const heroImagesOrDefault = heroImages ?? []
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["public-stats"],
@@ -117,26 +119,16 @@ export default function HomePage() {
 
   return (
     <div>
-      <section className="relative -mt-24 overflow-hidden border-b border-border/60 bg-soft-ivory pt-24">
-        {hasHeroImages && <HeroBackground images={heroImages} />}
+      <section className="relative -mt-24 overflow-hidden border-b border-border/60 bg-obsidian pt-24">
+        <HeroBackground images={heroImagesOrDefault} />
         <Container className="relative z-10 flex flex-col items-center gap-6 py-20 text-center sm:py-28">
-          <p
-            className={cn(
-              "text-sm font-medium tracking-wide uppercase",
-              hasHeroImages ? "text-warm-gold" : "text-heritage-gold"
-            )}
-          >
+          <p className="text-sm font-medium tracking-wide text-warm-gold uppercase">
             {siteConfig.tagline}
           </p>
-          <h1
-            className={cn(
-              "max-w-2xl font-heading text-4xl sm:text-5xl",
-              hasHeroImages ? "text-white" : "text-foreground"
-            )}
-          >
+          <h1 className="max-w-2xl font-heading text-4xl text-white sm:text-5xl">
             A dignified place to announce a funeral and gather the memories that matter
           </h1>
-          <p className={cn("max-w-xl", hasHeroImages ? "text-white/80" : "text-muted-foreground")}>
+          <p className="max-w-xl text-white/80">
             {siteConfig.description}
           </p>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
@@ -144,7 +136,7 @@ export default function HomePage() {
               href="/dashboard/memorials/new"
               className={cn(
                 buttonVariants({ size: "lg" }),
-                hasHeroImages && "bg-warm-gold text-obsidian hover:bg-warm-gold/90"
+                "bg-warm-gold text-obsidian hover:bg-warm-gold/90"
               )}
             >
               Create a Memorial
@@ -153,7 +145,7 @@ export default function HomePage() {
               href="/memorials"
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
-                hasHeroImages && "border-white/40 bg-white/10 text-white hover:bg-white/20"
+                "border-white/40 bg-white/10 text-white hover:bg-white/20"
               )}
             >
               Find a Memorial
