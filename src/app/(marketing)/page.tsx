@@ -24,6 +24,7 @@ import { HeroBackground } from "@/components/marketing/HeroBackground";
 import { buttonVariants } from "@/components/ui/button";
 import { useHighlightedMemorials } from "@/hooks/useMemorials";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
+import { getPublicSupabaseClient } from "@/lib/supabase-public";
 import { listHeroImages } from "@/services/heroImages";
 import { getPublicStats } from "@/services/publicStats";
 import { siteConfig } from "@/config/site";
@@ -93,19 +94,18 @@ const steps = [
 export default function HomePage() {
   const { data: highlighted, isLoading } = useHighlightedMemorials()
   const supabase = useSupabaseClient()
+  const publicSupabase = getPublicSupabaseClient()
   const { data: heroImages } = useQuery({
     queryKey: ["hero-images", "public"],
-    queryFn: () => listHeroImages(supabase),
+    queryFn: () => listHeroImages(publicSupabase),
     staleTime: 5 * 60_000,
-    retry: false,
+    retry: 2,
   })
-  const hasHeroImages = !!heroImages && heroImages.length > 0
-  // Always show the dark hero backdrop (images or gradient fallback)
   const heroImagesOrDefault = heroImages ?? []
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["public-stats"],
-    queryFn: () => getPublicStats(supabase),
+    queryFn: () => getPublicStats(publicSupabase),
     staleTime: 5 * 60_000,
     retry: false,
   })
