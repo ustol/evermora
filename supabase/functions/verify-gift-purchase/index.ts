@@ -37,13 +37,25 @@ interface PaystackVerifyResult {
 async function verifyPaystackTransaction(
   reference: string,
   secretKey: string
-): Promise<PaystackVerifyResult> {
+): Promise<PaystackVerifyResult | null> {
   const response = await fetch(
     `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
     { headers: { Authorization: `Bearer ${secretKey}` } }
   )
 
+  if (response.status === 404) {
+    return null
+  }
+
   const body = await response.json()
+
+  // Paystack test mode returns 400 with body.message "Transaction reference
+  // not found" when the reference hasn't been indexed yet — this is the
+  // same "not yet created" state as 404, just a different status code.
+  if (body?.message === "Transaction reference not found") {
+    return null
+  }
+
   if (!response.ok || !body?.status) {
     throw new Error(body?.message ?? `Paystack verify failed (${response.status})`)
   }
@@ -133,6 +145,20 @@ Deno.serve(async (req) => {
     }
 
     const verified = await verifyPaystackTransaction(purchase.paystack_reference, secretKey)
+
+    // Transaction not indexed by Paystack yet — onSuccess fires before
+    // Paystack's backend has processed the tx. Return "pending" so the
+    // UI shows a friendly message. The paystack-webhook backstop will
+    // finalize the sale once Paystack calls us.
+    if (!verified) {
+      // Ensure status is 'pending' even if some trigger set it differently
+      await supabaseAdmin
+        .from("gift_purchases")
+        .update({ status: "pending" })
+        .eq("id", purchase.id)
+      return json({ ok: false, reason: "pending" }, 200)
+    }
+
     const expectedAmountMinorUnits = Math.round(Number(purchase.amount) * 100)
     const isGenuinelyPaid =
       verified.status === "success" &&

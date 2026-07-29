@@ -92,8 +92,19 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
         amount: Math.round(gift.price * 100),
         currency: gift.currency,
         reference: purchase.paystackReference,
-        onSuccess: async () => {
+        onSuccess: async (transaction?: { reference?: string }) => {
           try {
+            // Paystack may have modified our reference (if it contained
+            // invalid characters). Update the DB with the actual reference
+            // Paystack used so verification finds the right transaction.
+            const paystackReference = transaction?.reference
+            if (paystackReference && paystackReference !== purchase.paystackReference) {
+              await supabase
+                .from("gift_purchases")
+                .update({ paystack_reference: paystackReference })
+                .eq("id", purchase.id)
+            }
+
             const result = await verifyGiftPurchase(supabase, purchase.id)
             if (result.ok) {
               toast.success(
@@ -106,14 +117,47 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
               setOpen(false)
               setSelectedGiftId(null)
             } else {
+              const reason =
+                (result as { reason?: string }).reason || "unknown"
+              if (reason === "pending") {
+                toast.info(
+                  "Your payment is being processed. The gift should appear shortly."
+                )
+              } else {
+                toast.error(
+                  "We couldn't confirm your payment yet — it may take a moment to appear."
+                )
+              }
+            }
+          } catch (error) {
+            // Try to extract a reason from the error for a better message
+            let reason = "unknown"
+            try {
+              const context = (error as { context?: Response }).context
+              const body = context ? await context.clone().json() : null
+              if (body?.reason) reason = body.reason
+            } catch {
+              // use default
+            }
+            if (reason === "verification_mismatch") {
               toast.error(
                 "We couldn't confirm your payment yet — it may take a moment to appear."
               )
+            } else if (reason === "already_paid") {
+              toast.success(
+                `Your ${gift.name.toLowerCase()} has been successfully placed on the memorial.`
+              )
+              await queryClient.invalidateQueries({
+                queryKey: ["memorial-gifts", memorialId],
+              })
+              onPurchased?.(purchase.id)
+              setOpen(false)
+              setSelectedGiftId(null)
+            } else {
+              toast.error(
+                "We couldn't confirm your payment. Contact support if you were charged."
+              )
             }
-          } catch {
-            toast.error(
-              "We couldn't confirm your payment. Contact support if you were charged."
-            )
           } finally {
             setSubmitting(false)
           }

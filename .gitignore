@@ -29,3 +29,10 @@ playwright/.cache
 *.njsproj
 *.sln
 *.sw?
+
+# anedai sandbox artifacts
+.aned-dev.log
+.aned-docs.log
+
+# Supabase CLI temp files
+supabase/.temp/
