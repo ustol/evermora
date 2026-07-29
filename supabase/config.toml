@@ -1,0 +1,8 @@
+# Edge Function settings. verify_jwt defaults to true; Paystack's webhook
+# carries no Clerk/Supabase session, so it's the exception — its own
+# HMAC signature check (see paystack-webhook/index.ts) is the real gate.
+[functions.paystack-webhook]
+verify_jwt = false
+
+[functions.verify-gift-purchase]
+verify_jwt = true

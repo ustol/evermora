@@ -1,0 +1,57 @@
+import { Link } from "react-router-dom"
+import { Container } from "@/components/layout/Container"
+import { siteConfig } from "@/config/site"
+import { SHOW_SERVICES_PAGE } from "@/config/featureFlags"
+
+const footerLinks = [
+  { to: "/about", label: "About" },
+  ...(SHOW_SERVICES_PAGE ? [{ to: "/services", label: "Services" }] : []),
+  { to: "/memorials", label: "Find a memorial" },
+  { to: "/privacy", label: "Privacy policy" },
+  { to: "/terms", label: "Terms & conditions" },
+]
+
+export function SiteFooter() {
+  return (
+    <footer className="border-t border-white/10 bg-obsidian text-soft-ivory">
+      <Container className="py-12">
+        <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="inline-block rounded-lg bg-soft-ivory p-1.5">
+              <img
+                src="/logo.png"
+                alt={siteConfig.name}
+                className="h-9 w-32 rounded object-cover object-center"
+              />
+            </div>
+            <p className="mt-3 max-w-xs text-sm text-soft-ivory/70">
+              {siteConfig.tagline}
+            </p>
+          </div>
+
+          <nav className="flex flex-wrap gap-x-6 gap-y-2">
+            {footerLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="text-sm text-soft-ivory/80 transition-colors hover:text-heritage-gold"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        <div className="mt-10 flex flex-col gap-1 text-xs text-soft-ivory/50">
+          <p>
+            &copy; {new Date().getFullYear()} {siteConfig.name}. All rights
+            reserved.
+          </p>
+          <p>
+            {siteConfig.name} is a product of {siteConfig.parentCompany}
+          </p>
+        </div>
+      </Container>
+    </footer>
+  )
+}
