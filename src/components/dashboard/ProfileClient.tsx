@@ -41,26 +41,18 @@ export function ProfileClient() {
     setError("");
     setMessage("");
     try {
-      const ext = file.name.split(".").pop() ?? "png";
-      const filePath = `avatars/${user.id}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("profile-images")
-        .upload(filePath, file, { upsert: true });
-      if (uploadError) throw uploadError;
+      const formData = new FormData();
+      formData.append("file", file);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("profile-images")
-        .getPublicUrl(filePath);
+      const res = await fetch("/api/profile/avatar", { method: "POST", body: formData });
+      const json = await res.json();
 
-      const { data: updatedUser, error: updateError } = await supabase.auth.updateUser({
-        data: { avatar_url: publicUrl },
-      });
-      if (updateError) throw updateError;
+      if (!res.ok) throw new Error(json.error ?? "Upload failed");
 
-      setUser(updatedUser.user);
+      setUser(json.user);
       setMessage("Profile picture updated.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to upload profile picture. Check storage permissions.");
+      setError(err instanceof Error ? err.message : "Failed to upload profile picture. Check server configuration.");
     } finally {
       setAvatarUploading(false);
       if (fileRef.current) fileRef.current.value = "";
