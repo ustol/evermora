@@ -7,8 +7,8 @@ const nextConfig: NextConfig = {
     },
   },
   allowedDevOrigins: [
-    "ta-01kyrwy4rm9x6w172qe12p3mzs-3000-ckdhcze8csmibj54wx6s55z1f.w.modal.host",
     "localhost",
+    "ta-01kysh6snzwchh7e7t73j7xets-3000-1fbrb7wojjjzllulsqnu8hsrp.w.modal.host",
   ],
 };
 

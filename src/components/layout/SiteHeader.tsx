@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link"
 import { usePathname } from "next/navigation";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 import { Menu, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -23,23 +22,18 @@ const navLinks = [
 function AuthButtons({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <SignedOut>
-        <Link
-          href="/sign-in"
-          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-        >
-          Sign in
-        </Link>
-      </SignedOut>
+      <Link
+        href="/sign-in"
+        className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+      >
+        Sign in
+      </Link>
       <Link
         href="/dashboard/memorials/new"
         className={cn(buttonVariants({ size: "sm" }))}
       >
         Create a memorial
       </Link>
-      <SignedIn>
-        <UserButton afterSignOutUrl="/" />
-      </SignedIn>
     </div>
   );
 }
@@ -111,15 +105,13 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-            <SignedOut>
-              <Link
-                href="/sign-in"
-                onClick={() => setMobileOpen(false)}
-                className={cn(buttonVariants({ variant: "ghost" }))}
-              >
-                Sign in
-              </Link>
-            </SignedOut>
+            <Link
+              href="/sign-in"
+              onClick={() => setMobileOpen(false)}
+              className={cn(buttonVariants({ variant: "ghost" }))}
+            >
+              Sign in
+            </Link>
             <Link
               href="/dashboard/memorials/new"
               onClick={() => setMobileOpen(false)}
