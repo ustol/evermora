@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/types/supabase";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { syncProfileForUser } from "@/lib/profile-resolver";
+import { getSupabaseCookieOptions } from "@/lib/supabase-cookie-options";
 import { sanitizeRedirectPath } from "@/lib/utils";
 
 function redirectTo(_req: NextRequest, path: string) {
@@ -32,13 +33,17 @@ export async function POST(req: NextRequest) {
     supabaseUrl,
     supabaseKey,
     {
+      cookieOptions: getSupabaseCookieOptions(req.nextUrl, req.headers),
       cookies: {
         getAll() {
           return req.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, headers = {}) {
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
+          });
+          Object.entries(headers).forEach(([key, value]) => {
+            response.headers.set(key, value);
           });
         },
       },
