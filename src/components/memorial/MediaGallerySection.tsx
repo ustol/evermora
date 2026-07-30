@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useState } from "react";
 import { Images } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { AddPhotoDialog } from "@/components/memorial/AddPhotoDialog";
 import { MediaLightbox } from "@/components/memorial/MediaLightbox";
 
@@ -12,14 +10,13 @@ interface MediaGallerySectionProps {
   slug: string;
   allowContributorPhotos: boolean;
   requireApproval: boolean;
-}
-
-interface Photo {
-  id: string;
-  url: string;
-  caption: string | null;
-  altText: string | null;
-  sortOrder: number;
+  initialGallery?: Array<{
+    id: string;
+    url: string;
+    caption: string | null;
+    altText: string | null;
+    sortOrder: number;
+  }>;
 }
 
 export function MediaGallerySection({
@@ -27,45 +24,12 @@ export function MediaGallerySection({
   slug,
   allowContributorPhotos,
   requireApproval,
+  initialGallery = [],
 }: MediaGallerySectionProps) {
-  const [photos, setPhotos] = useState<Photo[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [photos, setPhotos] = useState(initialGallery);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { persistSession: false } }
-    );
-    supabase
-      .from("memorial_media")
-      .select("*")
-      .eq("memorial_id", memorialId)
-      .in("status", ["approved", "auto_approved"])
-      .order("sort_order", { ascending: true })
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("media fetch error:", error);
-          setPhotos([]);
-        } else {
-          setPhotos(
-            (data ?? []).map((row: any) => ({
-              id: row.id,
-              url: row.storage_path
-                ? supabase.storage.from("memorial-media").getPublicUrl(row.storage_path).data.publicUrl
-                : "",
-              caption: row.caption,
-              altText: row.alt_text,
-              sortOrder: row.sort_order,
-            }))
-          );
-        }
-        setLoading(false);
-      });
-  }, [memorialId]);
-
-  if (!loading && (!photos || photos.length === 0) && !allowContributorPhotos) {
+  if (photos.length === 0 && !allowContributorPhotos) {
     return null;
   }
 
@@ -83,13 +47,7 @@ export function MediaGallerySection({
       </div>
 
       <div className="mt-6">
-        {loading ? (
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="aspect-square w-full rounded-lg" />
-            ))}
-          </div>
-        ) : photos && photos.length > 0 ? (
+        {photos.length > 0 ? (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {photos.map((photo, index) => (
               <button
@@ -103,11 +61,17 @@ export function MediaGallerySection({
                 }
                 className="aspect-square overflow-hidden rounded-lg border border-border bg-muted"
               >
-                <img
-                  src={photo.url}
-                  alt=""
-                  className="size-full object-cover transition-transform hover:scale-105"
-                />
+                {photo.url ? (
+                  <img
+                    src={photo.url}
+                    alt=""
+                    className="size-full object-cover transition-transform hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center">
+                    <Images className="size-6 text-muted-foreground" />
+                  </div>
+                )}
               </button>
             ))}
           </div>

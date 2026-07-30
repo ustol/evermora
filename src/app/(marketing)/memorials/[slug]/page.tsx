@@ -35,6 +35,36 @@ function getAdminSupabase() {
   );
 }
 
+async function createSignedUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  try {
+    const admin = getAdminSupabase();
+    const { data } = await admin.storage
+      .from("memorial-media")
+      .createSignedUrls([path], 3600);
+    return data?.[0]?.signedUrl ?? null;
+  } catch {
+    return getSupabase().storage.from("memorial-media").getPublicUrl(path).data.publicUrl;
+  }
+}
+
+async function createSignedUrls(paths: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (paths.length === 0) return map;
+  try {
+    const admin = getAdminSupabase();
+    const { data } = await admin.storage
+      .from("memorial-media")
+      .createSignedUrls(paths, 3600);
+    for (const entry of data ?? []) {
+      if (entry.path && entry.signedUrl) map.set(entry.path, entry.signedUrl);
+    }
+  } catch (e) {
+    console.error("signed URLs failed", e);
+  }
+  return map;
+}
+
 async function fetchMemorial(slug: string) {
   const supabase = getSupabase();
   const { data: memorial, error } = await supabase
@@ -45,26 +75,96 @@ async function fetchMemorial(slug: string) {
 
   if (error || !memorial || memorial.status !== "published") return null;
 
-  let photoUrl: string | null = null;
-  if (memorial.primary_photo_path) {
-    try {
-      const admin = getAdminSupabase();
-      const { data: signed } = await admin.storage
-        .from("memorial-media")
-        .createSignedUrls([memorial.primary_photo_path], 3600);
-      photoUrl = signed?.[0]?.signedUrl ?? null;
-    } catch {
-      photoUrl = supabase.storage.from("memorial-media").getPublicUrl(memorial.primary_photo_path).data.publicUrl;
-    }
-  }
+  const [photoUrl, events] = await Promise.all([
+    createSignedUrl(memorial.primary_photo_path),
+    supabase
+      .from("funeral_events")
+      .select("*")
+      .eq("memorial_id", memorial.id)
+      .order("start_time", { ascending: true })
+      .then(({ data }) => data ?? []),
+  ]);
 
-  const { data: events } = await supabase
-    .from("funeral_events")
+  // Gifts
+  const { data: giftPurchases } = await supabase
+    .from("gift_purchases")
     .select("*")
     .eq("memorial_id", memorial.id)
-    .order("start_time", { ascending: true });
+    .eq("status", "paid")
+    .order("created_at", { ascending: false });
 
-  return { memorial, photoUrl, events: events ?? [] };
+  const giftCatalogIds = [...new Set((giftPurchases ?? []).map((g: any) => g.gift_catalog_id))];
+  const { data: catalogGifts } = giftCatalogIds.length > 0
+    ? await supabase.from("gift_catalog").select("*").in("id", giftCatalogIds)
+    : { data: [] };
+
+  const giftMap = new Map((catalogGifts ?? []).map((g: any) => [g.id, g]));
+  const giftImagePaths = (catalogGifts ?? []).map((g: any) => g.image_path).filter(Boolean);
+  const giftImageUrls = await createSignedUrls(giftImagePaths);
+
+  const gifts = (giftPurchases ?? []).map((p: any) => {
+    const catalog = giftMap.get(p.gift_catalog_id);
+    return {
+      id: p.id,
+      purchaserDisplayName: p.purchaser_display_name ?? "Anonymous",
+      createdAt: p.created_at,
+      gift: {
+        name: catalog?.name ?? "Gift",
+        imageUrl: catalog?.image_path ? giftImageUrls.get(catalog.image_path) ?? "" : "",
+      },
+    };
+  });
+
+  // Gallery photos
+  const { data: mediaRows } = await supabase
+    .from("memorial_media")
+    .select("*")
+    .eq("memorial_id", memorial.id)
+    .in("status", ["approved"])
+    .order("sort_order", { ascending: true });
+
+  const mediaPaths = (mediaRows ?? []).map((m: any) => m.storage_path).filter(Boolean);
+  const mediaUrls = await createSignedUrls(mediaPaths);
+
+  const gallery = (mediaRows ?? []).map((m: any) => ({
+    id: m.id,
+    url: m.storage_path ? (mediaUrls.get(m.storage_path) ?? "") : "",
+    caption: m.caption,
+    altText: m.alt_text,
+    sortOrder: m.sort_order,
+  }));
+
+  // Tributes
+  const { data: contributions } = await supabase
+    .from("contributions")
+    .select("*")
+    .eq("memorial_id", memorial.id)
+    .in("status", ["approved"])
+    .order("created_at", { ascending: false });
+
+  const contributionsWithPhotos = contributions?.map((c: any) => ({
+    ...c,
+    photoUrl: null, // contributions don't have photo paths in this schema
+  })) ?? [];
+
+  const tributes = contributionsWithPhotos.map((c: any) => ({
+    id: c.id,
+    contributionType: c.contribution_type,
+    content: c.content,
+    photoUrl: null,
+    authorName: c.author_name,
+    relationship: c.author_relationship,
+    createdAt: c.created_at,
+  }));
+
+  return {
+    memorial,
+    photoUrl,
+    events,
+    gifts,
+    gallery,
+    tributes,
+  };
 }
 
 interface PageProps {
@@ -77,7 +177,7 @@ export default async function MemorialPage({ params }: PageProps) {
 
   if (!result) notFound();
 
-  const { memorial, photoUrl, events } = result;
+  const { memorial, photoUrl, events, gifts, gallery, tributes } = result;
   const age = calculateAge(memorial.date_of_birth, memorial.date_of_death);
   const lifespan = formatLifespanYears(memorial.date_of_birth, memorial.date_of_death);
   const fullName = memorial.display_name || `${memorial.first_name} ${memorial.surname}`;
@@ -98,7 +198,11 @@ export default async function MemorialPage({ params }: PageProps) {
           </div>
           <div>
             <h1 className="font-heading text-3xl text-foreground sm:text-4xl">{fullName}</h1>
-            <p className="mt-1 text-muted-foreground">{lifespan}</p>
+            <p className="mt-1 text-muted-foreground">
+              {memorial.date_of_birth && memorial.date_of_death
+                ? `${formatDayMonthYear(memorial.date_of_birth)} — ${formatDayMonthYear(memorial.date_of_death)}`
+                : lifespan}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <ShareButton path={`/memorials/${slug}`} title={fullName} />
@@ -160,7 +264,7 @@ export default async function MemorialPage({ params }: PageProps) {
           <div className="mt-10">
             <h2 className="font-heading text-xl">Funeral events</h2>
             <div className="mt-4 space-y-4">
-              {events.map((event) => (
+              {events.map((event: any) => (
                 <div key={event.id} className="rounded-xl border border-border bg-card p-4">
                   <span className="text-xs font-semibold tracking-wide text-heritage-gold uppercase">
                     {eventTypeLabels[event.event_type] ?? event.event_type}
@@ -203,18 +307,19 @@ export default async function MemorialPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Gifts */}
-        <MemorialGiftsSection memorialId={memorial.id} slug={slug} />
+        {/* Gifts — pass server-fetched data */}
+        <MemorialGiftsSection memorialId={memorial.id} slug={slug} initialGifts={gifts} />
 
-        {/* Gallery */}
+        {/* Gallery — pass server-fetched data */}
         <MediaGallerySection
           memorialId={memorial.id}
           slug={slug}
           allowContributorPhotos={memorial.allow_contributor_photos}
           requireApproval={memorial.require_approval}
+          initialGallery={gallery}
         />
 
-        {/* Tributes */}
+        {/* Tributes — pass server-fetched data */}
         <TributesSection
           memorialId={memorial.id}
           slug={slug}
@@ -223,6 +328,7 @@ export default async function MemorialPage({ params }: PageProps) {
           allowContributorPhotos={memorial.allow_contributor_photos}
           requireApproval={memorial.require_approval}
           showContributorNames={memorial.show_contributor_names}
+          initialTributes={tributes}
         />
       </div>
     </Container>
