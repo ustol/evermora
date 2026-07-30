@@ -45,7 +45,7 @@ async function attachGiftCounts(
 
 /**
  * Public version — uses anon client and direct storage URLs for photos.
- * Safe to call from the marketing home page without Clerk auth.
+ * Safe to call from the marketing home page without an auth session.
  */
 export async function listPublicHighlightedMemorials(
   supabase: SupabaseClient<Database>,

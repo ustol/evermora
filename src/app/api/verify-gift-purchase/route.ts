@@ -65,7 +65,6 @@ export async function POST(req: NextRequest) {
     const { data: { user: cookieUser } } = await scopedSupabase.auth.getUser()
     const tokenUser = await getSupabaseUserFromToken(supabaseAdmin, req)
     const authUser = tokenUser ?? cookieUser
-    const clerkSub = authUser?.id ?? null
 
     const secretKey = process.env.PAYSTACK_SECRET_KEY
     if (!secretKey) throw new Error("PAYSTACK_SECRET_KEY is not configured")

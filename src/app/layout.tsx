@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/sonner";
+import { TopLoader } from "@/components/layout/TopLoader";
 
 export const metadata: Metadata = {
   title: "Akornafa — Honouring lives. Preserving memories.",
@@ -20,23 +21,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/dashboard"
-      afterSignOutUrl="/"
-    >
-      <html lang="en" suppressHydrationWarning>
-        <body className="bg-background text-foreground font-sans antialiased">
-          <Providers>
-            <TooltipProvider>
-              {children}
-              <Toaster position="top-center" richColors closeButton />
-            </TooltipProvider>
-          </Providers>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-background text-foreground font-sans antialiased">
+        <Suspense fallback={null}>
+          <TopLoader />
+        </Suspense>
+        <Providers>
+          <TooltipProvider>
+            {children}
+            <Toaster position="top-center" richColors closeButton />
+          </TooltipProvider>
+        </Providers>
+      </body>
+    </html>
   );
 }

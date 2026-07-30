@@ -19,7 +19,7 @@ export async function requireAdmin(redirectPath: string) {
   const { data: profile } = await admin
     .from("profiles")
     .select("role")
-    .eq("id", user.id)
+    .eq("clerk_user_id", user.id)
     .maybeSingle();
 
   if (profile?.role !== "admin") {

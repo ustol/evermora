@@ -1,4 +1,4 @@
-// Public endpoint — Paystack calls this directly, with no Akornafa/Clerk
+// Public endpoint — Paystack calls this directly, with no app auth
 // session. The x-paystack-signature check below is the only authentication.
 // This is the reliability backstop for verify-gift-purchase: if a buyer
 // closes the tab right after paying, this is what still records the sale.
