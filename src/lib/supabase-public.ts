@@ -1,12 +1,14 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js"
+import { createClient } from "@supabase/supabase-js"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "@/types/supabase"
 
 /**
  * A Supabase client with NO auth — uses the anon key directly.
  * Safe for public data queries (hero images, public memorials, blog posts).
  */
-let _publicClient: SupabaseClient | null = null
+let _publicClient: SupabaseClient<Database> | null = null
 
-export function getPublicSupabaseClient(): SupabaseClient {
+export function getPublicSupabaseClient(): SupabaseClient<Database> {
   if (_publicClient) return _publicClient
 
   const url =
@@ -21,6 +23,7 @@ export function getPublicSupabaseClient(): SupabaseClient {
 
   _publicClient = createClient(url, anonKey, {
     auth: { persistSession: false },
-  })
+  }) as unknown as SupabaseClient<Database>
+
   return _publicClient
 }

@@ -94,16 +94,28 @@ export default function HomePage() {
   const { data: highlighted, isLoading } = useQuery({
     queryKey: ["memorials", "highlighted", 3],
     queryFn: async () => {
-      const pb = getPublicSupabaseClient()
-      return listPublicHighlightedMemorials(pb, 3)
+      try {
+        const pb = getPublicSupabaseClient()
+        return await listPublicHighlightedMemorials(pb, 3)
+      } catch (e) {
+        console.error("HighlightedMemorials fetch failed:", e)
+        return []
+      }
     },
     staleTime: 30_000,
   })
   const { data: heroImages } = useQuery({
     queryKey: ["hero-images", "public"],
-    queryFn: () => listHeroImages(getPublicSupabaseClient()),
+    queryFn: async () => {
+      try {
+        return await listHeroImages(getPublicSupabaseClient())
+      } catch (e) {
+        console.error("HeroImages fetch failed:", e)
+        return []
+      }
+    },
     staleTime: 5 * 60_000,
-    retry: 2,
+    retry: 1,
   })
   const heroImagesOrDefault = heroImages ?? []
 
