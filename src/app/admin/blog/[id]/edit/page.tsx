@@ -1,7 +1,17 @@
 "use client";
 
-import AdminBlogEditorPage from "@/lib/page-modules/admin/AdminBlogEditorPage";
+import { use } from "react"
+import { Container } from "@/components/layout/Container"
 
-export default function Page({ params }: { params: { id: string } }) {
-  return <AdminBlogEditorPage id={params.id} />;
+interface PageProps {
+  params: Promise<{ id: string }>
+}
+
+export default function AdminBlogEditorPage({ params }: PageProps) {
+  const { id } = use(params)
+  return (
+    <Container className="py-12">
+      <h1 className="font-heading text-2xl">{id === "new" ? "New" : "Edit"} blog post</h1>
+    </Container>
+  )
 }

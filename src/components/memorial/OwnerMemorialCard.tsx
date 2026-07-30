@@ -1,14 +1,11 @@
 import Link from "next/link"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useState } from "react"
 import { toast } from "sonner"
+import { createClient } from "@supabase/supabase-js"
 import { formatLifespanYears } from "@/lib/date"
 import { cn } from "@/lib/utils"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { deleteMemorial } from "@/services/memorials"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -17,189 +14,86 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import {
-  Eye,
-  Pencil,
-  MessageSquareText,
-  Images,
-  Settings,
-  Trash2,
-  Globe,
-  Lock,
-  EyeOff,
-} from "lucide-react"
-
-import type { MemorialWithPhoto } from "@/services/memorials"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface OwnerMemorialCardProps {
-  memorial: MemorialWithPhoto & {
-    visibility?: "public" | "unlisted" | "private"
-  }
+  memorial: any
 }
 
-/**
- * A card for the dashboard showing a memorial the current user owns, with
- * action links for edit/moderate/photos/settings and a delete confirmation.
- */
 export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
-  const supabase = useSupabaseClient()
-  const queryClient = useQueryClient()
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  async function handleDelete() {
+    setDeletingId(memorial.id)
+    try {
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
+      const { error } = await supabase.from("memorials").delete().eq("id", memorial.id)
+      if (error) throw error
+      toast.success("Memorial deleted.")
+      window.location.reload()
+    } catch (err) {
+      console.error("delete error:", err)
+      toast.error("Could not delete the memorial.")
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const name = memorial.display_name || `${memorial.first_name} ${memorial.surname}`
   const lifespan = formatLifespanYears(memorial.date_of_birth, memorial.date_of_death)
 
-  const visibilityIcon = {
-    public: Globe,
-    unlisted: EyeOff,
-    private: Lock,
-  } as const
-  const VisibilityIcon = memorial.visibility
-    ? visibilityIcon[memorial.visibility]
-    : undefined
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteMemorial(supabase, memorial.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["owner-memorials"] })
-      toast.success("Memorial deleted")
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Failed to delete memorial")
-    },
-  })
-
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
-      <div className="flex gap-5 p-5">
-        <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-muted sm:size-24">
-          {memorial.photoUrl ? (
-            <img
-              src={memorial.photoUrl}
-              alt={memorial.primary_photo_alt ?? memorial.display_name}
-              className="size-full object-cover"
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center text-muted-foreground">
-              <Images className="size-8" aria-hidden="true" />
-            </div>
-          )}
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <h3 className="truncate font-heading text-lg text-foreground">
-              {memorial.display_name}
-            </h3>
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                memorial.status === "published" && "bg-success/10 text-success",
-                memorial.status === "draft" && "bg-muted text-muted-foreground",
-                (memorial.status as string) === "unpublished" && "bg-destructive/10 text-destructive"
-              )}
-            >
-              {memorial.status}
-            </span>
-            {memorial.visibility !== "public" && memorial.visibility && VisibilityIcon && (
-              <VisibilityIcon className="size-3.5 shrink-0 text-muted-foreground" aria-label={memorial.visibility} />
-            )}
-          </div>
+    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <Link href={`/dashboard/memorials/${memorial.id}/content`} className="font-heading text-lg text-foreground hover:underline">
+            {name}
+          </Link>
           {lifespan && <p className="text-sm text-muted-foreground">{lifespan}</p>}
         </div>
+        <span className={cn(
+          "shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider",
+          memorial.status === "published" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" :
+          memorial.status === "draft" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" :
+          "bg-muted text-muted-foreground"
+        )}>
+          {memorial.status}
+        </span>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-t border-border/60 bg-muted/30 px-5 py-3">
-        {memorial.status === "published" && (
-          <Link
-            href={`/memorials/${memorial.slug}`}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
-          >
-            <Eye className="size-4" aria-hidden="true" />
-            View
-          </Link>
-        )}
-        <Link
-          href={`/dashboard/memorials/${memorial.id}/edit`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
-        >
-          <Pencil className="size-4" aria-hidden="true" />
+      <div className="flex flex-wrap gap-2">
+        <Link href={`/dashboard/memorials/${memorial.id}/content`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
           Edit
         </Link>
-        <Link
-          href={`/dashboard/memorials/${memorial.id}/content`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
-        >
-          <MessageSquareText className="size-4" aria-hidden="true" />
-          Moderate
+        <Link href={`/dashboard/memorials/${memorial.id}/gallery`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+          Gallery
         </Link>
-        <Link
-          href={`/dashboard/memorials/${memorial.id}/gallery`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
-        >
-          <Images className="size-4" aria-hidden="true" />
-          Photos
-        </Link>
-        <Link
-          href={`/dashboard/memorials/${memorial.id}/settings`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-heritage-gold"
-        >
-          <Settings className="size-4" aria-hidden="true" />
+        <Link href={`/dashboard/memorials/${memorial.id}/settings`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
           Settings
         </Link>
 
         <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <button
-                type="button"
-                aria-label={`Delete ${memorial.display_name}`}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-destructive hover:text-destructive/80"
-              />
-            }
-          >
-            <Trash2 className="size-4" aria-hidden="true" />
-            Delete
-          </AlertDialogTrigger>
+          <AlertDialogTrigger render={
+            <Button variant="destructive" size="sm" disabled={deletingId === memorial.id}>
+              {deletingId === memorial.id ? "Deleting…" : "Delete"}
+            </Button>
+          } />
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete this memorial?</AlertDialogTitle>
+              <AlertDialogTitle>Delete memorial</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete "{memorial.display_name}" along
-                with its tributes, photos, and gifts. This can't be undone.
+                Are you sure you want to delete this memorial? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                variant="destructive"
-                disabled={deleteMutation.isPending}
-                onClick={() => deleteMutation.mutate()}
-              >
-                {deleteMutation.isPending ? "Deleting…" : "Delete"}
-              </AlertDialogAction>
+              <Button variant="destructive" onClick={handleDelete} disabled={deletingId === memorial.id}>
+                {deletingId === memorial.id ? "Deleting…" : "Delete"}
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
-    </div>
-  )
-}
-
-export function OwnerMemorialCardSkeleton() {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="flex gap-5 p-5">
-        <Skeleton className="size-20 shrink-0 rounded-xl sm:size-24" />
-        <div className="flex flex-1 flex-col gap-2">
-          <Skeleton className="h-5 w-48" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-      </div>
-      <div className="flex gap-3 border-t border-border/60 bg-muted/30 px-5 py-3">
-        <Skeleton className="h-4 w-12" />
-        <Skeleton className="h-4 w-12" />
-        <Skeleton className="h-4 w-16" />
-        <Skeleton className="h-4 w-14" />
-        <Skeleton className="h-4 w-16" />
       </div>
     </div>
   )

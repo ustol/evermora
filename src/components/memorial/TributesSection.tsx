@@ -1,21 +1,31 @@
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { HeartHandshake } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
-import { TributeFormDialog } from "@/components/memorial/TributeFormDialog"
-import { TributeCard } from "@/components/memorial/TributeCard"
-import { TributeDetailDialog } from "@/components/memorial/TributeDetailDialog"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { listApprovedContributions, type ContributionWithAuthor } from "@/services/contributions"
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { HeartHandshake } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TributeFormDialog } from "@/components/memorial/TributeFormDialog";
+import { TributeCard } from "@/components/memorial/TributeCard";
+import { TributeDetailDialog } from "@/components/memorial/TributeDetailDialog";
 
 interface TributesSectionProps {
-  memorialId: string
-  slug: string
-  allowTributes: boolean
-  allowCondolences: boolean
-  allowContributorPhotos: boolean
-  requireApproval: boolean
-  showContributorNames: boolean
+  memorialId: string;
+  slug: string;
+  allowTributes: boolean;
+  allowCondolences: boolean;
+  allowContributorPhotos: boolean;
+  requireApproval: boolean;
+  showContributorNames: boolean;
+}
+
+interface Contribution {
+  id: string;
+  contributionType: string;
+  content: string | null;
+  photoUrl: string | null;
+  authorName: string | null;
+  relationship: string | null;
+  createdAt: string;
 }
 
 export function TributesSection({
@@ -27,15 +37,46 @@ export function TributesSection({
   requireApproval,
   showContributorNames,
 }: TributesSectionProps) {
-  const supabase = useSupabaseClient()
-  const [selected, setSelected] = useState<ContributionWithAuthor | null>(null)
+  const [contributions, setContributions] = useState<Contribution[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Contribution | null>(null);
 
-  const { data: contributions, isLoading } = useQuery({
-    queryKey: ["memorial-contributions", memorialId],
-    queryFn: () => listApprovedContributions(supabase, memorialId),
-  })
+  useEffect(() => {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+    supabase
+      .from("contributions")
+      .select("*")
+      .eq("memorial_id", memorialId)
+      .in("status", ["approved", "auto_approved"])
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("contributions fetch error:", error);
+          setContributions([]);
+        } else {
+          setContributions(
+            (data ?? []).map((row: any) => ({
+              id: row.id,
+              contributionType: row.contribution_type,
+              content: row.content,
+              photoUrl: row.photo_path
+                ? supabase.storage.from("memorial-media").getPublicUrl(row.photo_path).data.publicUrl
+                : null,
+              authorName: row.author_name,
+              relationship: row.author_relationship,
+              createdAt: row.created_at,
+            }))
+          );
+        }
+        setLoading(false);
+      });
+  }, [memorialId]);
 
-  const canContribute = allowTributes || allowCondolences
+  const canContribute = allowTributes || allowCondolences;
 
   return (
     <section className="mt-12">
@@ -61,7 +102,7 @@ export function TributesSection({
       </div>
 
       <div className="mt-6">
-        {isLoading ? (
+        {loading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-56 w-full rounded-2xl" />
@@ -94,5 +135,5 @@ export function TributesSection({
         onClose={() => setSelected(null)}
       />
     </section>
-  )
+  );
 }

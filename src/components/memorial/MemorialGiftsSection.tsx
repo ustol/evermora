@@ -1,34 +1,72 @@
-import { useEffect, useRef, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Flower2 } from "lucide-react"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { listPaidGiftsForMemorial } from "@/services/gifts"
-import { PurchaseGiftDialog } from "@/components/memorial/PurchaseGiftDialog"
-import { Skeleton } from "@/components/ui/skeleton"
-import { formatDayMonthYear } from "@/lib/date"
-import { cn } from "@/lib/utils"
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { Flower2 } from "lucide-react";
+import { PurchaseGiftDialog } from "@/components/memorial/PurchaseGiftDialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatDayMonthYear } from "@/lib/date";
+import { cn } from "@/lib/utils";
 
 interface MemorialGiftsSectionProps {
-  memorialId: string
-  slug: string
+  memorialId: string;
+  slug: string;
+}
+
+interface GiftPurchase {
+  id: string;
+  purchaserDisplayName: string;
+  createdAt: string;
+  gift: { name: string; imageUrl: string };
 }
 
 export function MemorialGiftsSection({ memorialId, slug }: MemorialGiftsSectionProps) {
-  const supabase = useSupabaseClient()
-  const [justPlacedId, setJustPlacedId] = useState<string | null>(null)
-  const sectionRef = useRef<HTMLElement>(null)
-
-  const { data: gifts, isLoading } = useQuery({
-    queryKey: ["memorial-gifts", memorialId],
-    queryFn: () => listPaidGiftsForMemorial(supabase, memorialId),
-  })
+  const [gifts, setGifts] = useState<GiftPurchase[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [justPlacedId, setJustPlacedId] = useState<string | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!justPlacedId) return
-    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
-    const timeout = setTimeout(() => setJustPlacedId(null), 5000)
-    return () => clearTimeout(timeout)
-  }, [justPlacedId])
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+    supabase
+      .from("gift_purchases")
+      .select("id, purchaser_display_name, created_at, gift_id, gift:catalog_gifts(name, image_path)")
+      .eq("memorial_id", memorialId)
+      .eq("status", "paid")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("gift fetch error:", error);
+          setGifts([]);
+        } else {
+          setGifts(
+            (data ?? []).map((row: any) => ({
+              id: row.id,
+              purchaserDisplayName: row.purchaser_display_name ?? "Anonymous",
+              createdAt: row.created_at,
+              gift: {
+                name: row.gift?.name ?? "Gift",
+                imageUrl: row.gift?.image_path
+                  ? supabase.storage.from("gift-images").getPublicUrl(row.gift.image_path).data.publicUrl
+                  : "",
+              },
+            }))
+          );
+        }
+        setLoading(false);
+      });
+  }, [memorialId]);
+
+  useEffect(() => {
+    if (!justPlacedId) return;
+    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    const timeout = setTimeout(() => setJustPlacedId(null), 5000);
+    return () => clearTimeout(timeout);
+  }, [justPlacedId]);
 
   return (
     <aside
@@ -48,7 +86,7 @@ export function MemorialGiftsSection({ memorialId, slug }: MemorialGiftsSectionP
         onPurchased={setJustPlacedId}
       />
 
-      {isLoading ? (
+      {loading ? (
         <div className="grid grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="aspect-square w-full rounded-lg" />
@@ -87,5 +125,5 @@ export function MemorialGiftsSection({ memorialId, slug }: MemorialGiftsSectionP
         </div>
       )}
     </aside>
-  )
+  );
 }

@@ -1,8 +1,10 @@
+"use client";
+
 import { useState } from "react"
 import { Flag } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
+import { createClient } from "@supabase/supabase-js"
 import { toast } from "sonner"
-import { useMutation } from "@tanstack/react-query"
 import {
   Dialog,
   DialogContent,
@@ -15,9 +17,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { useProfile } from "@/hooks/useProfile"
-import { reportContribution } from "@/services/reports"
 
 interface ReportContributionButtonProps {
   contributionId: string
@@ -27,39 +26,39 @@ export function ReportContributionButton({
   contributionId,
 }: ReportContributionButtonProps) {
   const { isSignedIn } = useUser()
-  const { data: profile } = useProfile()
-  const supabase = useSupabaseClient()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [sending, setSending] = useState(false)
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      if (!profile) throw new Error("Not signed in")
-      await reportContribution(supabase, {
-        contributionId,
-        reportedBy: profile.id,
-        reason,
-      })
-    },
-    onSuccess: () => {
-      toast.success("Thank you — your report has been sent for review.")
-      setOpen(false)
-      setReason("")
-    },
-    onError: () => {
-      toast.error("Something went wrong sending your report. Please try again.")
-    },
-  })
-
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (reason.trim().length < 5) {
       setError("Please add a few words about the issue.")
       return
     }
     setError(null)
-    mutation.mutate()
+    setSending(true)
+
+    try {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+      )
+      const { error: insertError } = await supabase
+        .from("contribution_reports")
+        .insert({ contribution_id: contributionId, reason })
+      if (insertError) throw insertError
+
+      toast.success("Thank you — your report has been sent for review.")
+      setOpen(false)
+      setReason("")
+    } catch (err) {
+      console.error("report error:", err)
+      toast.error("Something went wrong sending your report. Please try again.")
+    } finally {
+      setSending(false)
+    }
   }
 
   if (!isSignedIn) return null
@@ -109,8 +108,8 @@ export function ReportContributionButton({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Sending…" : "Send report"}
+            <Button type="submit" disabled={sending}>
+              {sending ? "Sending…" : "Send report"}
             </Button>
           </DialogFooter>
         </form>

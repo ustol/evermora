@@ -1,10 +1,9 @@
-import { useRef, useState } from "react"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Pencil } from "lucide-react"
+"use client";
+
+import { useState } from "react"
+import { createClient } from "@supabase/supabase-js"
 import { toast } from "sonner"
+import { ImagePlus } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -15,150 +14,82 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Field, FieldLabel, FieldDescription } from "@/components/ui/field"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { TextField } from "@/components/forms/TextField"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { uploadGiftImage, updateGiftCatalogItem } from "@/services/gifts"
-
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
-const MAX_FILE_SIZE = 3 * 1024 * 1024 // 3MB, matches the gift-assets bucket limit
-
-const schema = z.object({
-  name: z.string().trim().min(1, "Name is required"),
-  price: z
-    .string()
-    .trim()
-    .min(1, "Price is required")
-    .refine((v) => !Number.isNaN(Number(v)) && Number(v) > 0, "Enter a valid price"),
-})
-type FormValues = z.infer<typeof schema>
+import { Textarea } from "@/components/ui/textarea"
 
 interface EditGiftCatalogItemDialogProps {
-  item: { id: string; name: string; price: number; imageUrl: string }
+  gift: {
+    id: string
+    name: string
+    description: string | null
+    price: number
+  }
+  onUpdated?: () => void
 }
 
-export function EditGiftCatalogItemDialog({ item }: EditGiftCatalogItemDialogProps) {
-  const supabase = useSupabaseClient()
-  const queryClient = useQueryClient()
+export function EditGiftCatalogItemDialog({ gift, onUpdated }: EditGiftCatalogItemDialogProps) {
   const [open, setOpen] = useState(false)
-  const [file, setFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [saving, setSaving] = useState(false)
+  const [name, setName] = useState(gift.name)
+  const [description, setDescription] = useState(gift.description ?? "")
+  const [price, setPrice] = useState(String(gift.price))
+  const [error, setError] = useState<string | null>(null)
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { name: item.name, price: item.price.toFixed(2) },
-  })
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!name.trim()) { setError("Name is required."); return }
+    const numericPrice = Number(price)
+    if (isNaN(numericPrice) || numericPrice <= 0) { setError("Price must be a positive number."); return }
+    setError(null)
+    setSaving(true)
 
-  const mutation = useMutation({
-    mutationFn: async (values: FormValues) => {
-      const imagePath = file ? await uploadGiftImage(supabase, file) : undefined
-      await updateGiftCatalogItem(supabase, item.id, {
-        name: values.name,
-        price: Number(values.price),
-        imagePath,
-      })
-    },
-    onSuccess: () => {
+    try {
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
+      const { error: updateError } = await supabase
+        .from("catalog_gifts")
+        .update({ name: name.trim(), description: description.trim() || null, price: numericPrice })
+        .eq("id", gift.id)
+      if (updateError) throw updateError
+
       toast.success("Gift updated.")
-      queryClient.invalidateQueries({ queryKey: ["gift-catalog", "admin"] })
-      setFile(null)
-      setPreviewUrl(null)
       setOpen(false)
-    },
-    onError: () => {
-      toast.error("Couldn't update this gift. Please try again.")
-    },
-  })
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = e.target.files?.[0]
-    if (!selected) return
-    if (!ALLOWED_TYPES.includes(selected.type)) {
-      toast.error("Please choose a JPEG, PNG, or WebP image.")
-      return
+      onUpdated?.()
+    } catch (err) {
+      console.error("update error:", err)
+      toast.error("Something went wrong.")
+    } finally {
+      setSaving(false)
     }
-    if (selected.size > MAX_FILE_SIZE) {
-      toast.error("That image is larger than 3MB. Please choose a smaller file.")
-      return
-    }
-    setFile(selected)
-    setPreviewUrl(URL.createObjectURL(selected))
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next)
-        if (!next) {
-          form.reset({ name: item.name, price: item.price.toFixed(2) })
-          setFile(null)
-          setPreviewUrl(null)
-        }
-      }}
-    >
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>
-        <Pencil className="size-4" aria-hidden="true" />
-        Edit
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button variant="outline" size="sm">Edit</Button>} />
       <DialogContent>
-        <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))}>
+        <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Edit wreath or rose</DialogTitle>
-            <DialogDescription>
-              Changes apply immediately to the catalog visitors buy from.
-            </DialogDescription>
+            <DialogTitle>Edit gift</DialogTitle>
+            <DialogDescription>Update this gift catalog item.</DialogDescription>
           </DialogHeader>
-
           <div className="mt-4 flex flex-col gap-4">
-            <Field>
-              <FieldLabel>Image</FieldLabel>
-              <FieldDescription>JPEG, PNG, or WebP — up to 3MB.</FieldDescription>
-              <div className="mt-2 flex items-center gap-4">
-                <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
-                  <img
-                    src={previewUrl ?? item.imageUrl}
-                    alt=""
-                    className="size-full object-cover"
-                  />
-                </div>
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={ALLOWED_TYPES.join(",")}
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="edit-gift-image-upload"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  Replace image
-                </Button>
-              </div>
+            <Field data-invalid={!!error}>
+              <FieldLabel>Name</FieldLabel>
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              {error && <FieldError>{error}</FieldError>}
             </Field>
-
-            <TextField control={form.control} name="name" label="Name" required />
-            <TextField
-              control={form.control}
-              name="price"
-              label="Price (GHS)"
-              type="text"
-              required
-            />
+            <Field>
+              <FieldLabel>Description</FieldLabel>
+              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+            </Field>
+            <Field>
+              <FieldLabel>Price (₵)</FieldLabel>
+              <Input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
+            </Field>
           </div>
-
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : "Save changes"}
-            </Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
