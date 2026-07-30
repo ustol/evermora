@@ -1,9 +1,11 @@
+"use client"
+
 import Link from "next/link"
 import { useState } from "react"
 import { toast } from "sonner"
-import { createClient } from "@supabase/supabase-js"
 import { formatLifespanYears } from "@/lib/date"
 import { cn } from "@/lib/utils"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -15,19 +17,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 
 interface OwnerMemorialCardProps {
   memorial: any
 }
 
 export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
+  const supabase = useSupabaseClient()
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   async function handleDelete() {
     setDeletingId(memorial.id)
     try {
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
       const { error } = await supabase.from("memorials").delete().eq("id", memorial.id)
       if (error) throw error
       toast.success("Memorial deleted.")
@@ -81,15 +82,15 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
           } />
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete memorial</AlertDialogTitle>
+              <AlertDialogTitle>Delete this memorial?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this memorial? This action cannot be undone.
+                This action can't be undone. The memorial and its associated content will be removed.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <Button variant="destructive" onClick={handleDelete} disabled={deletingId === memorial.id}>
-                {deletingId === memorial.id ? "Deleting…" : "Delete"}
+                Delete
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

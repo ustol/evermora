@@ -4,8 +4,8 @@ import { useState } from "react"
 import { Flag } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
 import Link from "next/link"
-import { createClient } from "@supabase/supabase-js"
 import { toast } from "sonner"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import {
   Dialog,
   DialogContent,
@@ -29,7 +29,8 @@ export function ReportMemorialDialog({
   memorialId,
   slug,
 }: ReportMemorialDialogProps) {
-  const { isSignedIn } = useUser()
+  const { isSignedIn, user } = useUser()
+  const supabase = useSupabaseClient()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -45,13 +46,18 @@ export function ReportMemorialDialog({
     setSending(true)
 
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-      )
+      if (!user) throw new Error("You need to sign in before reporting content.")
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("clerk_user_id", user.id)
+        .maybeSingle()
+      if (profileError) throw profileError
+      if (!profile) throw new Error("Your profile is still being prepared. Please try again.")
+
       const { error: insertError } = await supabase
-        .from("memorial_reports")
-        .insert({ memorial_id: memorialId, reason })
+        .from("content_reports")
+        .insert({ memorial_id: memorialId, reason, reported_by: profile.id })
       if (insertError) throw insertError
 
       toast.success("Thank you — your report has been sent for review.")

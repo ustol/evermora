@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useUser } from "@clerk/nextjs"
-import { createClient } from "@supabase/supabase-js"
 import { Flower2 } from "lucide-react"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import Link from "next/link"
 import { toast } from "sonner"
 import {
@@ -36,6 +36,7 @@ interface Gift {
 
 export function PurchaseGiftDialog({ memorialId, slug, onPurchased }: PurchaseGiftDialogProps) {
   const { isSignedIn } = useUser()
+  const supabase = useSupabaseClient()
   const [open, setOpen] = useState(false)
   const [gifts, setGifts] = useState<Gift[]>([])
   const [selectedGift, setSelectedGift] = useState<Gift | null>(null)
@@ -44,11 +45,6 @@ export function PurchaseGiftDialog({ memorialId, slug, onPurchased }: PurchaseGi
 
   useEffect(() => {
     if (!open) return
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { persistSession: false } }
-    )
     supabase
       .from("gift_catalog")
       .select("*")
@@ -71,7 +67,7 @@ export function PurchaseGiftDialog({ memorialId, slug, onPurchased }: PurchaseGi
           )
         }
       })
-  }, [open])
+  }, [open, supabase])
 
   async function handlePurchase() {
     if (!selectedGift) return
@@ -142,20 +138,20 @@ export function PurchaseGiftDialog({ memorialId, slug, onPurchased }: PurchaseGi
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4 grid grid-cols-3 gap-3">
+        <div className="mt-4 grid grid-cols-3 gap-2">
           {gifts.map((gift) => (
             <button
               key={gift.id}
               type="button"
               onClick={() => setSelectedGift(gift)}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-xl border p-3 text-center transition-colors",
+                "flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition-colors",
                 selectedGift?.id === gift.id
                   ? "border-heritage-gold bg-heritage-gold/10 ring-2 ring-heritage-gold"
                   : "border-border hover:bg-muted"
               )}
             >
-              <img src={gift.imageUrl} alt={gift.name} className="aspect-square w-full rounded-lg object-cover" />
+              <img src={gift.imageUrl} alt={gift.name} className="size-14 rounded-lg object-contain" />
               <span className="text-xs font-medium">{gift.name}</span>
               <span className="text-xs text-muted-foreground">₵{gift.price}</span>
             </button>

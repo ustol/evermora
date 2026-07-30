@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import Link from "next/link"
 import { Container } from "@/components/layout/Container"
 import { PageHeader } from "@/components/layout/PageHeader"
@@ -11,18 +11,18 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { OwnerMemorialCard } from "@/components/memorial/OwnerMemorialCard"
 
 export default function DashboardMemorialsPage() {
+  const supabase = useSupabaseClient()
   const [memorials, setMemorials] = useState<any[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
     supabase.from("memorials").select("*").order("created_at", { ascending: false }).then(({ data, error }) => {
       if (error) { setError(true); return }
       setMemorials(data ?? [])
       setLoading(false)
     })
-  }, [])
+  }, [supabase])
 
   if (error) return <Container className="py-16"><ErrorState /></Container>
 

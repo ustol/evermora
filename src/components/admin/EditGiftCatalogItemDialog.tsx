@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react"
-import { createClient } from "@supabase/supabase-js"
 import { toast } from "sonner"
 import { ImagePlus } from "lucide-react"
 import {
@@ -17,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 
 interface EditGiftCatalogItemDialogProps {
   gift: {
@@ -29,6 +29,7 @@ interface EditGiftCatalogItemDialogProps {
 }
 
 export function EditGiftCatalogItemDialog({ gift, onUpdated }: EditGiftCatalogItemDialogProps) {
+  const supabase = useSupabaseClient()
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [name, setName] = useState(gift.name)
@@ -45,9 +46,8 @@ export function EditGiftCatalogItemDialog({ gift, onUpdated }: EditGiftCatalogIt
     setSaving(true)
 
     try {
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
-      const { error: updateError } = await supabase
-        .from("catalog_gifts")
+        const { error: updateError } = await supabase
+        .from("gift_catalog")
         .update({ name: name.trim(), description: description.trim() || null, price: numericPrice })
         .eq("id", gift.id)
       if (updateError) throw updateError

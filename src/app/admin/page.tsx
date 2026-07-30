@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { Container } from "@/components/layout/Container"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function AdminPage() {
+  const supabase = useSupabaseClient()
   const [counts, setCounts] = useState<{ memorials: number; users: number; gifts: number } | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
     Promise.all([
       supabase.from("memorials").select("id", { count: "exact", head: true }),
       supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -19,7 +19,7 @@ export default function AdminPage() {
       setCounts({ memorials: m.count ?? 0, users: p.count ?? 0, gifts: g.count ?? 0 })
       setLoading(false)
     }).catch(() => setLoading(false))
-  }, [])
+  }, [supabase])
 
   return (
     <Container className="py-12">

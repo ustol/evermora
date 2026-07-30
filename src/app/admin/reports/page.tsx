@@ -1,23 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { Container } from "@/components/layout/Container"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatDayMonthYear } from "@/lib/date"
 
 export default function AdminReportsPage() {
+  const supabase = useSupabaseClient()
   const [reports, setReports] = useState<any[] | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
-    supabase.from("memorial_reports").select("*").order("created_at", { ascending: false }).then(({ data }) => {
+    supabase.from("content_reports").select("*").order("created_at", { ascending: false }).then(({ data }) => {
       setReports(data ?? [])
       setLoading(false)
     })
-  }, [])
+  }, [supabase])
 
   return (
     <Container className="flex flex-col gap-8 py-12">

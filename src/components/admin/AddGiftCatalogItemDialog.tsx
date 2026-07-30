@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
 import { toast } from "sonner"
 import { Plus, ImagePlus } from "lucide-react"
 import {
@@ -16,11 +15,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const MAX_FILE_SIZE = 3 * 1024 * 1024
 
 export function AddGiftCatalogItemDialog() {
+  const supabase = useSupabaseClient()
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [name, setName] = useState("")
@@ -58,14 +59,13 @@ export function AddGiftCatalogItemDialog() {
     setSaving(true)
 
     try {
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
-      const ext = file.name.split(".").pop() ?? "png"
+        const ext = file.name.split(".").pop() ?? "png"
       const path = `gifts/${crypto.randomUUID()}.${ext}`
 
       const { error: uploadError } = await supabase.storage.from("gift-assets").upload(path, file)
       if (uploadError) throw uploadError
 
-      const { error: insertError } = await supabase.from("catalog_gifts").insert({
+      const { error: insertError } = await supabase.from("gift_catalog").insert({
         name: name.trim(),
         image_path: path,
         price: numericPrice,

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { use } from "react"
-import { createClient } from "@supabase/supabase-js"
 import { useUser } from "@clerk/nextjs"
 import { notFound, useRouter } from "next/navigation"
 import { Container } from "@/components/layout/Container"
@@ -12,6 +12,7 @@ import { ErrorState } from "@/components/layout/ErrorState"
 interface PageProps { params: Promise<{ id: string }> }
 
 export default function MemorialContentPage({ params }: PageProps) {
+  const supabase = useSupabaseClient()
   const { id } = use(params)
   const { user } = useUser()
   const router = useRouter()
@@ -20,13 +21,12 @@ export default function MemorialContentPage({ params }: PageProps) {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
     supabase.from("memorials").select("*").eq("id", id).maybeSingle().then(({ data, error }) => {
       if (error || !data) { setError(true); return }
       setData(data)
       setLoading(false)
     })
-  }, [id])
+  }, [id, supabase])
 
   if (error) return <Container className="py-16"><ErrorState /></Container>
   if (loading) return <Container className="py-16"><Skeleton className="h-64 rounded-2xl" /></Container>

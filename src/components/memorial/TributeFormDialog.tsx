@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
+import Link from "next/link"
+import { useUser } from "@clerk/nextjs"
 import { HeartHandshake, ImagePlus, X } from "lucide-react"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -39,6 +41,8 @@ export function TributeFormDialog({
   allowPhotos,
   requireApproval,
 }: TributeFormDialogProps) {
+  const { user } = useUser()
+  const supabase = useSupabaseClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [open, setOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -90,31 +94,62 @@ export function TributeFormDialog({
     setSubmitting(true)
 
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-        { auth: { persistSession: false } }
-      )
+      let profile: { id: string } | null = null
+      if (user) {
+        const { data, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("clerk_user_id", user.id)
+          .maybeSingle()
+        if (profileError) throw profileError
+        profile = data
+      }
 
-      let photoPath: string | null = null
-      if (file) {
+      if (file && !profile) {
+        throw new Error("Please sign in to upload a photo with your message.")
+      }
+
+      let photoMediaId: string | null = null
+      let uploadedPhotoPath: string | null = null
+      if (file && profile) {
         const ext = file.name.split(".").pop() ?? "jpg"
-        const path = `${memorialId}/tributes/${crypto.randomUUID()}.${ext}`
+        const path = `${memorialId}/${profile.id}/tributes/${crypto.randomUUID()}.${ext}`
         const { error: uploadError } = await supabase.storage.from("memorial-media").upload(path, file)
         if (uploadError) throw uploadError
-        photoPath = path
+        uploadedPhotoPath = path
+        const { data: media, error: mediaError } = await supabase
+          .from("memorial_media")
+          .insert({
+            memorial_id: memorialId,
+            uploaded_by: profile.id,
+            storage_path: path,
+            moderation_status: requireApproval ? "pending" : "approved",
+          })
+          .select("id")
+          .single()
+        if (mediaError) throw mediaError
+        photoMediaId = media.id
       }
 
       const { error: insertError } = await supabase.from("contributions").insert({
         memorial_id: memorialId,
-        contribution_type: type,
-        content: content.trim() || null,
-        photo_path: photoPath,
+        author_id: profile?.id ?? null,
         author_name: authorName.trim() || null,
-        author_relationship: authorRelationship.trim() || null,
-        status: requireApproval ? "pending" : "auto_approved",
+        type,
+        relationship: authorRelationship.trim() || null,
+        message: content.trim() || "Shared a photo.",
+        photo_media_id: photoMediaId,
+        status: requireApproval ? "pending" : "approved",
       })
-      if (insertError) throw insertError
+      if (insertError) {
+        if (photoMediaId) {
+          await supabase.from("memorial_media").delete().eq("id", photoMediaId)
+        }
+        if (uploadedPhotoPath) {
+          await supabase.storage.from("memorial-media").remove([uploadedPhotoPath])
+        }
+        throw insertError
+      }
 
       toast.success(
         requireApproval

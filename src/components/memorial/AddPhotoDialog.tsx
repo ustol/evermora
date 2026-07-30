@@ -17,7 +17,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { createClient } from "@supabase/supabase-js"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { cn, sanitizeRedirectPath } from "@/lib/utils"
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024
@@ -30,7 +30,8 @@ interface AddPhotoDialogProps {
 }
 
 export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDialogProps) {
-  const { isSignedIn } = useUser()
+  const { isSignedIn, user } = useUser()
+  const supabase = useSupabaseClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -75,14 +76,17 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
     setUploading(true)
 
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-        { auth: { persistSession: false } }
-      )
+      if (!user) throw new Error("You need to sign in before uploading a photo.")
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("clerk_user_id", user.id)
+        .maybeSingle()
+      if (profileError) throw profileError
+      if (!profile) throw new Error("Your profile is still being prepared. Please try again.")
 
       const extension = file.name.split(".").pop() ?? "jpg"
-      const storagePath = `${memorialId}/${crypto.randomUUID()}.${extension}`
+      const storagePath = `${memorialId}/${profile.id}/${crypto.randomUUID()}.${extension}`
 
       const { error: uploadError } = await supabase.storage
         .from("memorial-media")
@@ -93,9 +97,10 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
         .from("memorial_media")
         .insert({
           memorial_id: memorialId,
+          uploaded_by: profile.id,
           storage_path: storagePath,
           caption: caption.trim() || null,
-          status: requireApproval ? "pending" : "auto_approved",
+          moderation_status: requireApproval ? "pending" : "approved",
         })
       if (insertError) throw insertError
 

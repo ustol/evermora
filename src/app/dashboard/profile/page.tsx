@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { useUser } from "@clerk/nextjs"
 import { Container } from "@/components/layout/Container"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorState } from "@/components/layout/ErrorState"
 
 export default function DashboardProfilePage() {
+  const supabase = useSupabaseClient()
   const { user } = useUser()
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -15,7 +16,6 @@ export default function DashboardProfilePage() {
 
   useEffect(() => {
     if (!user) return
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
     supabase.from("profiles").select("*").eq("clerk_user_id", user.id).maybeSingle().then(({ data, error }) => {
       if (error) { setError(true); return }
       setProfile(data)

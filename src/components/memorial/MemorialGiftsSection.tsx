@@ -37,7 +37,7 @@ export function MemorialGiftsSection({ memorialId, slug, initialGifts = [] }: Me
       />
 
       {gifts.length > 0 ? (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
           {gifts.map((purchase) => (
             <div
               key={purchase.id}
@@ -50,10 +50,10 @@ export function MemorialGiftsSection({ memorialId, slug, initialGifts = [] }: Me
                 <img
                   src={purchase.gift.imageUrl}
                   alt={purchase.gift.name}
-                  className="aspect-square w-full rounded-lg object-cover"
+                  className="size-12 rounded-lg object-contain sm:size-14"
                 />
               ) : (
-                <div className="aspect-square w-full rounded-lg bg-muted flex items-center justify-center">
+                <div className="flex size-12 items-center justify-center rounded-lg bg-muted sm:size-14">
                   <Flower2 className="size-6 text-muted-foreground" />
                 </div>
               )}
