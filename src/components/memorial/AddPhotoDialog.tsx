@@ -80,7 +80,7 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
-        .eq("id", user.id)
+        .eq("clerk_user_id", user.id)
         .maybeSingle()
       if (profileError) throw profileError
       if (!profile) throw new Error("Your profile is still being prepared. Please try again.")

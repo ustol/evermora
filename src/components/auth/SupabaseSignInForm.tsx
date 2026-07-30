@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 interface SupabaseSignInFormProps {
   error?: string | null;
@@ -11,6 +11,7 @@ interface SupabaseSignInFormProps {
 
 export function SupabaseSignInForm({ error, redirectUrl = "/dashboard" }: SupabaseSignInFormProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <div className="w-full max-w-sm">
@@ -19,7 +20,12 @@ export function SupabaseSignInForm({ error, redirectUrl = "/dashboard" }: Supaba
         <p className="mt-1 text-sm text-muted-foreground">Welcome back to Akornafa</p>
       </div>
 
-      <form action="/api/auth/sign-in" method="post" className="space-y-4">
+      <form
+        action="/api/auth/sign-in"
+        method="post"
+        className="space-y-4"
+        onSubmit={() => setSubmitting(true)}
+      >
         <input type="hidden" name="redirect_url" value={redirectUrl} />
         <div>
           <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
@@ -65,9 +71,11 @@ export function SupabaseSignInForm({ error, redirectUrl = "/dashboard" }: Supaba
 
         <button
           type="submit"
-          className="flex h-10 w-full items-center justify-center rounded-lg bg-foreground px-4 text-sm font-semibold text-background transition-all hover:bg-foreground/90"
+          disabled={submitting}
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-foreground px-4 text-sm font-semibold text-background transition-all hover:bg-foreground/90 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Sign in
+          {submitting && <Loader2 className="size-4 animate-spin" />}
+          {submitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
 

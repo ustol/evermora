@@ -32,5 +32,5 @@ function useAuthState(): AuthState {
 
 export const useAuth = useAuthState;
 
-/** Alias for useAuth — compatible with code that previously imported useUser from @clerk/nextjs */
+/** Alias for useAuth. */
 export const useUser = useAuthState;
