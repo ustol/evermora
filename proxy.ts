@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { getSupabaseCookieOptions } from "@/lib/supabase-cookie-options";
 
 const publicPaths = [
   "/",
@@ -44,15 +45,19 @@ export async function proxy(req: NextRequest) {
     supabaseUrl,
     supabaseKey,
     {
+      cookieOptions: getSupabaseCookieOptions(req.nextUrl, req.headers),
       cookies: {
         getAll() {
           return req.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, headers = {}) {
           cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
           response = NextResponse.next({ request: req });
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
+          });
+          Object.entries(headers).forEach(([key, value]) => {
+            response.headers.set(key, value);
           });
         },
       },
