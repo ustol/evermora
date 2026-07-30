@@ -95,30 +95,10 @@ function getSupabase() {
   )
 }
 
-function getAdminSupabase() {
-  return createClient<Database>(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
-
-async function createSignedUrls(paths: string[]): Promise<Map<string, string>> {
-  const urlByPath = new Map<string, string>()
-  if (paths.length === 0) return urlByPath
-  try {
-    const supabase = getAdminSupabase()
-    const { data } = await supabase.storage
-      .from("memorial-media")
-      .createSignedUrls(paths, 3600)
-    for (const entry of data ?? []) {
-      if (entry.path && entry.signedUrl) {
-        urlByPath.set(entry.path, entry.signedUrl)
-      }
-    }
-  } catch (e) {
-    console.error("createSignedUrls failed, falling back to public URL", e)
-  }
-  return urlByPath
+/** Proxied URL for memorial-media (private bucket) images. */
+function mediaUrl(path: string | null): string | null {
+  if (!path) return null
+  return `/api/media?path=${encodeURIComponent(path)}`
 }
 
 async function fetchHeroImages(): Promise<HeroImage[]> {
@@ -153,16 +133,9 @@ async function fetchHighlightedMemorials(limit = 3): Promise<HighlightedMemorial
     return []
   }
 
-  const rows = data ?? []
-  const paths = rows.map((m) => m.primary_photo_path).filter((p): p is string => !!p)
-  const urlByPath = await createSignedUrls(paths)
-
-  const memorials = rows.map((m) => ({
+  const memorials = (data ?? []).map((m) => ({
     ...m,
-    photoUrl: m.primary_photo_path
-      ? (urlByPath.get(m.primary_photo_path) ??
-         supabase.storage.from("memorial-media").getPublicUrl(m.primary_photo_path).data.publicUrl)
-      : null,
+    photoUrl: mediaUrl(m.primary_photo_path),
   }))
 
   // Attach gift counts

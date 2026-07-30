@@ -28,41 +28,10 @@ function getSupabase() {
   );
 }
 
-function getAdminSupabase() {
-  return createClient<Database>(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
-async function createSignedUrl(path: string | null): Promise<string | null> {
+/** Proxied URL for memorial-media (private bucket) images. */
+function mediaUrl(path: string | null): string | null {
   if (!path) return null;
-  try {
-    const admin = getAdminSupabase();
-    const { data } = await admin.storage
-      .from("memorial-media")
-      .createSignedUrls([path], 3600);
-    return data?.[0]?.signedUrl ?? null;
-  } catch {
-    return getSupabase().storage.from("memorial-media").getPublicUrl(path).data.publicUrl;
-  }
-}
-
-async function createSignedUrls(paths: string[]): Promise<Map<string, string>> {
-  const map = new Map<string, string>();
-  if (paths.length === 0) return map;
-  try {
-    const admin = getAdminSupabase();
-    const { data } = await admin.storage
-      .from("memorial-media")
-      .createSignedUrls(paths, 3600);
-    for (const entry of data ?? []) {
-      if (entry.path && entry.signedUrl) map.set(entry.path, entry.signedUrl);
-    }
-  } catch (e) {
-    console.error("signed URLs failed", e);
-  }
-  return map;
+  return `/api/media?path=${encodeURIComponent(path)}`;
 }
 
 async function fetchMemorial(slug: string) {
@@ -75,15 +44,14 @@ async function fetchMemorial(slug: string) {
 
   if (error || !memorial || memorial.status !== "published") return null;
 
-  const [photoUrl, events] = await Promise.all([
-    createSignedUrl(memorial.primary_photo_path),
-    supabase
-      .from("funeral_events")
-      .select("*")
-      .eq("memorial_id", memorial.id)
-      .order("start_time", { ascending: true })
-      .then(({ data }) => data ?? []),
-  ]);
+  const photoUrl = mediaUrl(memorial.primary_photo_path);
+
+  const events = await supabase
+    .from("funeral_events")
+    .select("*")
+    .eq("memorial_id", memorial.id)
+    .order("start_time", { ascending: true })
+    .then(({ data }) => data ?? []);
 
   // Gifts
   const { data: giftPurchases } = await supabase
@@ -99,8 +67,6 @@ async function fetchMemorial(slug: string) {
     : { data: [] };
 
   const giftMap = new Map((catalogGifts ?? []).map((g: any) => [g.id, g]));
-  const giftImagePaths = (catalogGifts ?? []).map((g: any) => g.image_path).filter(Boolean);
-  const giftImageUrls = await createSignedUrls(giftImagePaths);
 
   const gifts = (giftPurchases ?? []).map((p: any) => {
     const catalog = giftMap.get(p.gift_catalog_id);
@@ -110,12 +76,12 @@ async function fetchMemorial(slug: string) {
       createdAt: p.created_at,
       gift: {
         name: catalog?.name ?? "Gift",
-        imageUrl: catalog?.image_path ? giftImageUrls.get(catalog.image_path) ?? "" : "",
+        imageUrl: catalog?.image_path ? `/api/media?bucket=gift-images&path=${encodeURIComponent(catalog.image_path)}` : "",
       },
     };
   });
 
-  // Gallery photos
+  // Gallery photos — use proxy URLs for private bucket
   const { data: mediaRows } = await supabase
     .from("memorial_media")
     .select("*")
@@ -123,12 +89,9 @@ async function fetchMemorial(slug: string) {
     .in("status", ["approved"])
     .order("sort_order", { ascending: true });
 
-  const mediaPaths = (mediaRows ?? []).map((m: any) => m.storage_path).filter(Boolean);
-  const mediaUrls = await createSignedUrls(mediaPaths);
-
   const gallery = (mediaRows ?? []).map((m: any) => ({
     id: m.id,
-    url: m.storage_path ? (mediaUrls.get(m.storage_path) ?? "") : "",
+    url: m.storage_path ? mediaUrl(m.storage_path) ?? "" : "",
     caption: m.caption,
     altText: m.alt_text,
     sortOrder: m.sort_order,

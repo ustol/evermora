@@ -50,9 +50,9 @@ export function PurchaseGiftDialog({ memorialId, slug, onPurchased }: PurchaseGi
       { auth: { persistSession: false } }
     )
     supabase
-      .from("catalog_gifts")
+      .from("gift_catalog")
       .select("*")
-      .eq("active", true)
+      .eq("is_active", true)
       .order("price", { ascending: true })
       .then(({ data, error }) => {
         if (!error) {
@@ -62,9 +62,7 @@ export function PurchaseGiftDialog({ memorialId, slug, onPurchased }: PurchaseGi
               name: g.name,
               description: g.description,
               price: g.price,
-              imageUrl: g.image_path
-                ? supabase.storage.from("gift-images").getPublicUrl(g.image_path).data.publicUrl
-                : "",
+              imageUrl: g.image_path?.includes("/") ? g.image_path : `/api/media?bucket=gift-images&path=${encodeURIComponent(g.image_path)}`,
             }))
           )
         }

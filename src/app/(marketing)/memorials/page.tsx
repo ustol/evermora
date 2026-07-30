@@ -53,35 +53,13 @@ async function fetchMemorials(params: Awaited<PageProps["searchParams"]>) {
     return { memorials: [], total: 0 };
   }
 
-  // Get signed URLs for memorial photos (private bucket)
-  const paths = (data ?? []).map((m: any) => m.primary_photo_path).filter(Boolean);
-  const signedUrlByPath = new Map<string, string>();
-  if (paths.length > 0) {
-    try {
-      const admin = createClient<Database>(
-        process.env.SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-      const { data: signed } = await admin.storage
-        .from("memorial-media")
-        .createSignedUrls(paths, 3600);
-      for (const entry of signed ?? []) {
-        if (entry.path && entry.signedUrl) {
-          signedUrlByPath.set(entry.path, entry.signedUrl);
-        }
-      }
-    } catch (e) {
-      console.error("signed URL fallback:", e);
-    }
-  }
-
+  // Get signed URLs via proxy for memorial photos (private bucket)
   const memorials = (data ?? []).map((m: any) => ({
     id: m.id,
     slug: m.slug,
     displayName: m.display_name,
     photoUrl: m.primary_photo_path
-      ? (signedUrlByPath.get(m.primary_photo_path) ??
-         supabase.storage.from("memorial-media").getPublicUrl(m.primary_photo_path).data.publicUrl)
+      ? `/api/media?path=${encodeURIComponent(m.primary_photo_path)}`
       : null,
     photoAlt: m.primary_photo_alt,
     dateOfBirth: m.date_of_birth,
