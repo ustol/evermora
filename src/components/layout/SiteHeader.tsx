@@ -45,18 +45,17 @@ function AuthButtons({ className, user, loading }: { className?: string; user: U
             {(() => {
               const rawUrl = user?.user_metadata?.avatar_url as string | undefined;
               const avatarUrl = rawUrl ? safeAvatar(rawUrl) : null;
-              return avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt=""
-                  className="size-6 rounded-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
-              ) : null;
+              if (avatarUrl) {
+                return (
+                  <img src={avatarUrl} alt="" className="size-6 rounded-full object-cover" onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = "none"; el.parentElement?.querySelector(".fallback")?.classList.remove("hidden"); }} />
+                );
+              }
+              return (
+                <span className="fallback flex size-6 items-center justify-center rounded-full bg-heritage-gold text-[11px] font-bold text-obsidian">
+                  {(user?.email?.charAt(0) ?? "?").toUpperCase()}
+                </span>
+              );
             })()}
-            <span className="flex size-6 items-center justify-center rounded-full bg-heritage-gold text-[11px] font-bold text-obsidian">
-              {(user?.email?.charAt(0) ?? "?").toUpperCase()}
-            </span>
             <span className="hidden sm:inline">
               {(user?.user_metadata?.display_name as string) ?? user?.email ?? "Profile"}
             </span>
@@ -166,18 +165,22 @@ export function SiteHeader() {
                   {(() => {
                     const raw = user.user_metadata?.avatar_url as string | undefined;
                     const av = raw ? safeAvatar(raw) : null;
-                    return av ? (
-                      <img
-                        src={av}
-                        alt=""
-                        className="size-8 rounded-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                      />
-                    ) : null;
+                    if (av) {
+                      return (
+                        <img
+                          src={av}
+                          alt=""
+                          className="size-8 rounded-full object-cover"
+                          onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = "none"; el.parentElement?.querySelector(".m-fallback")?.classList.remove("hidden"); }}
+                        />
+                      );
+                    }
+                    return (
+                      <span className="m-fallback flex size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">
+                        {(user.email?.charAt(0) ?? "?").toUpperCase()}
+                      </span>
+                    );
                   })()}
-                  <span className="flex size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">
-                    {(user.email?.charAt(0) ?? "?").toUpperCase()}
-                  </span>
                   <span>{(user.user_metadata?.display_name as string) ?? user.email ?? "Profile"}</span>
                 </Link>
               </>

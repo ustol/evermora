@@ -81,19 +81,20 @@ export function DashboardShell({ children, initialUser }: { children: React.Reac
           {user ? (
             <div className="flex items-center gap-2">
               {(() => {
-                const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
-                const safeUrl = avatarUrl && (() => {
-                  try { const u = new URL(avatarUrl); if (u.protocol !== 'https:') return null; return avatarUrl; } catch { return null; }
-                })();
-                return safeUrl ? (
-                  <img
-                    src={safeUrl}
-                    alt=""
-                    className="size-8 rounded-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
-                ) : (
-                  <div className="flex size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">
+                const rawUrl = user.user_metadata?.avatar_url as string | undefined;
+                const avatarUrl = rawUrl && (() => { try { const u = new URL(rawUrl); if (u.protocol !== 'https:') return null; return rawUrl; } catch { return null; } })();
+                if (avatarUrl) {
+                  return (
+                    <img
+                      src={avatarUrl}
+                      alt=""
+                      className="size-8 rounded-full object-cover"
+                      onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = "none"; (el.parentElement as HTMLElement)?.querySelector(".ds-fallback")?.classList.remove("hidden"); }}
+                    />
+                  );
+                }
+                return (
+                  <div className="ds-fallback flex size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">
                     {user.email?.charAt(0).toUpperCase() ?? "U"}
                   </div>
                 );
