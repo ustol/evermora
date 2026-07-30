@@ -10,7 +10,6 @@
         }
       ],
       "destination": "/api/memorial-preview?slug=:slug"
-    },
-    { "source": "/(.*)", "destination": "/index.html" }
+    }
   ]
 }
