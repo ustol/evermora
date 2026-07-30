@@ -80,13 +80,28 @@ export function DashboardShell({ children, initialUser }: { children: React.Reac
         <div className="mt-auto flex items-center gap-2 border-t border-white/10 pt-4">
           {user ? (
             <div className="flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">
-                {user.email?.charAt(0).toUpperCase() ?? "U"}
-              </div>
+              {(() => {
+                const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
+                const safeUrl = avatarUrl && (() => {
+                  try { const u = new URL(avatarUrl); if (u.protocol !== 'https:') return null; return avatarUrl; } catch { return null; }
+                })();
+                return safeUrl ? (
+                  <img
+                    src={safeUrl}
+                    alt=""
+                    className="size-8 rounded-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                ) : (
+                  <div className="flex size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">
+                    {user.email?.charAt(0).toUpperCase() ?? "U"}
+                  </div>
+                );
+              })()}
               <div className="flex flex-col">
-                <span className="text-sm text-soft-ivory">
+                <Link href="/dashboard/profile" className="text-sm text-soft-ivory hover:underline">
                   {user.user_metadata?.display_name as string ?? user.email}
-                </span>
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="text-left text-xs text-soft-ivory/60 hover:text-soft-ivory"
