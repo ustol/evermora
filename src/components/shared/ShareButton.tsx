@@ -1,7 +1,7 @@
 "use client";
 
 import { Share2, Link as LinkIcon } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { siteConfig } from "@/config/site"
@@ -12,15 +12,18 @@ interface ShareButtonProps {
   title: string
 }
 
-const canUseWebShare = typeof navigator !== "undefined" && "share" in navigator
-
 export function ShareButton({ path, title }: ShareButtonProps) {
   const [copying, setCopying] = useState(false)
+  const [canWebShare, setCanWebShare] = useState(false)
+
+  useEffect(() => {
+    setCanWebShare(typeof navigator !== "undefined" && "share" in navigator)
+  }, [])
 
   async function handleShare() {
     const url = `${siteConfig.url}${path}`
 
-    if (canUseWebShare) {
+    if (canWebShare) {
       try {
         await navigator.share({
           title: `${title} — ${siteConfig.name}`,
@@ -61,7 +64,7 @@ export function ShareButton({ path, title }: ShareButtonProps) {
 
   return (
     <Button variant="outline" onClick={handleShare} disabled={copying}>
-      {canUseWebShare ? (
+      {canWebShare ? (
         <Share2 className="size-4" aria-hidden="true" />
       ) : (
         <LinkIcon className="size-4" aria-hidden="true" />

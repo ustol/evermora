@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Camera, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
 import type { User } from "@supabase/supabase-js";
 import { Container } from "@/components/layout/Container";
@@ -18,6 +19,8 @@ export function ProfileClient() {
   const [error, setError] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -30,6 +33,39 @@ export function ProfileClient() {
       setLoading(false);
     });
   }, []);
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setAvatarUploading(true);
+    setError("");
+    setMessage("");
+    try {
+      const ext = file.name.split(".").pop() ?? "png";
+      const filePath = `avatars/${user.id}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("profile-images")
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("profile-images")
+        .getPublicUrl(filePath);
+
+      const { data: updatedUser, error: updateError } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl },
+      });
+      if (updateError) throw updateError;
+
+      setUser(updatedUser.user);
+      setMessage("Profile picture updated.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload profile picture. Check storage permissions.");
+    } finally {
+      setAvatarUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
 
   async function handleProfileUpdate(e: React.FormEvent) {
     e.preventDefault();
@@ -99,14 +135,42 @@ export function ProfileClient() {
       <div className="mt-8 max-w-xl space-y-6">
         <div className="rounded-2xl border border-border bg-card p-6">
           <div className="flex items-center gap-4">
-            <div className="flex size-16 items-center justify-center rounded-full bg-heritage-gold text-2xl font-bold text-obsidian">
-              {email.charAt(0).toUpperCase() || "?"}
-            </div>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={avatarUploading}
+              className="group relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-heritage-gold text-2xl font-bold text-obsidian transition-opacity hover:opacity-90 disabled:opacity-70"
+            >
+              {user?.user_metadata?.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url as string}
+                  alt=""
+                  className="size-full object-cover"
+                />
+              ) : avatarUploading ? (
+                <Loader2 className="size-6 animate-spin" />
+              ) : (
+                email.charAt(0).toUpperCase() || "?"
+              )}
+              <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                <Camera className="size-5 text-white" />
+              </span>
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarUpload}
+            />
             <div>
               <p className="text-lg font-medium text-foreground">
                 {(user?.user_metadata?.display_name as string) ?? "User"}
               </p>
               <p className="text-sm text-muted-foreground">{user?.email}</p>
+              <button type="button" onClick={() => fileRef.current?.click()} className="mt-1 text-xs font-medium text-heritage-gold hover:underline">
+                {user?.user_metadata?.avatar_url ? "Change photo" : "Upload photo"}
+              </button>
             </div>
           </div>
 
