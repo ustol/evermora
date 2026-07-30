@@ -48,7 +48,7 @@ export function MemorialGiftsSection({ memorialId, slug, initialGifts = [] }: Me
       />
 
       {gifts.length > 0 ? (
-        <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+        <div className="grid grid-cols-3 gap-2">
           {gifts.map((purchase) => (
             <div
               key={purchase.id}

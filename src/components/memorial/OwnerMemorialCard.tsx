@@ -5,7 +5,6 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { formatLifespanYears } from "@/lib/date"
 import { cn } from "@/lib/utils"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -23,14 +22,13 @@ interface OwnerMemorialCardProps {
 }
 
 export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
-  const supabase = useSupabaseClient()
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   async function handleDelete() {
     setDeletingId(memorial.id)
     try {
-      const { error } = await supabase.from("memorials").delete().eq("id", memorial.id)
-      if (error) throw error
+      const res = await fetch(`/api/dashboard/memorials/${memorial.id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("delete failed")
       toast.success("Memorial deleted.")
       window.location.reload()
     } catch (err) {

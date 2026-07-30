@@ -17,23 +17,29 @@ const navLinks = [
   ...(SHOW_SERVICES_PAGE ? [{ to: "/services", label: "Services" }] : []),
 ];
 
-/** Always-visible SSR-safe auth buttons — renders the public (signed-out) state
- *  at server time; Clerk's <SignedOut>/<SignedIn> swap on client hydration. */
+/** Auth buttons that react to Clerk state: signed-out shows "Sign in",
+ *  signed-in shows a Dashboard link + the Clerk user menu. "Create a memorial"
+ *  stays visible in both states. */
 function AuthButtons({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <Link
-        href="/sign-in"
-        className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-      >
-        Sign in
-      </Link>
+      <SignedOut>
+        <Link
+          href="/sign-in"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+        >
+          Sign in
+        </Link>
+      </SignedOut>
       <Link
         href="/dashboard/memorials/new"
         className={cn(buttonVariants({ size: "sm" }))}
       >
         Create a memorial
       </Link>
+      <SignedIn>
+        <UserButton afterSignOutUrl="/" />
+      </SignedIn>
     </div>
   );
 }
@@ -105,13 +111,15 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-            <Link
-              href="/sign-in"
-              onClick={() => setMobileOpen(false)}
-              className={cn(buttonVariants({ variant: "ghost" }))}
-            >
-              Sign in
-            </Link>
+            <SignedOut>
+              <Link
+                href="/sign-in"
+                onClick={() => setMobileOpen(false)}
+                className={cn(buttonVariants({ variant: "ghost" }))}
+              >
+                Sign in
+              </Link>
+            </SignedOut>
             <Link
               href="/dashboard/memorials/new"
               onClick={() => setMobileOpen(false)}

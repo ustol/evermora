@@ -1,30 +1,23 @@
-"use client";
-
-import { useEffect, useState } from "react"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import Link from "next/link"
+import { redirect } from "next/navigation"
+import { getCurrentProfile } from "@/lib/auth-profile"
+import { listMemorialsOwnedBy } from "@/services/memorials"
 import { Container } from "@/components/layout/Container"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { EmptyState } from "@/components/layout/EmptyState"
 import { ErrorState } from "@/components/layout/ErrorState"
-import { Skeleton } from "@/components/ui/skeleton"
 import { OwnerMemorialCard } from "@/components/memorial/OwnerMemorialCard"
 
-export default function DashboardMemorialsPage() {
-  const supabase = useSupabaseClient()
-  const [memorials, setMemorials] = useState<any[] | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+export default async function DashboardMemorialsPage() {
+  const current = await getCurrentProfile()
+  if (!current) redirect("/sign-in")
 
-  useEffect(() => {
-    supabase.from("memorials").select("*").order("created_at", { ascending: false }).then(({ data, error }) => {
-      if (error) { setError(true); return }
-      setMemorials(data ?? [])
-      setLoading(false)
-    })
-  }, [supabase])
-
-  if (error) return <Container className="py-16"><ErrorState /></Container>
+  let memorials: Awaited<ReturnType<typeof listMemorialsOwnedBy>>
+  try {
+    memorials = await listMemorialsOwnedBy(current.supabase, current.profile.id)
+  } catch {
+    return <Container className="py-16"><ErrorState /></Container>
+  }
 
   return (
     <Container className="flex flex-col gap-8 py-12">
@@ -37,11 +30,7 @@ export default function DashboardMemorialsPage() {
           </Link>
         }
       />
-      {loading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-48 w-full rounded-2xl" />)}
-        </div>
-      ) : memorials && memorials.length > 0 ? (
+      {memorials.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {memorials.map((m) => <OwnerMemorialCard key={m.id} memorial={m} />)}
         </div>

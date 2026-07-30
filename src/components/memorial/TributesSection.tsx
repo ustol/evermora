@@ -17,6 +17,7 @@ interface TributesSectionProps {
   initialTributes?: Array<{
     id: string;
     contributionType: string;
+    title: string | null;
     content: string | null;
     photoUrl: string | null;
     authorName: string | null;

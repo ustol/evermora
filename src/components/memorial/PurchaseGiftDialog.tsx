@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Flower2 } from "lucide-react"
+import PaystackPop from "@paystack/inline-js"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
+import { createPendingGiftPurchase } from "@/services/gifts"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -73,41 +75,71 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
 
   async function handlePurchase() {
     if (!selectedGift) return
+    const email = purchaserEmail.trim()
+    if (!email) {
+      toast.error("Please enter an email — Paystack requires it for the receipt.")
+      return
+    }
+    const displayName = purchaserName.trim() || "Anonymous"
     setPurchasing(true)
 
     try {
-      const response = await fetch("/api/verify-gift-purchase", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          memorialId,
-          giftId: selectedGift.id,
-          amount: selectedGift.price,
-          purchaserDisplayName: purchaserName.trim() || undefined,
-          buyerEmail: purchaserEmail.trim() || undefined,
-        }),
+      // 1. Create the pending purchase. amount/currency are set server-side by
+      //    the pricing trigger; we only get back the id + Paystack reference.
+      const { id, paystackReference } = await createPendingGiftPurchase(supabase, {
+        memorialId,
+        giftCatalogId: selectedGift.id,
+        purchaserDisplayName: displayName,
       })
 
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error ?? "Payment failed")
-
-      toast.success("Thank you for your gift!")
-      onPurchased({
-        id: data.purchaseId ?? "purchased",
-        purchaserDisplayName: purchaserName.trim() || "Anonymous",
-        createdAt: new Date().toISOString(),
-        gift: {
-          name: selectedGift.name,
-          imageUrl: selectedGift.imageUrl,
+      // 2. Open the Paystack popup against that reference.
+      const popup = new PaystackPop()
+      popup.newTransaction({
+        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
+        email,
+        amount: Math.round(selectedGift.price * 100), // minor units
+        currency: "GHS",
+        reference: paystackReference,
+        onSuccess: async () => {
+          // 3. Verify server-side before trusting the popup's success report.
+          try {
+            const res = await fetch("/api/verify-gift-purchase", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ purchaseId: id }),
+            })
+            const data = await res.json()
+            if (!res.ok || !data.ok) {
+              throw new Error(data.error ?? data.reason ?? "Payment could not be verified")
+            }
+            toast.success("Thank you for your gift!")
+            onPurchased({
+              id,
+              purchaserDisplayName: displayName,
+              createdAt: new Date().toISOString(),
+              gift: { name: selectedGift.name, imageUrl: selectedGift.imageUrl },
+            })
+            setOpen(false)
+            setSelectedGift(null)
+            setPurchaserName("")
+            setPurchaserEmail("")
+          } catch (err: any) {
+            toast.error(err.message ?? "Could not confirm your payment.")
+          } finally {
+            setPurchasing(false)
+          }
+        },
+        onCancel: () => {
+          setPurchasing(false)
+          toast("Payment cancelled.")
+        },
+        onError: (err) => {
+          setPurchasing(false)
+          toast.error(err.message ?? "Payment error. Please try again.")
         },
       })
-      setOpen(false)
-      setSelectedGift(null)
-      setPurchaserName("")
-      setPurchaserEmail("")
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong. Please try again.")
-    } finally {
       setPurchasing(false)
     }
   }
@@ -167,7 +199,7 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="purchaser-email">Email (optional)</FieldLabel>
+          <FieldLabel htmlFor="purchaser-email">Email</FieldLabel>
           <Input
             id="purchaser-email"
             type="email"

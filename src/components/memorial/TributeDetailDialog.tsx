@@ -23,6 +23,7 @@ interface TributeDetailDialogProps {
   contribution: {
     id: string
     contributionType: string
+    title: string | null
     content: string | null
     photoUrl: string | null
     authorName: string | null
@@ -74,6 +75,12 @@ export function TributeDetailDialog({
             </DialogHeader>
 
             {contribution.photoUrl && <TributePhoto url={contribution.photoUrl} />}
+
+            {contribution.title && (
+              <p className="font-semibold uppercase tracking-wide text-foreground">
+                {contribution.title}
+              </p>
+            )}
 
             <p className="clear-both whitespace-pre-wrap text-foreground/90">
               {contribution.content}

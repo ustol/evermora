@@ -1,17 +1,13 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/supabase"
+import { createAdminClient as createServerAdminClient } from "@supabase/server/core"
 
 /**
- * Server-side Supabase admin client with the service role key.
- * Only import and use in API routes (never client components).
+ * Server-side Supabase admin client (RLS-bypassing). Backed by
+ * @supabase/server, which resolves the new-format secret key
+ * (SUPABASE_SECRET_KEY = sb_secret_...) + SUPABASE_URL from the environment.
+ * Only import in API routes — never client components.
  */
 export function createAdminClient(): SupabaseClient<Database> {
-  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL/SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set for admin client")
-  }
-
-  return createClient<Database>(supabaseUrl, serviceRoleKey)
+  return createServerAdminClient<Database>()
 }
