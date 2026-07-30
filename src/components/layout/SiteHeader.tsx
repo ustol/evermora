@@ -29,52 +29,56 @@ function AuthButtons({ className, user, loading }: { className?: string; user: U
   return (
     <div className={cn("flex items-center gap-2", className)}>
       {loading ? (
-        <span className="h-7 w-20 rounded-full bg-muted" aria-hidden="true" />
+        <span className="h-7 w-28 rounded-full bg-muted" aria-hidden="true" />
       ) : signedIn ? (
-        <div className="flex items-center gap-2">
+        <>
           <Link
-            href="/dashboard"
-            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "hidden sm:inline-flex")}
+            href="/dashboard/memorials/new"
+            className={cn(buttonVariants({ size: "sm" }))}
           >
-            Dashboard
+            Create a memorial
           </Link>
           <Link
             href="/dashboard/profile"
-            className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/80"
+            aria-label="Your profile"
+            className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-bold text-foreground ring-1 ring-border transition-colors hover:bg-muted/80"
           >
             {(() => {
               const rawUrl = user?.user_metadata?.avatar_url as string | undefined;
               const avatarUrl = rawUrl ? safeAvatar(rawUrl) : null;
+              const initial = (user?.email?.charAt(0) ?? "?").toUpperCase();
               if (avatarUrl) {
                 return (
-                  <img src={avatarUrl} alt="" className="size-6 rounded-full object-cover" onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = "none"; el.parentElement?.querySelector(".fallback")?.classList.remove("hidden"); }} />
+                  <>
+                    <img src={avatarUrl} alt="" className="size-full object-cover" onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = "none"; el.parentElement?.querySelector(".fallback")?.classList.remove("hidden"); }} />
+                    <span className="fallback hidden size-full items-center justify-center bg-heritage-gold text-[11px] font-bold text-obsidian">{initial}</span>
+                  </>
                 );
               }
               return (
-                <span className="fallback flex size-6 items-center justify-center rounded-full bg-heritage-gold text-[11px] font-bold text-obsidian">
-                  {(user?.email?.charAt(0) ?? "?").toUpperCase()}
+                <span className="fallback flex size-full items-center justify-center bg-heritage-gold text-[11px] font-bold text-obsidian">
+                  {initial}
                 </span>
               );
             })()}
-            <span className="hidden sm:inline">
-              {(user?.user_metadata?.display_name as string) ?? user?.email ?? "Profile"}
-            </span>
           </Link>
-        </div>
+        </>
       ) : (
-        <Link
-          href="/sign-in"
-          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-        >
-          Sign in
-        </Link>
+        <>
+          <Link
+            href="/sign-in"
+            className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/dashboard/memorials/new"
+            className={cn(buttonVariants({ size: "sm" }))}
+          >
+            Create a memorial
+          </Link>
+        </>
       )}
-      <Link
-        href="/dashboard/memorials/new"
-        className={cn(buttonVariants({ size: "sm" }))}
-      >
-        Create a memorial
-      </Link>
     </div>
   );
 }
@@ -149,41 +153,36 @@ export function SiteHeader() {
             {loading ? (
               <span className="h-9 rounded-lg bg-muted" aria-hidden="true" />
             ) : user ? (
-              <>
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/dashboard/profile"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
-                >
-                  {(() => {
-                    const raw = user.user_metadata?.avatar_url as string | undefined;
-                    const av = raw ? safeAvatar(raw) : null;
-                    if (av) {
-                      return (
+              <Link
+                href="/dashboard/profile"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Your profile"
+                className="flex w-fit items-center justify-center rounded-full bg-muted p-1 ring-1 ring-border hover:bg-muted/80"
+              >
+                {(() => {
+                  const raw = user.user_metadata?.avatar_url as string | undefined;
+                  const av = raw ? safeAvatar(raw) : null;
+                  const initial = (user.email?.charAt(0) ?? "?").toUpperCase();
+                  if (av) {
+                    return (
+                      <>
                         <img
                           src={av}
                           alt=""
                           className="size-8 rounded-full object-cover"
                           onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = "none"; el.parentElement?.querySelector(".m-fallback")?.classList.remove("hidden"); }}
                         />
-                      );
-                    }
-                    return (
-                      <span className="m-fallback flex size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">
-                        {(user.email?.charAt(0) ?? "?").toUpperCase()}
-                      </span>
+                        <span className="m-fallback hidden size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">{initial}</span>
+                      </>
                     );
-                  })()}
-                  <span>{(user.user_metadata?.display_name as string) ?? user.email ?? "Profile"}</span>
-                </Link>
-              </>
+                  }
+                  return (
+                    <span className="m-fallback flex size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">
+                      {initial}
+                    </span>
+                  );
+                })()}
+              </Link>
             ) : (
               <Link
                 href="/sign-in"
