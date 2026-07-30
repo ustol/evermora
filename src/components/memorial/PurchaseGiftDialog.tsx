@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Flower2 } from "lucide-react"
-import PaystackPop from "@paystack/inline-js"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { createPendingGiftPurchase } from "@/services/gifts"
 import { toast } from "sonner"
@@ -93,6 +92,8 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
       })
 
       // 2. Open the Paystack popup against that reference.
+      // Dynamic import avoids SSR failure (@paystack/inline-js references window)
+      const PaystackPop = (await import("@paystack/inline-js")).default
       const popup = new PaystackPop()
       popup.newTransaction({
         key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
