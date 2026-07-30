@@ -62,7 +62,7 @@ export function AddGiftCatalogItemDialog() {
       const ext = file.name.split(".").pop() ?? "png"
       const path = `gifts/${crypto.randomUUID()}.${ext}`
 
-      const { error: uploadError } = await supabase.storage.from("gift-images").upload(path, file)
+      const { error: uploadError } = await supabase.storage.from("gift-assets").upload(path, file)
       if (uploadError) throw uploadError
 
       const { error: insertError } = await supabase.from("catalog_gifts").insert({

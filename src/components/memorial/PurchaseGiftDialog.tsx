@@ -62,7 +62,11 @@ export function PurchaseGiftDialog({ memorialId, slug, onPurchased }: PurchaseGi
               name: g.name,
               description: g.description,
               price: g.price,
-              imageUrl: g.image_path?.includes("/") ? g.image_path : `/api/media?bucket=gift-images&path=${encodeURIComponent(g.image_path)}`,
+              imageUrl: g.image_path
+                ? /^https?:\/\//.test(g.image_path) || g.image_path.startsWith("data:")
+                  ? g.image_path
+                  : `/api/media?bucket=gift-assets&path=${encodeURIComponent(g.image_path)}`
+                : "",
             }))
           )
         }

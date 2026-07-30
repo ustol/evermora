@@ -76,7 +76,7 @@ async function fetchMemorial(slug: string) {
       createdAt: p.created_at,
       gift: {
         name: catalog?.name ?? "Gift",
-        imageUrl: catalog?.image_path ? `/api/media?bucket=gift-images&path=${encodeURIComponent(catalog.image_path)}` : "",
+        imageUrl: catalog?.image_path ? `/api/media?bucket=gift-assets&path=${encodeURIComponent(catalog.image_path)}` : "",
       },
     };
   });

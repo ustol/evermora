@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 /**
  * Proxies an image from Supabase storage.
- * For private buckets (memorial-media, gift-images) that don't allow
+ * For private buckets (memorial-media, gift-assets) that don't allow
  * anonymous public reads, this proxies the bytes server-side using
  * the authenticated storage endpoint with the anon key as bearer token.
  *

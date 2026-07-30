@@ -6,9 +6,7 @@ type MemorialWithPhoto = MemorialRow & { photoUrl: string | null }
 export type HighlightedMemorial = MemorialWithPhoto & { giftCount: number }
 
 /**
- * Uses getPublicUrl instead of createSignedUrls — works with the anon
- * (public) Supabase client since the "memorial-media" bucket has public
- * read enabled.
+ * Memorial media is private, so public marketing pages use the Next proxy.
  */
 function attachPublicPhotoUrls(
   memorials: MemorialRow[]
@@ -16,7 +14,7 @@ function attachPublicPhotoUrls(
   return memorials.map((m) => ({
     ...m,
     photoUrl: m.primary_photo_path
-      ? process.env.NEXT_PUBLIC_SUPABASE_URL + "/storage/v1/object/public/memorial-media/" + m.primary_photo_path
+      ? `/api/media?bucket=memorial-media&path=${encodeURIComponent(m.primary_photo_path)}`
       : null,
   }))
 }
