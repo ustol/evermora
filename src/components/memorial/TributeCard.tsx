@@ -24,7 +24,7 @@ const typeLabels: Record<string, string> = {
 }
 
 export function TributeCard({ contribution, showContributorNames, onOpen }: TributeCardProps) {
-  const displayName = showContributorNames ? contribution.authorName : "A well-wisher"
+  const displayName = showContributorNames ? (contribution.authorName || "A well-wisher") : "A well-wisher"
 
   return (
     <button

@@ -112,8 +112,8 @@ async function fetchMemorial(slug: string) {
 
   const tributes = contributionsWithPhotos.map((c: any) => ({
     id: c.id,
-    contributionType: c.contribution_type,
-    content: c.content,
+    contributionType: c.type,
+    content: c.message,
     photoUrl: null,
     authorName: c.author_name,
     relationship: c.author_relationship,

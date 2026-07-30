@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { Flower2 } from "lucide-react"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { toast } from "sonner"
-import { Dialog,
+import {
+  Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -19,7 +20,12 @@ import { cn } from "@/lib/utils"
 
 interface PurchaseGiftDialogProps {
   memorialId: string
-  onPurchased: (purchaseId: string) => void
+  onPurchased: (purchase: {
+    id: string
+    purchaserDisplayName: string
+    createdAt: string
+    gift: { name: string; imageUrl: string }
+  }) => void
 }
 
 interface Gift {
@@ -86,7 +92,15 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
       if (!response.ok) throw new Error(data.error ?? "Payment failed")
 
       toast.success("Thank you for your gift!")
-      onPurchased(data.purchaseId ?? "purchased")
+      onPurchased({
+        id: data.purchaseId ?? "purchased",
+        purchaserDisplayName: purchaserName.trim() || "Anonymous",
+        createdAt: new Date().toISOString(),
+        gift: {
+          name: selectedGift.name,
+          imageUrl: selectedGift.imageUrl,
+        },
+      })
       setOpen(false)
       setSelectedGift(null)
       setPurchaserName("")
@@ -152,14 +166,14 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
           />
         </Field>
 
-        <Field className="mt-2">
-          <FieldLabel htmlFor="purchaser-email">Email address</FieldLabel>
+        <Field>
+          <FieldLabel htmlFor="purchaser-email">Email (optional)</FieldLabel>
           <Input
             id="purchaser-email"
             type="email"
             value={purchaserEmail}
             onChange={(e) => setPurchaserEmail(e.target.value)}
-            placeholder="For receipt (not shown publicly)"
+            placeholder="For your receipt"
           />
         </Field>
 

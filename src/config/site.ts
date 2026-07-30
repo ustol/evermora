@@ -6,7 +6,7 @@
 function getOrigin(): string {
   // Server-side: use NEXT_PUBLIC_APP_URL or fallback
   if (typeof window === "undefined") {
-    return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:5173"
+    return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
   }
   // Client-side: use the actual origin
   return window.location.origin

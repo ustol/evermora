@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Flower2 } from "lucide-react";
 import { PurchaseGiftDialog } from "@/components/memorial/PurchaseGiftDialog";
 import { formatDayMonthYear } from "@/lib/date";
@@ -21,6 +21,18 @@ export function MemorialGiftsSection({ memorialId, slug, initialGifts = [] }: Me
   const [gifts, setGifts] = useState(initialGifts);
   const [justPlacedId, setJustPlacedId] = useState<string | null>(null);
 
+  const handlePurchased = useCallback((purchase: {
+    id: string;
+    purchaserDisplayName: string;
+    createdAt: string;
+    gift: { name: string; imageUrl: string };
+  }) => {
+    setGifts((prev) => [purchase, ...prev]);
+    setJustPlacedId(purchase.id);
+    // Clear highlight after a moment
+    setTimeout(() => setJustPlacedId(null), 3000);
+  }, []);
+
   return (
     <aside className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5">
       <div>
@@ -32,7 +44,7 @@ export function MemorialGiftsSection({ memorialId, slug, initialGifts = [] }: Me
 
       <PurchaseGiftDialog
         memorialId={memorialId}
-        onPurchased={setJustPlacedId}
+        onPurchased={handlePurchased}
       />
 
       {gifts.length > 0 ? (
