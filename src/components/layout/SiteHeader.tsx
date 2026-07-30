@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button"
+import { useAuth } from "@/hooks/useAuth"
 import { cn } from "@/lib/utils"
 import { siteConfig } from "@/config/site"
 import { SHOW_SERVICES_PAGE } from "@/config/featureFlags"
@@ -16,18 +17,26 @@ const navLinks = [
   ...(SHOW_SERVICES_PAGE ? [{ to: "/services", label: "Services" }] : []),
 ];
 
-/** Auth buttons that react to Clerk state: signed-out shows "Sign in",
- *  signed-in shows a Dashboard link + the Clerk user menu. "Create a memorial"
- *  stays visible in both states. */
-function AuthButtons({ className }: { className?: string }) {
+function AuthButtons({ className, isSignedIn, loading }: { className?: string; isSignedIn: boolean; loading: boolean }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <Link
-        href="/sign-in"
-        className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-      >
-        Sign in
-      </Link>
+      {loading ? (
+        <span className="h-7 w-20 rounded-full bg-muted" aria-hidden="true" />
+      ) : isSignedIn ? (
+        <Link
+          href="/dashboard"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+        >
+          Dashboard
+        </Link>
+      ) : (
+        <Link
+          href="/sign-in"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+        >
+          Sign in
+        </Link>
+      )}
       <Link
         href="/dashboard/memorials/new"
         className={cn(buttonVariants({ size: "sm" }))}
@@ -41,6 +50,7 @@ function AuthButtons({ className }: { className?: string }) {
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { isSignedIn, loading } = useAuth();
 
   return (
     <header className="fixed top-3 right-0 left-0 z-40 px-3 sm:top-4 sm:px-4">
@@ -71,8 +81,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          {/* Desktop — Clerk-controlled, SSR fallback from plain <AuthButtons> */}
-          <AuthButtons className="hidden sm:flex" />
+          <AuthButtons className="hidden sm:flex" isSignedIn={isSignedIn} loading={loading} />
 
           <button
             type="button"
@@ -105,13 +114,25 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-            <Link
-              href="/sign-in"
-              onClick={() => setMobileOpen(false)}
-              className={cn(buttonVariants({ variant: "ghost" }))}
-            >
-              Sign in
-            </Link>
+            {loading ? (
+              <span className="h-9 rounded-lg bg-muted" aria-hidden="true" />
+            ) : isSignedIn ? (
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileOpen(false)}
+                className={cn(buttonVariants({ variant: "ghost" }))}
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/sign-in"
+                onClick={() => setMobileOpen(false)}
+                className={cn(buttonVariants({ variant: "ghost" }))}
+              >
+                Sign in
+              </Link>
+            )}
             <Link
               href="/dashboard/memorials/new"
               onClick={() => setMobileOpen(false)}
