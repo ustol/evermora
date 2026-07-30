@@ -1,6 +1,5 @@
-"use client";
-
-import { useQuery } from "@tanstack/react-query";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/supabase";
 import {
   Megaphone,
   MessageCircleHeart,
@@ -15,19 +14,15 @@ import {
 import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { EmptyState } from "@/components/layout/EmptyState";
-import { Skeleton } from "@/components/ui/skeleton";
 import { MemorialCard } from "@/components/memorial/MemorialCard";
-import { MemorialCardSkeleton } from "@/components/memorial/MemorialCardSkeleton";
 import { FeatureCard } from "@/components/marketing/FeatureCard";
 import { StepCard } from "@/components/marketing/StepCard";
 import { HeroBackground } from "@/components/marketing/HeroBackground";
 import { buttonVariants } from "@/components/ui/button";
-import { getPublicSupabaseClient } from "@/lib/supabase-public";
-import { listHeroImages } from "@/services/heroImages";
-import { listPublicHighlightedMemorials } from "@/services/publicMemorials";
-import { getPublicStats } from "@/services/publicStats";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
+import type { HighlightedMemorial } from "@/services/publicMemorials";
+import type { HeroImage } from "@/services/heroImages";
 
 // Hidden per request — kept in place (data still loads) rather than removed,
 // so it can be turned back on by flipping this flag.
@@ -79,64 +74,96 @@ const steps = [
       "Add the details of your loved one's life and the funeral arrangements, step by step.",
   },
   {
-    title: "Share the link",
+    title: "Share the page",
     description:
-      "Publish when you're ready and share the memorial's link with family and friends near and far.",
+      "Share the memorial's link with family, friends, and community via any messaging platform or social media.",
   },
   {
     title: "Gather tributes",
     description:
-      "Review and approve tributes, condolences, and photographs as they come in, at your own pace.",
+      "Visitors leave messages, lay virtual wreaths, and share photographs — building a lasting collection of memories.",
   },
 ]
 
-export default function HomePage() {
-  const { data: highlighted, isLoading } = useQuery({
-    queryKey: ["memorials", "highlighted", 3],
-    queryFn: async () => {
-      try {
-        const pb = getPublicSupabaseClient()
-        return await listPublicHighlightedMemorials(pb, 3)
-      } catch (e) {
-        console.error("HighlightedMemorials fetch failed:", e)
-        return []
-      }
-    },
-    staleTime: 30_000,
-  })
-  const { data: heroImages } = useQuery({
-    queryKey: ["hero-images", "public"],
-    queryFn: async () => {
-      try {
-        return await listHeroImages(getPublicSupabaseClient())
-      } catch (e) {
-        console.error("HeroImages fetch failed:", e)
-        return []
-      }
-    },
-    staleTime: 5 * 60_000,
-    retry: 1,
-  })
-  const heroImagesOrDefault = heroImages ?? []
+/* ─── server-side data helpers ─────────────────────────────────── */
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["public-stats"],
-    queryFn: () => getPublicStats(getPublicSupabaseClient()),
-    staleTime: 5 * 60_000,
-    retry: false,
-  })
+function getSupabase() {
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { persistSession: false } }
+  )
+}
 
-  const statTiles = [
-    { icon: MessageCircleHeart, value: stats?.tributeCount, label: "Tributes & condolences shared" },
-    { icon: Flower2, value: stats?.giftCount, label: "Wreaths & roses laid" },
-    { icon: BookOpen, value: stats?.blogPostCount, label: "Blog posts published" },
-    { icon: Clock, value: "24/7", label: "Always available" },
-  ]
+async function fetchHeroImages(): Promise<HeroImage[]> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from("hero_images")
+    .select("*")
+    .order("sort_order", { ascending: true })
+  if (error) {
+    console.error("fetchHeroImages:", error.message);
+    return []
+  }
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    url: supabase.storage.from("hero-images").getPublicUrl(row.storage_path).data.publicUrl,
+    sortOrder: row.sort_order,
+  }))
+}
+
+async function fetchHighlightedMemorials(limit = 3): Promise<HighlightedMemorial[]> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from("memorials")
+    .select("*")
+    .eq("status", "published")
+    .eq("privacy", "public")
+    .order("is_featured", { ascending: false })
+    .order("published_at", { ascending: false })
+    .limit(limit)
+  if (error) {
+    console.error("fetchHighlightedMemorials:", error.message);
+    return []
+  }
+
+  // Attach photo URLs (public bucket, no signed URLs needed)
+  const memorials = (data ?? []).map((m) => ({
+    ...m,
+    photoUrl: m.primary_photo_path
+      ? supabase.storage.from("memorial-media").getPublicUrl(m.primary_photo_path).data.publicUrl
+      : null,
+  }))
+
+  // Attach gift counts
+  const ids = memorials.map((m) => m.id)
+  const counts = new Map<string, number>()
+  if (ids.length > 0) {
+    const { data: purchases } = await supabase
+      .from("gift_purchases")
+      .select("memorial_id")
+      .in("memorial_id", ids)
+      .eq("status", "paid")
+    for (const row of purchases ?? []) {
+      counts.set(row.memorial_id, (counts.get(row.memorial_id) ?? 0) + 1)
+    }
+  }
+
+  return memorials.map((m) => ({ ...m, giftCount: counts.get(m.id) ?? 0 }))
+}
+
+/* ─── page ─────────────────────────────────────────────────────── */
+
+export default async function HomePage() {
+  const [heroImages, highlighted] = await Promise.all([
+    fetchHeroImages(),
+    fetchHighlightedMemorials(3),
+  ])
 
   return (
     <div>
       <section className="relative -mt-24 overflow-hidden border-b border-border/60 bg-obsidian pt-24">
-        <HeroBackground images={heroImagesOrDefault} />
+        <HeroBackground images={heroImages} />
         <Container className="relative z-10 flex flex-col items-center gap-6 py-20 text-center sm:py-28">
           <p className="text-sm font-medium tracking-wide text-warm-gold uppercase">
             {siteConfig.tagline}
@@ -169,33 +196,6 @@ export default function HomePage() {
           </div>
         </Container>
       </section>
-
-      {SHOW_STATS_SECTION && (
-        <section className="py-16">
-          <Container>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {statTiles.map(({ icon: Icon, value, label }) => (
-                <div
-                  key={label}
-                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 text-center"
-                >
-                  <div className="flex size-12 items-center justify-center rounded-full border border-heritage-gold text-heritage-gold">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </div>
-                  {statsLoading && typeof value !== "string" ? (
-                    <Skeleton className="h-9 w-16" />
-                  ) : (
-                    <p className="font-heading text-3xl text-heritage-gold sm:text-4xl">
-                      {value ?? 0}
-                    </p>
-                  )}
-                  <p className="max-w-[12rem] text-sm text-muted-foreground">{label}</p>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </section>
-      )}
 
       <section className="py-20">
         <Container>
@@ -230,13 +230,7 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="mt-10">
-            {isLoading ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <MemorialCardSkeleton key={i} />
-                ))}
-              </div>
-            ) : highlighted && highlighted.length > 0 ? (
+            {highlighted.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {highlighted.map((memorial) => (
                   <MemorialCard
