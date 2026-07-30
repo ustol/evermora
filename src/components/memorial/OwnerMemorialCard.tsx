@@ -62,8 +62,11 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <Link href={`/dashboard/memorials/${memorial.id}/edit`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+          Details
+        </Link>
         <Link href={`/dashboard/memorials/${memorial.id}/content`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-          Edit
+          Content
         </Link>
         <Link href={`/dashboard/memorials/${memorial.id}/gallery`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
           Gallery
