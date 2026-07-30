@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import Link from "next/link"
-import { useUser } from "@clerk/nextjs"
+import { useUser } from "@/hooks/useAuth"
 import { ImagePlus } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -80,7 +80,7 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
-        .eq("clerk_user_id", user.id)
+        .eq("id", user.id)
         .maybeSingle()
       if (profileError) throw profileError
       if (!profile) throw new Error("Your profile is still being prepared. Please try again.")

@@ -1,12 +1,13 @@
-import { redirect } from "next/navigation"
+import { requireUser } from "@/lib/require-auth"
 import { getCurrentProfile } from "@/lib/auth-profile"
 import { getOwnerDashboardStats } from "@/services/dashboard"
 import { Container } from "@/components/layout/Container"
 import { ErrorState } from "@/components/layout/ErrorState"
 
 export default async function DashboardPage() {
+  await requireUser("/dashboard")
   const current = await getCurrentProfile()
-  if (!current) redirect("/sign-in")
+  if (!current) return <Container className="py-16"><ErrorState /></Container>
 
   let stats: Awaited<ReturnType<typeof getOwnerDashboardStats>>
   try {

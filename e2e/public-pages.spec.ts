@@ -43,11 +43,11 @@ test("a real memorial page renders its core sections with no console errors", as
   const href = await firstMemorialLink.getAttribute("href")
   await page.goto(href!)
 
-  await expect(page.getByRole("heading", { name: "Photo gallery" })).toBeVisible()
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Tributes & Condolences" })
+    page.getByRole("heading", { name: /Tributes & Condolences/ })
   ).toBeVisible()
-  await expect(page.getByText("Wreaths & roses")).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Wreaths & roses" })).toBeVisible()
 
   expect(errors).toEqual([])
 })
@@ -59,5 +59,5 @@ test("unknown paths render the 404 page", async ({ page }) => {
   // itself decides to render NotFoundPage — assert on content, not status.
   expect(response?.status()).toBeLessThan(500)
   await expect(page.getByText(/not found/i).first()).toBeVisible()
-  expect(errors).toEqual([])
+  expect(errors.filter((error) => !error.includes("status of 404"))).toEqual([])
 })

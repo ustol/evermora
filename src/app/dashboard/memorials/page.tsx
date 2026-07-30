@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { redirect } from "next/navigation"
+import { requireUser } from "@/lib/require-auth"
 import { getCurrentProfile } from "@/lib/auth-profile"
 import { listMemorialsOwnedBy } from "@/services/memorials"
 import { Container } from "@/components/layout/Container"
@@ -9,8 +9,9 @@ import { ErrorState } from "@/components/layout/ErrorState"
 import { OwnerMemorialCard } from "@/components/memorial/OwnerMemorialCard"
 
 export default async function DashboardMemorialsPage() {
+  await requireUser("/dashboard/memorials")
   const current = await getCurrentProfile()
-  if (!current) redirect("/sign-in")
+  if (!current) return <Container className="py-16"><ErrorState /></Container>
 
   let memorials: Awaited<ReturnType<typeof listMemorialsOwnedBy>>
   try {

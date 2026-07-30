@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { useUser } from "@clerk/nextjs"
+import { useUser } from "@/hooks/useAuth"
 import { HeartHandshake, ImagePlus, X } from "lucide-react"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { toast } from "sonner"
@@ -99,7 +99,7 @@ export function TributeFormDialog({
         const { data, error: profileError } = await supabase
           .from("profiles")
           .select("id")
-          .eq("clerk_user_id", user.id)
+          .eq("id", user.id)
           .maybeSingle()
         if (profileError) throw profileError
         profile = data
