@@ -365,6 +365,7 @@ export interface Database {
         Row: {
           id: string
           name: string
+          description: string | null
           image_path: string
           price: number
           currency: string
@@ -376,6 +377,7 @@ export interface Database {
         Insert: {
           id?: string
           name: string
+          description?: string | null
           image_path: string
           price: number
           currency?: string

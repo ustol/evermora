@@ -1,9 +1,11 @@
+"use client";
+
 import { useState } from "react"
 import { Flag } from "lucide-react"
-import { useUser } from "@clerk/react"
-import { Link } from "react-router-dom"
+import { useUser } from "@clerk/nextjs"
+import Link from "next/link"
 import { toast } from "sonner"
-import { useMutation } from "@tanstack/react-query"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import {
   Dialog,
   DialogContent,
@@ -16,9 +18,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { useProfile } from "@/hooks/useProfile"
-import { reportMemorial } from "@/services/reports"
 import { sanitizeRedirectPath } from "@/lib/utils"
 
 interface ReportMemorialDialogProps {
@@ -30,47 +29,53 @@ export function ReportMemorialDialog({
   memorialId,
   slug,
 }: ReportMemorialDialogProps) {
-  const { isSignedIn } = useUser()
-  const { data: profile } = useProfile()
+  const { isSignedIn, user } = useUser()
   const supabase = useSupabaseClient()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [sending, setSending] = useState(false)
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      if (!profile) throw new Error("Not signed in")
-      await reportMemorial(supabase, {
-        memorialId,
-        reportedBy: profile.id,
-        reason,
-      })
-    },
-    onSuccess: () => {
-      toast.success("Thank you — your report has been sent for review.")
-      setOpen(false)
-      setReason("")
-    },
-    onError: () => {
-      toast.error("Something went wrong sending your report. Please try again.")
-    },
-  })
-
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (reason.trim().length < 5) {
       setError("Please add a few words about the issue.")
       return
     }
     setError(null)
-    mutation.mutate()
+    setSending(true)
+
+    try {
+      if (!user) throw new Error("You need to sign in before reporting content.")
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("clerk_user_id", user.id)
+        .maybeSingle()
+      if (profileError) throw profileError
+      if (!profile) throw new Error("Your profile is still being prepared. Please try again.")
+
+      const { error: insertError } = await supabase
+        .from("content_reports")
+        .insert({ memorial_id: memorialId, reason, reported_by: profile.id })
+      if (insertError) throw insertError
+
+      toast.success("Thank you — your report has been sent for review.")
+      setOpen(false)
+      setReason("")
+    } catch (err) {
+      console.error("report error:", err)
+      toast.error("Something went wrong sending your report. Please try again.")
+    } finally {
+      setSending(false)
+    }
   }
 
   if (!isSignedIn) {
     const redirectUrl = sanitizeRedirectPath(`/memorials/${slug}`)
     return (
       <Link
-        to={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
+        href={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <Flag className="size-3.5" aria-hidden="true" />
@@ -122,8 +127,8 @@ export function ReportMemorialDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Sending…" : "Send report"}
+            <Button type="submit" disabled={sending}>
+              {sending ? "Sending…" : "Send report"}
             </Button>
           </DialogFooter>
         </form>

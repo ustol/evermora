@@ -1,3 +1,5 @@
+"use client";
+
 import { UserRound } from "lucide-react"
 import {
   Dialog,
@@ -11,16 +13,23 @@ import { Badge } from "@/components/ui/badge"
 import { TributePhoto } from "@/components/memorial/TributePhoto"
 import { ReportContributionButton } from "@/components/memorial/ReportContributionButton"
 import { formatDayMonthYear } from "@/lib/date"
-import type { ContributionWithAuthor } from "@/services/contributions"
 
 const typeLabels: Record<string, string> = {
   tribute: "Tribute",
   condolence: "Condolence",
-  memory: "Memory",
 }
 
 interface TributeDetailDialogProps {
-  contribution: ContributionWithAuthor | null
+  contribution: {
+    id: string
+    contributionType: string
+    title: string | null
+    content: string | null
+    photoUrl: string | null
+    authorName: string | null
+    relationship: string | null
+    createdAt: string
+  } | null
   showContributorNames: boolean
   onClose: () => void
 }
@@ -32,7 +41,7 @@ export function TributeDetailDialog({
 }: TributeDetailDialogProps) {
   const displayName = contribution
     ? showContributorNames
-      ? contribution.authorDisplayName
+      ? contribution.authorName ?? "Anonymous"
       : "A well-wisher"
     : ""
 
@@ -43,10 +52,7 @@ export function TributeDetailDialog({
           <>
             <DialogHeader>
               <div className="flex items-center gap-3">
-                <Avatar size="lg">
-                  {showContributorNames && contribution.authorAvatarUrl && (
-                    <AvatarImage src={contribution.authorAvatarUrl} alt="" />
-                  )}
+                <Avatar>
                   <AvatarFallback>
                     <UserRound className="size-5" aria-hidden="true" />
                   </AvatarFallback>
@@ -55,7 +61,7 @@ export function TributeDetailDialog({
                   <div className="flex flex-wrap items-center gap-2">
                     <DialogTitle className="text-base">{displayName}</DialogTitle>
                     <Badge variant="secondary">
-                      {typeLabels[contribution.type] ?? contribution.type}
+                      {typeLabels[contribution.contributionType] ?? contribution.contributionType}
                     </Badge>
                   </div>
                   <DialogDescription className="text-left">
@@ -68,14 +74,16 @@ export function TributeDetailDialog({
               </div>
             </DialogHeader>
 
-            {contribution.title && (
-              <p className="font-medium text-foreground">{contribution.title}</p>
-            )}
-
             {contribution.photoUrl && <TributePhoto url={contribution.photoUrl} />}
 
+            {contribution.title && (
+              <p className="font-semibold uppercase tracking-wide text-foreground">
+                {contribution.title}
+              </p>
+            )}
+
             <p className="clear-both whitespace-pre-wrap text-foreground/90">
-              {contribution.message}
+              {contribution.content}
             </p>
 
             <div className="border-t border-border/60 pt-3">

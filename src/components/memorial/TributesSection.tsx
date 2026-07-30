@@ -1,21 +1,29 @@
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { HeartHandshake } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
-import { TributeFormDialog } from "@/components/memorial/TributeFormDialog"
-import { TributeCard } from "@/components/memorial/TributeCard"
-import { TributeDetailDialog } from "@/components/memorial/TributeDetailDialog"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { listApprovedContributions, type ContributionWithAuthor } from "@/services/contributions"
+"use client";
+
+import { useState } from "react";
+import { HeartHandshake } from "lucide-react";
+import { TributeFormDialog } from "@/components/memorial/TributeFormDialog";
+import { TributeCard } from "@/components/memorial/TributeCard";
+import { TributeDetailDialog } from "@/components/memorial/TributeDetailDialog";
 
 interface TributesSectionProps {
-  memorialId: string
-  slug: string
-  allowTributes: boolean
-  allowCondolences: boolean
-  allowContributorPhotos: boolean
-  requireApproval: boolean
-  showContributorNames: boolean
+  memorialId: string;
+  slug: string;
+  allowTributes: boolean;
+  allowCondolences: boolean;
+  allowContributorPhotos: boolean;
+  requireApproval: boolean;
+  showContributorNames: boolean;
+  initialTributes?: Array<{
+    id: string;
+    contributionType: string;
+    title: string | null;
+    content: string | null;
+    photoUrl: string | null;
+    authorName: string | null;
+    relationship: string | null;
+    createdAt: string;
+  }>;
 }
 
 export function TributesSection({
@@ -26,23 +34,19 @@ export function TributesSection({
   allowContributorPhotos,
   requireApproval,
   showContributorNames,
+  initialTributes = [],
 }: TributesSectionProps) {
-  const supabase = useSupabaseClient()
-  const [selected, setSelected] = useState<ContributionWithAuthor | null>(null)
+  const [contributions, setContributions] = useState(initialTributes);
+  const [selected, setSelected] = useState<(typeof initialTributes)[number] | null>(null);
 
-  const { data: contributions, isLoading } = useQuery({
-    queryKey: ["memorial-contributions", memorialId],
-    queryFn: () => listApprovedContributions(supabase, memorialId),
-  })
-
-  const canContribute = allowTributes || allowCondolences
+  const canContribute = allowTributes || allowCondolences;
 
   return (
     <section className="mt-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-heading text-xl text-foreground">
           Tributes & Condolences
-          {contributions && contributions.length > 0 && (
+          {contributions.length > 0 && (
             <span className="ml-2 text-base font-normal text-muted-foreground">
               ({contributions.length})
             </span>
@@ -61,13 +65,7 @@ export function TributesSection({
       </div>
 
       <div className="mt-6">
-        {isLoading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-56 w-full rounded-2xl" />
-            ))}
-          </div>
-        ) : contributions && contributions.length > 0 ? (
+        {contributions.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {contributions.map((contribution) => (
               <TributeCard
@@ -94,5 +92,5 @@ export function TributesSection({
         onClose={() => setSelected(null)}
       />
     </section>
-  )
+  );
 }

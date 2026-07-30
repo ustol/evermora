@@ -1,5 +1,10 @@
-import { Link } from "react-router-dom"
-import { Show, UserButton } from "@clerk/react"
+"use client";
+
+import { useState } from "react";
+import Link from "next/link"
+import { usePathname } from "next/navigation";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { Menu, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { siteConfig } from "@/config/site"
@@ -10,13 +15,43 @@ const navLinks = [
   { to: "/blog", label: "Blog" },
   { to: "/about", label: "About" },
   ...(SHOW_SERVICES_PAGE ? [{ to: "/services", label: "Services" }] : []),
-]
+];
+
+/** Auth buttons that react to Clerk state: signed-out shows "Sign in",
+ *  signed-in shows a Dashboard link + the Clerk user menu. "Create a memorial"
+ *  stays visible in both states. */
+function AuthButtons({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex items-center gap-2", className)}>
+      <SignedOut>
+        <Link
+          href="/sign-in"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+        >
+          Sign in
+        </Link>
+      </SignedOut>
+      <Link
+        href="/dashboard/memorials/new"
+        className={cn(buttonVariants({ size: "sm" }))}
+      >
+        Create a memorial
+      </Link>
+      <SignedIn>
+        <UserButton afterSignOutUrl="/" />
+      </SignedIn>
+    </div>
+  );
+}
 
 export function SiteHeader() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
   return (
     <header className="fixed top-3 right-0 left-0 z-40 px-3 sm:top-4 sm:px-4">
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 rounded-full border border-border/60 bg-background/80 px-4 shadow-lg shadow-black/5 backdrop-blur-md supports-backdrop-filter:bg-background/70 sm:px-6">
-        <Link to="/" className="shrink-0">
+        <Link href="/" className="shrink-0">
           <img
             src="/logo.png"
             alt={siteConfig.name}
@@ -28,44 +63,73 @@ export function SiteHeader() {
           {navLinks.map((link) => (
             <Link
               key={link.to}
-              to={link.to}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              href={link.to}
+              className={cn(
+                "text-sm font-medium transition-colors",
+                pathname === link.to || (link.to !== "/" && pathname.startsWith(link.to))
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <Show
-          when="signed-in"
-          fallback={
-            <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          {/* Desktop — Clerk-controlled, SSR fallback from plain <AuthButtons> */}
+          <AuthButtons className="hidden sm:flex" />
+
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-full p-2 text-muted-foreground hover:bg-muted md:hidden"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
+      </div>
+
+      {mobileOpen && (
+        <div className="mx-auto mt-2 w-full max-w-5xl rounded-2xl border border-border/60 bg-background p-4 shadow-lg backdrop-blur-md md:hidden">
+          <nav className="flex flex-col gap-2">
+            {navLinks.map((link) => (
               <Link
-                to="/sign-in"
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+                key={link.to}
+                href={link.to}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  pathname === link.to || (link.to !== "/" && pathname.startsWith(link.to))
+                    ? "bg-heritage-gold/10 text-heritage-gold"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
+            <SignedOut>
+              <Link
+                href="/sign-in"
+                onClick={() => setMobileOpen(false)}
+                className={cn(buttonVariants({ variant: "ghost" }))}
               >
                 Sign in
               </Link>
-              <Link
-                to="/dashboard/memorials/new"
-                className={cn(buttonVariants({ size: "sm" }))}
-              >
-                Create a memorial
-              </Link>
-            </div>
-          }
-        >
-          <div className="flex items-center gap-3">
+            </SignedOut>
             <Link
-              to="/dashboard/memorials/new"
-              className={cn(buttonVariants({ size: "sm" }))}
+              href="/dashboard/memorials/new"
+              onClick={() => setMobileOpen(false)}
+              className={cn(buttonVariants())}
             >
               Create a memorial
             </Link>
-            <UserButton />
           </div>
-        </Show>
-      </div>
+        </div>
+      )}
     </header>
   )
 }

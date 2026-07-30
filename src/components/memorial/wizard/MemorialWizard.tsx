@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
+"use client"
+
+import { useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
-import { useQuery } from "@tanstack/react-query"
+import { createClient } from "@supabase/supabase-js"
 import { Container } from "@/components/layout/Container"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { ErrorState } from "@/components/layout/ErrorState"
@@ -12,8 +14,6 @@ import { PhotographStep } from "@/components/memorial/wizard/PhotographStep"
 import { LifeStoryStep } from "@/components/memorial/wizard/LifeStoryStep"
 import { FuneralArrangementsStep } from "@/components/memorial/wizard/FuneralArrangementsStep"
 import { PrivacySettingsStep } from "@/components/memorial/wizard/PrivacySettingsStep"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { useProfile } from "@/hooks/useProfile"
 import { getFuneralEvents, getSignedPhotoUrl } from "@/services/memorials"
 import {
   getMemorialById,
@@ -62,45 +62,63 @@ function toFuneralEventValues(event: FuneralEvent): FuneralEventValues {
 }
 
 export function MemorialWizard({ memorialId }: MemorialWizardProps) {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const supabase = useSupabaseClient()
-  const { data: profile, isLoading: profileLoading } = useProfile()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [profile, setProfile] = useState<any>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [supabase] = useState(() => createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    { auth: { persistSession: false } }
+  ))
+
+  // Load profile
+  useEffect(() => {
+    const clerkUser = (window as any).Clerk?.user
+    if (!clerkUser) { setProfileLoading(false); return }
+    ;(async () => {
+      try {
+        const { data } = await supabase.from("profiles").select("*").eq("clerk_user_id", clerkUser.id).maybeSingle()
+        setProfile(data)
+      } catch (e) {
+        console.error("profile load error:", e)
+      }
+      setProfileLoading(false)
+    })()
+  }, [])
 
   // Saving step 1 of a NEW memorial navigates to the /edit route, which
   // mounts a fresh wizard instance — the step to resume at rides along in
   // navigation state so the user lands on step 2 instead of back on step 1.
   const [step, setStep] = useState<number>(() => {
-    const state = location.state as { step?: number } | null
-    return state?.step ?? 1
+    const initialStep = searchParams?.get("step")
+      ? Number(searchParams.get("step"))
+      : undefined
+    return initialStep ?? 1
   })
   const [memorial, setMemorial] = useState<Memorial | null>(null)
   const [events, setEvents] = useState<FuneralEventValues[]>([])
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [existingLoading, setExistingLoading] = useState(!!memorialId)
 
-  const existingQuery = useQuery({
-    queryKey: ["memorial-draft", memorialId],
-    queryFn: async () => {
-      if (!memorialId) return null
-      const m = await getMemorialById(supabase, memorialId)
-      if (!m) return null
-      const [eventRows, signedUrl] = await Promise.all([
-        getFuneralEvents(supabase, m.id),
-        getSignedPhotoUrl(supabase, m.primary_photo_path),
-      ])
-      return { memorial: m, events: eventRows, photoUrl: signedUrl }
-    },
-    enabled: !!memorialId,
-  })
-
+  // Load existing draft data when editing
   useEffect(() => {
-    if (existingQuery.data) {
-      setMemorial(existingQuery.data.memorial)
-      setEvents(existingQuery.data.events.map(toFuneralEventValues))
-      setPhotoUrl(existingQuery.data.photoUrl)
-    }
-  }, [existingQuery.data])
+    if (!memorialId) { setExistingLoading(false); return }
+    (async () => {
+      const m = await getMemorialById(supabase, memorialId)
+      if (m) {
+        const [eventRows, signedUrl] = await Promise.all([
+          getFuneralEvents(supabase, m.id),
+          getSignedPhotoUrl(supabase, m.primary_photo_path),
+        ])
+        setMemorial(m)
+        setEvents(eventRows.map(toFuneralEventValues))
+        setPhotoUrl(signedUrl)
+      }
+      setExistingLoading(false)
+    })()
+  }, [memorialId])
 
   async function handlePersonalDetailsSubmit(values: PersonalDetailsValues) {
     if (!profile) {
@@ -118,10 +136,7 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
           slug
         )
         setMemorial(created)
-        navigate(`/dashboard/memorials/${created.id}/edit`, {
-          replace: true,
-          state: { step: 2 },
-        })
+        router.replace(`/dashboard/memorials/${created.id}/edit?step=2`)
       } else {
         const updated = await updateMemorial(
           supabase,
@@ -216,7 +231,7 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
         privacySettingsToPatch(values)
       )
       toast.success("Draft saved. You can come back and finish it any time.")
-      navigate("/dashboard/memorials")
+      router.push("/dashboard/memorials")
     } catch {
       toast.error("Couldn't save your settings. Please try again.")
     } finally {
@@ -245,7 +260,7 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
       } else {
         toast.success("Memorial published.")
       }
-      navigate(`/memorials/${values.slug}`)
+      router.push(`/memorials/${values.slug}`)
     } catch {
       toast.error("Couldn't publish this memorial. Please try again.")
     } finally {
@@ -253,7 +268,7 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
     }
   }
 
-  if (memorialId && (existingQuery.isError || existingQuery.data === null)) {
+  if (memorialId && !existingLoading && memorial === null) {
     return (
       <Container className="py-12">
         <ErrorState

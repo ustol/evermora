@@ -35,4 +35,9 @@ playwright/.cache
 .aned-docs.log
 
 # Supabase CLI temp files
-supabase/.temp/
+supabase/.temp/.env
+.env
+.next
+
+# clerk configuration (can include secrets)
+/.clerk/

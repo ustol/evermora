@@ -1,13 +1,15 @@
-import { useMemo } from "react"
-import { useSession } from "@clerk/react"
+"use client"
+
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
-import { env } from "@/config/env"
+import { useSession } from "@clerk/nextjs"
+import { useMemo } from "react"
 import type { Database } from "@/types/supabase"
 
 /**
- * A Supabase client whose requests carry the current Clerk session token,
- * via Supabase's native third-party auth integration (no JWT template).
- * RLS policies read the Clerk user id from `auth.jwt()->>'sub'`.
+ * Browser Supabase client scoped to the logged-in Clerk user. The Clerk
+ * session token is forwarded via `accessToken`, so RLS sees the user's
+ * `sub` claim and scopes every query. Unauthenticated callers get a null
+ * token and are treated as the anon role (public data only).
  */
 export function useSupabaseClient(): SupabaseClient<Database> {
   const { session } = useSession()
@@ -15,12 +17,11 @@ export function useSupabaseClient(): SupabaseClient<Database> {
   return useMemo(
     () =>
       createClient<Database>(
-        env.VITE_SUPABASE_URL,
-        env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
         {
-          async accessToken() {
-            return (await session?.getToken()) ?? null
-          },
+          accessToken: async () => (await session?.getToken()) ?? null,
+          auth: { persistSession: false },
         }
       ),
     [session]

@@ -1,40 +1,40 @@
-import { useEffect, useRef, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Flower2 } from "lucide-react"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { listPaidGiftsForMemorial } from "@/services/gifts"
-import { PurchaseGiftDialog } from "@/components/memorial/PurchaseGiftDialog"
-import { Skeleton } from "@/components/ui/skeleton"
-import { formatDayMonthYear } from "@/lib/date"
-import { cn } from "@/lib/utils"
+"use client";
+
+import { useState, useCallback } from "react";
+import { Flower2 } from "lucide-react";
+import { PurchaseGiftDialog } from "@/components/memorial/PurchaseGiftDialog";
+import { formatDayMonthYear } from "@/lib/date";
+import { cn } from "@/lib/utils";
 
 interface MemorialGiftsSectionProps {
-  memorialId: string
-  slug: string
+  memorialId: string;
+  slug: string;
+  initialGifts?: Array<{
+    id: string;
+    purchaserDisplayName: string;
+    createdAt: string;
+    gift: { name: string; imageUrl: string };
+  }>;
 }
 
-export function MemorialGiftsSection({ memorialId, slug }: MemorialGiftsSectionProps) {
-  const supabase = useSupabaseClient()
-  const [justPlacedId, setJustPlacedId] = useState<string | null>(null)
-  const sectionRef = useRef<HTMLElement>(null)
+export function MemorialGiftsSection({ memorialId, slug, initialGifts = [] }: MemorialGiftsSectionProps) {
+  const [gifts, setGifts] = useState(initialGifts);
+  const [justPlacedId, setJustPlacedId] = useState<string | null>(null);
 
-  const { data: gifts, isLoading } = useQuery({
-    queryKey: ["memorial-gifts", memorialId],
-    queryFn: () => listPaidGiftsForMemorial(supabase, memorialId),
-  })
-
-  useEffect(() => {
-    if (!justPlacedId) return
-    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
-    const timeout = setTimeout(() => setJustPlacedId(null), 5000)
-    return () => clearTimeout(timeout)
-  }, [justPlacedId])
+  const handlePurchased = useCallback((purchase: {
+    id: string;
+    purchaserDisplayName: string;
+    createdAt: string;
+    gift: { name: string; imageUrl: string };
+  }) => {
+    setGifts((prev) => [purchase, ...prev]);
+    setJustPlacedId(purchase.id);
+    // Clear highlight after a moment
+    setTimeout(() => setJustPlacedId(null), 3000);
+  }, []);
 
   return (
-    <aside
-      ref={sectionRef}
-      className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5"
-    >
+    <aside className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5">
       <div>
         <h2 className="font-heading text-lg text-foreground">Wreaths & roses</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -44,18 +44,11 @@ export function MemorialGiftsSection({ memorialId, slug }: MemorialGiftsSectionP
 
       <PurchaseGiftDialog
         memorialId={memorialId}
-        slug={slug}
-        onPurchased={setJustPlacedId}
+        onPurchased={handlePurchased}
       />
 
-      {isLoading ? (
-        <div className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-square w-full rounded-lg" />
-          ))}
-        </div>
-      ) : gifts && gifts.length > 0 ? (
-        <div className="grid grid-cols-3 gap-3">
+      {gifts.length > 0 ? (
+        <div className="grid grid-cols-3 gap-2">
           {gifts.map((purchase) => (
             <div
               key={purchase.id}
@@ -64,11 +57,17 @@ export function MemorialGiftsSection({ memorialId, slug }: MemorialGiftsSectionP
                 purchase.id === justPlacedId && "bg-heritage-gold/10 ring-2 ring-heritage-gold"
               )}
             >
-              <img
-                src={purchase.gift.imageUrl}
-                alt={purchase.gift.name}
-                className="aspect-square w-full rounded-lg object-cover"
-              />
+              {purchase.gift.imageUrl ? (
+                <img
+                  src={purchase.gift.imageUrl}
+                  alt={purchase.gift.name}
+                  className="size-12 rounded-lg object-contain sm:size-14"
+                />
+              ) : (
+                <div className="flex size-12 items-center justify-center rounded-lg bg-muted sm:size-14">
+                  <Flower2 className="size-6 text-muted-foreground" />
+                </div>
+              )}
               <span className="line-clamp-2 text-xs font-medium text-foreground">
                 {purchase.purchaserDisplayName}
               </span>
@@ -87,5 +86,5 @@ export function MemorialGiftsSection({ memorialId, slug }: MemorialGiftsSectionP
         </div>
       )}
     </aside>
-  )
+  );
 }

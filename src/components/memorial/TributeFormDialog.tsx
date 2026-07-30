@@ -1,6 +1,10 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import Link from "next/link"
+import { useUser } from "@clerk/nextjs"
 import { HeartHandshake, ImagePlus, X } from "lucide-react"
+import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -11,20 +15,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { useProfile } from "@/hooks/useProfile"
-import {
-  createContribution,
-  uploadContributionPhoto,
-} from "@/services/contributions"
-import type { Database } from "@/types/supabase"
-
-type ContributionType = Database["public"]["Enums"]["contribution_type"]
+import { Field, FieldLabel, FieldDescription } from "@/components/ui/field"
+import { cn, sanitizeRedirectPath } from "@/lib/utils"
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
@@ -40,124 +35,136 @@ interface TributeFormDialogProps {
 
 export function TributeFormDialog({
   memorialId,
+  slug,
   allowTributes,
   allowCondolences,
   allowPhotos,
   requireApproval,
 }: TributeFormDialogProps) {
-  const { data: profile } = useProfile()
+  const { user } = useUser()
   const supabase = useSupabaseClient()
-  const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
-
   const [open, setOpen] = useState(false)
-  const [type, setType] = useState<ContributionType>(
-    allowTributes ? "tribute" : "condolence"
-  )
+  const [submitting, setSubmitting] = useState(false)
+  const [type, setType] = useState<"tribute" | "condolence">("tribute")
+  const [content, setContent] = useState("")
   const [authorName, setAuthorName] = useState("")
-  const [relationship, setRelationship] = useState("")
-  const [title, setTitle] = useState("")
-  const [message, setMessage] = useState("")
+  const [authorRelationship, setAuthorRelationship] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [nameError, setNameError] = useState<string | null>(null)
-  const [messageError, setMessageError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (open && profile && !authorName) {
-      setAuthorName(profile.display_name)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, profile])
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      let photoMediaId: string | undefined
-      if (file && profile) {
-        photoMediaId = await uploadContributionPhoto(supabase, {
-          memorialId,
-          uploaderProfileId: profile.id,
-          file,
-        })
-      }
-
-      await createContribution(supabase, {
-        memorialId,
-        authorId: profile?.id,
-        authorName: authorName.trim(),
-        type,
-        relationship: relationship.trim() || undefined,
-        title: title.trim() || undefined,
-        message: message.trim(),
-        photoMediaId,
-      })
-    },
-    onSuccess: () => {
-      toast.success(
-        requireApproval
-          ? "Thank you — your message has been sent for review."
-          : "Thank you — your message is now on the memorial."
-      )
-      queryClient.invalidateQueries({ queryKey: ["memorial-contributions", memorialId] })
-      setOpen(false)
-      resetForm()
-    },
-    onError: () => {
-      toast.error("Something went wrong sending your message. Please try again.")
-    },
-  })
+    if (allowTributes) setType("tribute")
+    else if (allowCondolences) setType("condolence")
+  }, [allowTributes, allowCondolences])
 
   function resetForm() {
+    setContent("")
     setAuthorName("")
-    setRelationship("")
-    setTitle("")
-    setMessage("")
+    setAuthorRelationship("")
     setFile(null)
     setPreviewUrl(null)
-    setNameError(null)
-    setMessageError(null)
+    setError(null)
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0]
     if (!selected) return
-
     if (!ALLOWED_TYPES.includes(selected.type)) {
       toast.error("Please choose a JPEG, PNG, or WebP image.")
       return
     }
     if (selected.size > MAX_FILE_SIZE) {
-      toast.error("That image is larger than 8MB. Please choose a smaller file.")
+      toast.error("That image is larger than 8MB.")
       return
     }
-
     setFile(selected)
     setPreviewUrl(URL.createObjectURL(selected))
   }
 
-  function handleRemovePhoto() {
-    setFile(null)
-    setPreviewUrl(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
-  }
-
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const hasNameError = !authorName.trim()
-    const hasMessageError = message.trim().length < 5
-    setNameError(hasNameError ? "Please enter your name." : null)
-    setMessageError(hasMessageError ? "Please write a few words for your message." : null)
-    if (hasNameError || hasMessageError) return
-    mutation.mutate()
-  }
+    if (!content.trim() && !file) {
+      setError("Please add a message or a photo.")
+      return
+    }
+    setError(null)
+    setSubmitting(true)
 
-  const triggerLabel =
-    allowTributes && allowCondolences
-      ? "Leave a tribute or condolence"
-      : allowCondolences
-        ? "Leave a condolence"
-        : "Leave a tribute"
+    try {
+      let profile: { id: string } | null = null
+      if (user) {
+        const { data, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("clerk_user_id", user.id)
+          .maybeSingle()
+        if (profileError) throw profileError
+        profile = data
+      }
+
+      if (file && !profile) {
+        throw new Error("Please sign in to upload a photo with your message.")
+      }
+
+      let photoMediaId: string | null = null
+      let uploadedPhotoPath: string | null = null
+      if (file && profile) {
+        const ext = file.name.split(".").pop() ?? "jpg"
+        const path = `${memorialId}/${profile.id}/tributes/${crypto.randomUUID()}.${ext}`
+        const { error: uploadError } = await supabase.storage.from("memorial-media").upload(path, file)
+        if (uploadError) throw uploadError
+        uploadedPhotoPath = path
+        const { data: media, error: mediaError } = await supabase
+          .from("memorial_media")
+          .insert({
+            memorial_id: memorialId,
+            uploaded_by: profile.id,
+            storage_path: path,
+            moderation_status: requireApproval ? "pending" : "approved",
+          })
+          .select("id")
+          .single()
+        if (mediaError) throw mediaError
+        photoMediaId = media.id
+      }
+
+      const { error: insertError } = await supabase.from("contributions").insert({
+        memorial_id: memorialId,
+        author_id: profile?.id ?? null,
+        author_name: authorName.trim() || null,
+        type,
+        relationship: authorRelationship.trim() || null,
+        message: content.trim() || "Shared a photo.",
+        photo_media_id: photoMediaId,
+        status: requireApproval ? "pending" : "approved",
+      })
+      if (insertError) {
+        if (photoMediaId) {
+          await supabase.from("memorial_media").delete().eq("id", photoMediaId)
+        }
+        if (uploadedPhotoPath) {
+          await supabase.storage.from("memorial-media").remove([uploadedPhotoPath])
+        }
+        throw insertError
+      }
+
+      toast.success(
+        requireApproval
+          ? "Thank you — your message has been sent for review."
+          : "Thank you — your message has been added."
+      )
+      setOpen(false)
+      resetForm()
+    } catch (err) {
+      console.error("submit error:", err)
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <Dialog
@@ -167,133 +174,65 @@ export function TributeFormDialog({
         if (!next) resetForm()
       }}
     >
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger render={<Button variant="outline" />}>
         <HeartHandshake className="size-4" aria-hidden="true" />
-        {triggerLabel}
+        {allowTributes && allowCondolences ? "Leave a message" : allowTributes ? "Leave a tribute" : "Send condolences"}
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{triggerLabel}</DialogTitle>
+            <DialogTitle>Leave a message</DialogTitle>
             <DialogDescription>
               {requireApproval
                 ? "Your message will be reviewed by the family before it appears."
-                : "Your message will appear on the memorial right away."}
+                : "Your message will appear publicly."}
             </DialogDescription>
           </DialogHeader>
 
           <div className="mt-4 flex flex-col gap-4">
             {allowTributes && allowCondolences && (
-              <Tabs value={type} onValueChange={(v) => setType(v as ContributionType)}>
-                <TabsList className="w-full">
-                  <TabsTrigger value="tribute">Tribute</TabsTrigger>
-                  <TabsTrigger value="condolence">Condolence</TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setType("tribute")} className={cn("flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors", type === "tribute" ? "border-heritage-gold bg-heritage-gold/10 text-heritage-gold" : "border-border bg-muted")}>
+                  Tribute
+                </button>
+                <button type="button" onClick={() => setType("condolence")} className={cn("flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors", type === "condolence" ? "border-heritage-gold bg-heritage-gold/10 text-heritage-gold" : "border-border bg-muted")}>
+                  Condolence
+                </button>
+              </div>
             )}
 
-            <Field data-invalid={!!nameError}>
-              <FieldLabel htmlFor="tribute-author-name">Your name</FieldLabel>
-              <Input
-                id="tribute-author-name"
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
-                placeholder="e.g. your name, or a group like &quot;The Mensah Family&quot;"
-              />
-              {nameError && <FieldError>{nameError}</FieldError>}
-            </Field>
-
             <Field>
-              <FieldLabel htmlFor="tribute-relationship">
-                Your relationship (optional)
-              </FieldLabel>
-              <Input
-                id="tribute-relationship"
-                value={relationship}
-                onChange={(e) => setRelationship(e.target.value)}
-                placeholder="e.g. Daughter, Friend, Colleague"
-              />
+              <FieldLabel htmlFor="tribute-author">Your name (optional)</FieldLabel>
+              <Input id="tribute-author" value={authorName} onChange={(e) => setAuthorName(e.target.value)} placeholder="Displayed on the memorial" />
             </Field>
-
             <Field>
-              <FieldLabel htmlFor="tribute-title">Title (optional)</FieldLabel>
-              <Input
-                id="tribute-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Give your message a title"
-              />
+              <FieldLabel htmlFor="tribute-relationship">Relationship (optional)</FieldLabel>
+              <Input id="tribute-relationship" value={authorRelationship} onChange={(e) => setAuthorRelationship(e.target.value)} placeholder="e.g. Friend, Cousin" />
+            </Field>
+            <Field data-invalid={!!error}>
+              <FieldLabel htmlFor="tribute-content">Message</FieldLabel>
+              <Textarea id="tribute-content" rows={4} value={content} onChange={(e) => setContent(e.target.value)} placeholder={type === "tribute" ? "Share a memory…" : "Send your condolences…"} />
             </Field>
 
-            <Field data-invalid={!!messageError}>
-              <FieldLabel htmlFor="tribute-message">Your message</FieldLabel>
-              <Textarea
-                id="tribute-message"
-                rows={5}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Share a memory, tribute, or words of comfort…"
-              />
-              {messageError && <FieldError>{messageError}</FieldError>}
-            </Field>
-
-            {allowPhotos && profile && (
+            {allowPhotos && (
               <Field>
-                <FieldLabel>Photo (optional)</FieldLabel>
-                <FieldDescription>
-                  JPEG, PNG, or WebP — up to 8MB.
-                </FieldDescription>
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={ALLOWED_TYPES.join(",")}
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="tribute-photo-upload"
-                />
-                {previewUrl ? (
-                  <div className="mt-1 flex items-center gap-3">
-                    <img
-                      src={previewUrl}
-                      alt=""
-                      className="size-16 rounded-lg object-cover"
-                    />
-                    <Button type="button" variant="ghost" onClick={handleRemovePhoto}>
-                      <X className="size-4" aria-hidden="true" />
-                      Remove
-                    </Button>
+                <FieldLabel htmlFor="tribute-photo">Photo (optional)</FieldLabel>
+                <Input ref={fileInputRef} type="file" accept={ALLOWED_TYPES.join(",")} onChange={handleFileChange} id="tribute-photo" />
+                {previewUrl && (
+                  <div className="relative mt-2 inline-block">
+                    <img src={previewUrl} alt="" className="h-32 rounded-lg object-cover" />
+                    <button type="button" onClick={() => { setFile(null); setPreviewUrl(null); }} className="absolute -top-2 -right-2 rounded-full bg-background p-0.5 shadow-sm">
+                      <X className="size-4" />
+                    </button>
                   </div>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-1 w-fit"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <ImagePlus className="size-4" aria-hidden="true" />
-                    Add a photo
-                  </Button>
                 )}
               </Field>
-            )}
-            {allowPhotos && !profile && (
-              <p className="text-xs text-muted-foreground">
-                Sign in if you'd like to attach a photo to your message.
-              </p>
             )}
           </div>
 
           <DialogFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Sending…" : "Send"}
-            </Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={submitting}>{submitting ? "Sending…" : "Send"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

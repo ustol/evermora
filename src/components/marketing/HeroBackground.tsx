@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
@@ -7,7 +9,11 @@ interface HeroBackgroundProps {
   images: { id: string; url: string }[]
 }
 
-/** Absolutely-positioned crossfade slideshow, decorative — sits behind the hero content. */
+/**
+ * Decorative hero background. When hero images are available, crossfades
+ * through them. Otherwise shows a warm-toned gradient fallback so the
+ * hero never looks bare.
+ */
 export function HeroBackground({ images }: HeroBackgroundProps) {
   const [index, setIndex] = useState(0)
 
@@ -19,7 +25,11 @@ export function HeroBackground({ images }: HeroBackgroundProps) {
     return () => clearInterval(interval)
   }, [images.length])
 
-  if (images.length === 0) return null
+  if (images.length === 0) {
+    return (
+      <div className="absolute inset-0 bg-gradient-to-br from-obsidian/60 via-rich-black/70 to-obsidian/80" aria-hidden="true" />
+    )
+  }
 
   return (
     <div className="absolute inset-0" aria-hidden="true">

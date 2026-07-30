@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import Link from "next/link"
 import { MapPin, UserRound, Flower2 } from "lucide-react"
 import { formatLifespanYears } from "@/lib/date"
 import type { MemorialCardData } from "@/types/memorial"
@@ -15,7 +15,7 @@ export function MemorialCard({ memorial }: MemorialCardProps) {
 
   return (
     <Link
-      to={`/memorials/${memorial.slug}`}
+      href={`/memorials/${memorial.slug}`}
       className="group flex flex-col items-center rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-shadow hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
     >
       <div className="size-24 shrink-0 overflow-hidden rounded-full border-2 border-warm-stone bg-muted">

@@ -1,7 +1,8 @@
+"use client";
+
 import { useRef, useState } from "react"
-import { Link } from "react-router-dom"
-import { useUser } from "@clerk/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import Link from "next/link"
+import { useUser } from "@clerk/nextjs"
 import { ImagePlus } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -17,8 +18,6 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { useProfile } from "@/hooks/useProfile"
-import { uploadMediaPhoto } from "@/services/media"
 import { cn, sanitizeRedirectPath } from "@/lib/utils"
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024
@@ -31,42 +30,15 @@ interface AddPhotoDialogProps {
 }
 
 export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDialogProps) {
-  const { isSignedIn } = useUser()
-  const { data: profile } = useProfile()
+  const { isSignedIn, user } = useUser()
   const supabase = useSupabaseClient()
-  const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
-
+  const [uploading, setUploading] = useState(false)
   const [open, setOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [caption, setCaption] = useState("")
   const [error, setError] = useState<string | null>(null)
-
-  const mutation = useMutation({
-    mutationFn: async () => {
-      if (!profile || !file) throw new Error("Missing file or profile")
-      await uploadMediaPhoto(supabase, {
-        memorialId,
-        uploaderProfileId: profile.id,
-        file,
-        caption: caption.trim() || undefined,
-      })
-    },
-    onSuccess: () => {
-      toast.success(
-        requireApproval
-          ? "Thank you — your photo has been sent for review."
-          : "Thank you — your photo is now in the gallery."
-      )
-      queryClient.invalidateQueries({ queryKey: ["memorial-gallery", memorialId] })
-      setOpen(false)
-      resetForm()
-    },
-    onError: () => {
-      toast.error("Something went wrong uploading your photo. Please try again.")
-    },
-  })
 
   function resetForm() {
     setFile(null)
@@ -94,21 +66,64 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
     setPreviewUrl(URL.createObjectURL(selected))
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!file) {
       setError("Please choose a photo to upload.")
       return
     }
     setError(null)
-    mutation.mutate()
+    setUploading(true)
+
+    try {
+      if (!user) throw new Error("You need to sign in before uploading a photo.")
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("clerk_user_id", user.id)
+        .maybeSingle()
+      if (profileError) throw profileError
+      if (!profile) throw new Error("Your profile is still being prepared. Please try again.")
+
+      const extension = file.name.split(".").pop() ?? "jpg"
+      const storagePath = `${memorialId}/${profile.id}/${crypto.randomUUID()}.${extension}`
+
+      const { error: uploadError } = await supabase.storage
+        .from("memorial-media")
+        .upload(storagePath, file)
+      if (uploadError) throw uploadError
+
+      const { error: insertError } = await supabase
+        .from("memorial_media")
+        .insert({
+          memorial_id: memorialId,
+          uploaded_by: profile.id,
+          storage_path: storagePath,
+          caption: caption.trim() || null,
+          moderation_status: requireApproval ? "pending" : "approved",
+        })
+      if (insertError) throw insertError
+
+      toast.success(
+        requireApproval
+          ? "Thank you — your photo has been sent for review."
+          : "Thank you — your photo is now in the gallery."
+      )
+      setOpen(false)
+      resetForm()
+    } catch (err) {
+      console.error("upload error:", err)
+      toast.error("Something went wrong uploading your photo. Please try again.")
+    } finally {
+      setUploading(false)
+    }
   }
 
   if (!isSignedIn) {
     const redirectUrl = sanitizeRedirectPath(`/memorials/${slug}`)
     return (
       <Link
-        to={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
+        href={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
         className={cn(buttonVariants({ variant: "outline" }))}
       >
         <ImagePlus className="size-4" aria-hidden="true" />
@@ -181,8 +196,8 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Uploading…" : "Upload"}
+            <Button type="submit" disabled={uploading}>
+              {uploading ? "Uploading…" : "Upload"}
             </Button>
           </DialogFooter>
         </form>

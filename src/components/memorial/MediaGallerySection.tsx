@@ -1,17 +1,22 @@
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Images } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
-import { AddPhotoDialog } from "@/components/memorial/AddPhotoDialog"
-import { MediaLightbox } from "@/components/memorial/MediaLightbox"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { listApprovedMedia } from "@/services/media"
+"use client";
+
+import { useState } from "react";
+import { Images } from "lucide-react";
+import { AddPhotoDialog } from "@/components/memorial/AddPhotoDialog";
+import { MediaLightbox } from "@/components/memorial/MediaLightbox";
 
 interface MediaGallerySectionProps {
-  memorialId: string
-  slug: string
-  allowContributorPhotos: boolean
-  requireApproval: boolean
+  memorialId: string;
+  slug: string;
+  allowContributorPhotos: boolean;
+  requireApproval: boolean;
+  initialGallery?: Array<{
+    id: string;
+    url: string;
+    caption: string | null;
+    altText: string | null;
+    sortOrder: number;
+  }>;
 }
 
 export function MediaGallerySection({
@@ -19,17 +24,13 @@ export function MediaGallerySection({
   slug,
   allowContributorPhotos,
   requireApproval,
+  initialGallery = [],
 }: MediaGallerySectionProps) {
-  const supabase = useSupabaseClient()
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [photos, setPhotos] = useState(initialGallery);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const { data: photos, isLoading } = useQuery({
-    queryKey: ["memorial-gallery", memorialId],
-    queryFn: () => listApprovedMedia(supabase, memorialId),
-  })
-
-  if (!isLoading && (!photos || photos.length === 0) && !allowContributorPhotos) {
-    return null
+  if (photos.length === 0 && !allowContributorPhotos) {
+    return null;
   }
 
   return (
@@ -46,13 +47,7 @@ export function MediaGallerySection({
       </div>
 
       <div className="mt-6">
-        {isLoading ? (
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="aspect-square w-full rounded-lg" />
-            ))}
-          </div>
-        ) : photos && photos.length > 0 ? (
+        {photos.length > 0 ? (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {photos.map((photo, index) => (
               <button
@@ -66,11 +61,17 @@ export function MediaGallerySection({
                 }
                 className="aspect-square overflow-hidden rounded-lg border border-border bg-muted"
               >
-                <img
-                  src={photo.url}
-                  alt=""
-                  className="size-full object-cover transition-transform hover:scale-105"
-                />
+                {photo.url ? (
+                  <img
+                    src={photo.url}
+                    alt=""
+                    className="size-full object-cover transition-transform hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center">
+                    <Images className="size-6 text-muted-foreground" />
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -93,5 +94,5 @@ export function MediaGallerySection({
         />
       )}
     </section>
-  )
+  );
 }
