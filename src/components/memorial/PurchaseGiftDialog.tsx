@@ -1,13 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react"
-import { useUser } from "@clerk/nextjs"
 import { Flower2 } from "lucide-react"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import Link from "next/link"
 import { toast } from "sonner"
-import {
-  Dialog,
+import { Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -15,14 +12,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { cn, sanitizeRedirectPath } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 
 interface PurchaseGiftDialogProps {
   memorialId: string
-  slug: string
   onPurchased: (purchaseId: string) => void
 }
 
@@ -34,8 +30,7 @@ interface Gift {
   imageUrl: string
 }
 
-export function PurchaseGiftDialog({ memorialId, slug, onPurchased }: PurchaseGiftDialogProps) {
-  const { isSignedIn } = useUser()
+export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDialogProps) {
   const supabase = useSupabaseClient()
   const [open, setOpen] = useState(false)
   const [gifts, setGifts] = useState<Gift[]>([])
@@ -100,19 +95,6 @@ export function PurchaseGiftDialog({ memorialId, slug, onPurchased }: PurchaseGi
     } finally {
       setPurchasing(false)
     }
-  }
-
-  if (!isSignedIn) {
-    const redirectUrl = sanitizeRedirectPath(`/memorials/${slug}`)
-    return (
-      <Link
-        href={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
-        className={cn(buttonVariants({ variant: "outline", className: "w-full" }))}
-      >
-        <Flower2 className="size-4" aria-hidden="true" />
-        Send a wreath or rose
-      </Link>
-    )
   }
 
   return (

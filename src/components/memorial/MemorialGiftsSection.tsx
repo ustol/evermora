@@ -32,7 +32,6 @@ export function MemorialGiftsSection({ memorialId, slug, initialGifts = [] }: Me
 
       <PurchaseGiftDialog
         memorialId={memorialId}
-        slug={slug}
         onPurchased={setJustPlacedId}
       />
 
