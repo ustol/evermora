@@ -22,10 +22,9 @@ import { FeatureCard } from "@/components/marketing/FeatureCard";
 import { StepCard } from "@/components/marketing/StepCard";
 import { HeroBackground } from "@/components/marketing/HeroBackground";
 import { buttonVariants } from "@/components/ui/button";
-import { useHighlightedMemorials } from "@/hooks/useMemorials";
-import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { getPublicSupabaseClient } from "@/lib/supabase-public";
 import { listHeroImages } from "@/services/heroImages";
+import { listPublicHighlightedMemorials } from "@/services/publicMemorials";
 import { getPublicStats } from "@/services/publicStats";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -92,12 +91,17 @@ const steps = [
 ]
 
 export default function HomePage() {
-  const { data: highlighted, isLoading } = useHighlightedMemorials()
-  const supabase = useSupabaseClient()
-  const publicSupabase = getPublicSupabaseClient()
+  const { data: highlighted, isLoading } = useQuery({
+    queryKey: ["memorials", "highlighted", 3],
+    queryFn: async () => {
+      const pb = getPublicSupabaseClient()
+      return listPublicHighlightedMemorials(pb, 3)
+    },
+    staleTime: 30_000,
+  })
   const { data: heroImages } = useQuery({
     queryKey: ["hero-images", "public"],
-    queryFn: () => listHeroImages(publicSupabase),
+    queryFn: () => listHeroImages(getPublicSupabaseClient()),
     staleTime: 5 * 60_000,
     retry: 2,
   })
@@ -105,7 +109,7 @@ export default function HomePage() {
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["public-stats"],
-    queryFn: () => getPublicStats(publicSupabase),
+    queryFn: () => getPublicStats(getPublicSupabaseClient()),
     staleTime: 5 * 60_000,
     retry: false,
   })
