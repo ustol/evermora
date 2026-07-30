@@ -26,3 +26,7 @@ export function getSupabaseCookieOptions(url: URL, headers?: Headers): CookieOpt
     secure: useCrossSiteCookies || process.env.NODE_ENV === "production",
   };
 }
+
+export function getBrowserSupabaseCookieOptions(location: Pick<Location, "href"> = window.location): CookieOptions {
+  return getSupabaseCookieOptions(new URL(location.href));
+}

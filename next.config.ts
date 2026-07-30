@@ -1,12 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: process.cwd(),
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "5mb",
     },
   },
-  allowedDevOrigins: ["**.modal.host", "*.modal.host", "localhost","akornafa.com"],
+  allowedDevOrigins: ["**.modal.host", "*.modal.host", "localhost", "akornafa.com"],
 };
 
 export default nextConfig;

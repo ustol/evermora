@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getBrowserSupabaseCookieOptions,
   getSupabaseCookieOptions,
   isStudioIframeHost,
   shouldUseCrossSiteAuthCookies,
@@ -39,12 +40,29 @@ describe("Supabase cookie options", () => {
     });
   });
 
+  it("uses SameSite=None for browser-side Supabase cookie refreshes in the iframe", () => {
+    expect(
+      getBrowserSupabaseCookieOptions({
+        href: "https://ta-example-3000-token.w.modal.host/dashboard",
+      }),
+    ).toMatchObject({
+      path: "/",
+      sameSite: "none",
+      secure: true,
+    });
+  });
+
   it("keeps first-party local development cookies SameSite=Lax", () => {
     const url = new URL("http://localhost:3000/dashboard");
     const headers = new Headers({ host: "localhost:3000" });
 
     expect(shouldUseCrossSiteAuthCookies(url, headers)).toBe(false);
     expect(getSupabaseCookieOptions(url, headers)).toMatchObject({
+      path: "/",
+      sameSite: "lax",
+      secure: false,
+    });
+    expect(getBrowserSupabaseCookieOptions({ href: url.href })).toMatchObject({
       path: "/",
       sameSite: "lax",
       secure: false,
