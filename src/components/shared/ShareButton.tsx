@@ -1,3 +1,5 @@
+"use client";
+
 import { Share2, Link as LinkIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"

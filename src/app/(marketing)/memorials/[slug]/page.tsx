@@ -28,6 +28,13 @@ function getSupabase() {
   );
 }
 
+function getAdminSupabase() {
+  return createClient<Database>(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
 async function fetchMemorial(slug: string) {
   const supabase = getSupabase();
   const { data: memorial, error } = await supabase
@@ -38,9 +45,18 @@ async function fetchMemorial(slug: string) {
 
   if (error || !memorial || memorial.status !== "published") return null;
 
-  const photoUrl = memorial.primary_photo_path
-    ? supabase.storage.from("memorial-media").getPublicUrl(memorial.primary_photo_path).data.publicUrl
-    : null;
+  let photoUrl: string | null = null;
+  if (memorial.primary_photo_path) {
+    try {
+      const admin = getAdminSupabase();
+      const { data: signed } = await admin.storage
+        .from("memorial-media")
+        .createSignedUrls([memorial.primary_photo_path], 3600);
+      photoUrl = signed?.[0]?.signedUrl ?? null;
+    } catch {
+      photoUrl = supabase.storage.from("memorial-media").getPublicUrl(memorial.primary_photo_path).data.publicUrl;
+    }
+  }
 
   const { data: events } = await supabase
     .from("funeral_events")
