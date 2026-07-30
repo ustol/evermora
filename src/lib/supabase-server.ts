@@ -1,19 +1,33 @@
-import { auth } from "@clerk/nextjs/server"
-import type { SupabaseClient } from "@supabase/supabase-js"
-import type { Database } from "@/types/supabase"
-import { createContextClient } from "@supabase/server/core"
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/supabase";
 
-/**
- * Server-side Supabase client scoped to the logged-in Clerk user.
- *
- * The Clerk session token is forwarded as the request's auth token, so Postgres
- * sees `auth.jwt()->>'sub'` = the Clerk user id and every RLS policy applies.
- * Runs as the `authenticated` role — no secret key. Backed by @supabase/server,
- * which resolves SUPABASE_URL + SUPABASE_PUBLISHABLE_KEY from the environment.
- */
 export async function createServerSupabaseClient(): Promise<SupabaseClient<Database>> {
-  const { getToken } = await auth()
-  const token = await getToken()
+  const cookieStore = await cookies();
 
-  return createContextClient<Database>({ auth: { token } })
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !supabaseKey) throw new Error("Supabase is not configured");
+
+  return createServerClient<Database>(
+    supabaseUrl,
+    supabaseKey,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Server components cannot set cookies; middleware refreshes sessions.
+          }
+        },
+      },
+    },
+  );
 }

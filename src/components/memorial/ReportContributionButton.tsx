@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Flag } from "lucide-react"
-import { useUser } from "@clerk/nextjs"
+import { useUser } from "@/hooks/useAuth"
 import { toast } from "sonner"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import {
@@ -46,7 +46,7 @@ export function ReportContributionButton({
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
-        .eq("clerk_user_id", user.id)
+        .eq("id", user.id)
         .maybeSingle()
       if (profileError) throw profileError
       if (!profile) throw new Error("Your profile is still being prepared. Please try again.")

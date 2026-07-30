@@ -1,7 +1,6 @@
-// Called by the client immediately after Paystack's popup reports success.
-// Trusts nothing from that report — independently re-verifies with Paystack
-// using the secret key before marking anything paid.
 import { createAdminClient } from "@/lib/supabase-admin"
+import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { resolveProfileForUser } from "@/lib/profile-resolver"
 import type { NextRequest } from "next/server"
 
 const corsHeaders = {
@@ -46,22 +45,11 @@ async function verifyPaystackTransaction(
   }
 }
 
-function getClerkSubFromRequest(req: NextRequest): string | null {
+function getSupabaseUserFromToken(supabase: ReturnType<typeof createAdminClient>, req: NextRequest) {
   const auth = req.headers.get("Authorization")
-  if (!auth?.startsWith("Bearer ")) return null
-
+  if (!auth?.startsWith("Bearer ")) return Promise.resolve(null)
   const token = auth.slice("Bearer ".length)
-  const payloadSegment = token.split(".")[1]
-  if (!payloadSegment) return null
-
-  try {
-    const base64 = payloadSegment.replace(/-/g, "+").replace(/_/g, "/")
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=")
-    const claims = JSON.parse(atob(padded))
-    return typeof claims.sub === "string" ? claims.sub : null
-  } catch {
-    return null
-  }
+  return supabase.auth.getUser(token).then(({ data }) => data.user ?? null).catch(() => null)
 }
 
 export async function POST(req: NextRequest) {
@@ -72,18 +60,19 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "purchaseId is required" }, { status: 400 })
     }
 
-    const clerkSub = getClerkSubFromRequest(req)
+    const supabaseAdmin = createAdminClient()
+    const scopedSupabase = await createServerSupabaseClient()
+    const { data: { user: cookieUser } } = await scopedSupabase.auth.getUser()
+    const tokenUser = await getSupabaseUserFromToken(supabaseAdmin, req)
+    const authUser = tokenUser ?? cookieUser
+    const clerkSub = authUser?.id ?? null
 
     const secretKey = process.env.PAYSTACK_SECRET_KEY
     if (!secretKey) throw new Error("PAYSTACK_SECRET_KEY is not configured")
 
-    const supabaseAdmin = createAdminClient()
-
     const { data: purchase, error } = await supabaseAdmin
       .from("gift_purchases")
-      .select(
-        "id, paystack_reference, amount, currency, status, purchaser_profile_id, profiles(clerk_user_id)"
-      )
+      .select("id, paystack_reference, amount, currency, status, purchaser_profile_id")
       .eq("id", purchaseId)
       .maybeSingle()
 
@@ -93,19 +82,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (purchase.purchaser_profile_id) {
-      const ownerClerkId = (purchase as { profiles?: { clerk_user_id?: string } })
-        .profiles?.clerk_user_id
-      const isOwner = !!clerkSub && ownerClerkId === clerkSub
+      let isOwner = false
+      const callerProfile = authUser
+        ? await resolveProfileForUser(supabaseAdmin, authUser)
+        : null
+      isOwner = callerProfile?.id === purchase.purchaser_profile_id
 
-      let isAdmin = false
-      if (!isOwner && clerkSub) {
-        const { data: callerProfile } = await supabaseAdmin
-          .from("profiles")
-          .select("role")
-          .eq("clerk_user_id", clerkSub)
-          .maybeSingle()
-        isAdmin = callerProfile?.role === "admin"
-      }
+      const isAdmin = callerProfile?.role === "admin"
 
       if (!isOwner && !isAdmin) {
         return Response.json({ error: "Not your purchase" }, { status: 403, headers: corsHeaders })

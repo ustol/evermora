@@ -1,19 +1,13 @@
-import { SignUp } from "@clerk/nextjs";
+import { SupabaseSignUpForm } from "@/components/auth/SupabaseSignUpForm";
 
-export default function SignUpPage() {
-  return (
-    <div className="flex w-full justify-center px-4">
-      <SignUp
-        routing="path"
-        path="/sign-up"
-        fallbackRedirectUrl="/dashboard"
-        appearance={{
-          elements: {
-            rootBox: "mx-auto w-full max-w-md",
-            cardBox: "w-full shadow-sm",
-          },
-        }}
-      />
-    </div>
-  );
+interface SignUpPageProps {
+  searchParams: Promise<{
+    error?: string;
+    message?: string;
+  }>;
+}
+
+export default async function SignUpPage({ searchParams }: SignUpPageProps) {
+  const params = await searchParams;
+  return <SupabaseSignUpForm error={params.error ?? null} message={params.message ?? null} />;
 }

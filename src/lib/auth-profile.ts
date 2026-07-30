@@ -1,7 +1,8 @@
-import { auth } from "@clerk/nextjs/server"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/supabase"
+import { createAdminClient } from "@/lib/supabase-admin"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { resolveProfileForUser, syncProfileForUser } from "@/lib/profile-resolver"
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 
@@ -11,25 +12,21 @@ export interface CurrentProfile {
   supabase: SupabaseClient<Database>
 }
 
-/**
- * Resolve the logged-in Clerk user to their Supabase `profiles` row, server-side.
- * The returned client is scoped to the user's Clerk token, so every query it
- * runs is enforced by RLS. Returns null when unauthenticated or when the
- * profile row does not exist yet (ClerkProfileSync creates it on first login).
- */
 export async function getCurrentProfile(): Promise<CurrentProfile | null> {
-  const { userId } = await auth()
-  if (!userId) return null
-
   const supabase = await createServerSupabaseClient()
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("clerk_user_id", userId)
-    .maybeSingle()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) return null
 
-  if (error) throw error
+  let profile = await resolveProfileForUser(supabase, user)
+
+  if (!profile) {
+    profile = await syncProfileForUser(createAdminClient(), user).catch((error) => {
+      console.error("Profile auto-sync failed", error)
+      return null
+    })
+  }
+
   if (!profile) return null
 
-  return { userId, profile, supabase }
+  return { userId: user.id, profile, supabase }
 }

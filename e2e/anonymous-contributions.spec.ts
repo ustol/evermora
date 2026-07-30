@@ -14,12 +14,12 @@ test("signed-out visitors can open the tribute form without being redirected to 
   const href = await firstMemorialLink.getAttribute("href")
   await page.goto(href!, { waitUntil: "networkidle" })
 
-  await page.getByRole("button", { name: /Leave a (tribute|condolence)/i }).click()
+  await page.getByRole("button", { name: /Leave a (message|tribute|condolence)/i }).click()
 
   // Must NOT bounce to sign-in — the whole point is no login required.
   await expect(page).not.toHaveURL(/sign-in/)
-  await expect(page.getByLabel("Your name")).toBeVisible()
-  await expect(page.getByLabel("Your message")).toBeVisible()
+  await expect(page.getByLabel(/your name/i)).toBeVisible()
+  await expect(page.getByLabel(/^message$/i)).toBeVisible()
 
   expect(errors).toEqual([])
 })
@@ -40,7 +40,8 @@ test("signed-out visitors can open the gift purchase dialog without being redire
   await page.getByRole("button", { name: /Send a wreath or rose/i }).click()
 
   await expect(page).not.toHaveURL(/sign-in/)
-  await expect(page.getByText(/no account needed/i)).toBeVisible()
+  await expect(page.getByRole("dialog", { name: /send a gift/i })).toBeVisible()
+  await expect(page.getByLabel(/^email$/i)).toBeVisible()
 
   expect(errors).toEqual([])
 })

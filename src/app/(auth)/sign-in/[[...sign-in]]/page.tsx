@@ -1,19 +1,19 @@
-import { SignIn } from "@clerk/nextjs";
+import { SupabaseSignInForm } from "@/components/auth/SupabaseSignInForm";
+import { sanitizeRedirectPath } from "@/lib/utils";
 
-export default function SignInPage() {
+interface SignInPageProps {
+  searchParams: Promise<{
+    error?: string;
+    redirect_url?: string;
+  }>;
+}
+
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+  const params = await searchParams;
   return (
-    <div className="flex w-full justify-center px-4">
-      <SignIn
-        routing="path"
-        path="/sign-in"
-        fallbackRedirectUrl="/dashboard"
-        appearance={{
-          elements: {
-            rootBox: "mx-auto w-full max-w-md",
-            cardBox: "w-full shadow-sm",
-          },
-        }}
-      />
-    </div>
+    <SupabaseSignInForm
+      error={params.error ?? null}
+      redirectUrl={sanitizeRedirectPath(params.redirect_url) ?? "/dashboard"}
+    />
   );
 }

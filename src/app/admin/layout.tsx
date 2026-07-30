@@ -1,29 +1,20 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { createAdminClient } from "@/lib/supabase-admin";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { resolveProfileForUser } from "@/lib/profile-resolver";
 import { AdminShell } from "./AdminShell";
 
-function hasAdminClaim(sessionClaims: unknown): boolean {
-  if (!sessionClaims || typeof sessionClaims !== "object") return false;
-  const claims = sessionClaims as {
-    role?: unknown;
-    metadata?: { role?: unknown };
-    publicMetadata?: { role?: unknown };
-  };
-  return (
-    claims.role === "admin" ||
-    claims.metadata?.role === "admin" ||
-    claims.publicMetadata?.role === "admin"
-  );
-}
-
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { userId, sessionClaims } = await auth();
+  const supabase = await createServerSupabaseClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (!userId) {
+  if (error || !user) {
     redirect("/sign-in?redirect_url=/admin");
   }
 
-  if (!hasAdminClaim(sessionClaims)) {
+  const profile = await resolveProfileForUser(createAdminClient(), user);
+
+  if (profile?.role !== "admin") {
     redirect("/dashboard");
   }
 

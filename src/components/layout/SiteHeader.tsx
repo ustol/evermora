@@ -5,9 +5,16 @@ import Link from "next/link"
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button"
+import { useAuth } from "@/hooks/useAuth"
+import type { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils"
 import { siteConfig } from "@/config/site"
 import { SHOW_SERVICES_PAGE } from "@/config/featureFlags"
+
+function safeAvatar(src: string) {
+  try { const url = new URL(src); if (url.protocol !== 'https:') return null; return src; }
+  catch { return null; }
+}
 
 const navLinks = [
   { to: "/memorials", label: "Find a memorial" },
@@ -16,24 +23,62 @@ const navLinks = [
   ...(SHOW_SERVICES_PAGE ? [{ to: "/services", label: "Services" }] : []),
 ];
 
-/** Auth buttons that react to Clerk state: signed-out shows "Sign in",
- *  signed-in shows a Dashboard link + the Clerk user menu. "Create a memorial"
- *  stays visible in both states. */
-function AuthButtons({ className }: { className?: string }) {
+function AuthButtons({ className, user, loading }: { className?: string; user: User | null; loading: boolean }) {
+  const signedIn = !loading && user;
+
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <Link
-        href="/sign-in"
-        className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-      >
-        Sign in
-      </Link>
-      <Link
-        href="/dashboard/memorials/new"
-        className={cn(buttonVariants({ size: "sm" }))}
-      >
-        Create a memorial
-      </Link>
+      {loading ? (
+        <span className="h-7 w-28 rounded-full bg-muted" aria-hidden="true" />
+      ) : signedIn ? (
+        <>
+          <Link
+            href="/dashboard/memorials/new"
+            className={cn(buttonVariants({ size: "sm" }))}
+          >
+            Create a memorial
+          </Link>
+          <Link
+            href="/dashboard/profile"
+            aria-label="Your profile"
+            className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-bold text-foreground ring-1 ring-border transition-colors hover:bg-muted/80"
+          >
+            {(() => {
+              const rawUrl = user?.user_metadata?.avatar_url as string | undefined;
+              const avatarUrl = rawUrl ? safeAvatar(rawUrl) : null;
+              const initial = (user?.email?.charAt(0) ?? "?").toUpperCase();
+              if (avatarUrl) {
+                return (
+                  <>
+                    <img src={avatarUrl} alt="" className="size-full object-cover" onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = "none"; el.parentElement?.querySelector(".fallback")?.classList.remove("hidden"); }} />
+                    <span className="fallback hidden size-full items-center justify-center bg-heritage-gold text-[11px] font-bold text-obsidian">{initial}</span>
+                  </>
+                );
+              }
+              return (
+                <span className="fallback flex size-full items-center justify-center bg-heritage-gold text-[11px] font-bold text-obsidian">
+                  {initial}
+                </span>
+              );
+            })()}
+          </Link>
+        </>
+      ) : (
+        <>
+          <Link
+            href="/sign-in"
+            className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/dashboard/memorials/new"
+            className={cn(buttonVariants({ size: "sm" }))}
+          >
+            Create a memorial
+          </Link>
+        </>
+      )}
     </div>
   );
 }
@@ -41,6 +86,7 @@ function AuthButtons({ className }: { className?: string }) {
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { user, isSignedIn, loading } = useAuth();
 
   return (
     <header className="fixed top-3 right-0 left-0 z-40 px-3 sm:top-4 sm:px-4">
@@ -71,8 +117,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          {/* Desktop — Clerk-controlled, SSR fallback from plain <AuthButtons> */}
-          <AuthButtons className="hidden sm:flex" />
+          <AuthButtons className="hidden sm:flex" user={user} loading={loading} />
 
           <button
             type="button"
@@ -105,13 +150,48 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-            <Link
-              href="/sign-in"
-              onClick={() => setMobileOpen(false)}
-              className={cn(buttonVariants({ variant: "ghost" }))}
-            >
-              Sign in
-            </Link>
+            {loading ? (
+              <span className="h-9 rounded-lg bg-muted" aria-hidden="true" />
+            ) : user ? (
+              <Link
+                href="/dashboard/profile"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Your profile"
+                className="flex w-fit items-center justify-center rounded-full bg-muted p-1 ring-1 ring-border hover:bg-muted/80"
+              >
+                {(() => {
+                  const raw = user.user_metadata?.avatar_url as string | undefined;
+                  const av = raw ? safeAvatar(raw) : null;
+                  const initial = (user.email?.charAt(0) ?? "?").toUpperCase();
+                  if (av) {
+                    return (
+                      <>
+                        <img
+                          src={av}
+                          alt=""
+                          className="size-8 rounded-full object-cover"
+                          onError={(e) => { const el = e.target as HTMLImageElement; el.style.display = "none"; el.parentElement?.querySelector(".m-fallback")?.classList.remove("hidden"); }}
+                        />
+                        <span className="m-fallback hidden size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">{initial}</span>
+                      </>
+                    );
+                  }
+                  return (
+                    <span className="m-fallback flex size-8 items-center justify-center rounded-full bg-heritage-gold text-xs font-bold text-obsidian">
+                      {initial}
+                    </span>
+                  );
+                })()}
+              </Link>
+            ) : (
+              <Link
+                href="/sign-in"
+                onClick={() => setMobileOpen(false)}
+                className={cn(buttonVariants({ variant: "ghost" }))}
+              >
+                Sign in
+              </Link>
+            )}
             <Link
               href="/dashboard/memorials/new"
               onClick={() => setMobileOpen(false)}

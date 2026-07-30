@@ -6,10 +6,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "5mb",
     },
   },
-  allowedDevOrigins: [
-    "localhost",
-    "https://akornafa.com",
-  ],
+  allowedDevOrigins: ["**.modal.host", "*.modal.host", "localhost","akornafa.com"],
 };
 
 export default nextConfig;

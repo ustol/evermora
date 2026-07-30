@@ -1,6 +1,5 @@
 import Link from "next/link"
-import { redirect } from "next/navigation"
-import { getCurrentProfile } from "@/lib/auth-profile"
+import { createServerSupabaseClient } from "@/lib/supabase-server"
 import { listMemorialsOwnedBy } from "@/services/memorials"
 import { Container } from "@/components/layout/Container"
 import { PageHeader } from "@/components/layout/PageHeader"
@@ -9,12 +8,13 @@ import { ErrorState } from "@/components/layout/ErrorState"
 import { OwnerMemorialCard } from "@/components/memorial/OwnerMemorialCard"
 
 export default async function DashboardMemorialsPage() {
-  const current = await getCurrentProfile()
-  if (!current) redirect("/sign-in")
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return <Container className="py-16"><ErrorState /></Container>
 
   let memorials: Awaited<ReturnType<typeof listMemorialsOwnedBy>>
   try {
-    memorials = await listMemorialsOwnedBy(current.supabase, current.profile.id)
+    memorials = await listMemorialsOwnedBy(supabase, user.id)
   } catch {
     return <Container className="py-16"><ErrorState /></Container>
   }

@@ -55,7 +55,7 @@ export function TributeCard({ contribution, showContributorNames, onOpen }: Trib
             </Avatar>
             <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
           </div>
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-heritage-gold/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-heritage-gold">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-heritage-gold/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-obsidian">
             <Heart className="size-2.5" aria-hidden="true" />
             {typeLabels[contribution.contributionType] ?? contribution.contributionType}
           </span>

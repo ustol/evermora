@@ -1,50 +1,83 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
-export default clerkMiddleware(async (auth, req) => {
+const publicPaths = [
+  "/",
+  "/sign-in",
+  "/sign-up",
+  "/memorials",
+  "/about",
+  "/blog",
+  "/privacy",
+  "/terms",
+  "/api",
+];
+
+export async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
-  const publicPaths = [
-    "/",
-    "/sign-in",
-    "/sign-up",
-    "/memorials",
-    "/about",
-    "/blog",
-    "/privacy",
-    "/terms",
-    "/api",
-  ];
+  const isProtectedCreateRoute =
+    pathname === "/memorials/new" ||
+    pathname.startsWith("/memorials/new/") ||
+    pathname === "/memorials/create" ||
+    pathname.startsWith("/memorials/create/");
 
-  if (publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
-    return;
+  if (!isProtectedCreateRoute && publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+    return NextResponse.next();
   }
 
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
-    try {
-      const { userId } = await auth();
-      if (!userId) {
-        const signInUrl = new URL("/sign-in", req.url);
-        signInUrl.searchParams.set("redirect_url", pathname);
-        return NextResponse.redirect(signInUrl);
-      }
-    } catch {
-      // Clerk's auth() may throw on frozen headers in some Next.js versions.
-      // Fallback: check if the request has a session token directly.
-      const sessionCookie = req.cookies.get("__session");
-      if (!sessionCookie) {
-        const signInUrl = new URL("/sign-in", req.url);
-        signInUrl.searchParams.set("redirect_url", pathname);
-        return NextResponse.redirect(signInUrl);
-      }
-    }
+  if (!isProtectedCreateRoute && !pathname.startsWith("/dashboard") && !pathname.startsWith("/admin")) {
+    return NextResponse.next();
   }
-});
+
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    const signInUrl = new URL("/sign-in", req.url);
+    signInUrl.searchParams.set("redirect_url", pathname);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  let response = NextResponse.next({ request: req });
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseKey,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+          response = NextResponse.next({ request: req });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    },
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    const signInUrl = new URL("/sign-in", req.url);
+    signInUrl.searchParams.set("redirect_url", pathname);
+    const redirectResponse = NextResponse.redirect(signInUrl);
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+    return redirectResponse;
+  }
+
+  return response;
+}
+
+export default proxy;
 
 export const config = {
   matcher: [
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
-    "/__clerk/(.*)",
   ],
 };

@@ -1,9 +1,9 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase-browser"
 import { Container } from "@/components/layout/Container"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { ErrorState } from "@/components/layout/ErrorState"
@@ -41,6 +41,7 @@ type FuneralEvent = Database["public"]["Tables"]["funeral_events"]["Row"]
 
 interface MemorialWizardProps {
   memorialId?: string
+  userId: string
 }
 
 function toFuneralEventValues(event: FuneralEvent): FuneralEventValues {
@@ -61,31 +62,10 @@ function toFuneralEventValues(event: FuneralEvent): FuneralEventValues {
   }
 }
 
-export function MemorialWizard({ memorialId }: MemorialWizardProps) {
+export function MemorialWizard({ memorialId, userId }: MemorialWizardProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [profile, setProfile] = useState<any>(null)
-  const [profileLoading, setProfileLoading] = useState(true)
-  const [supabase] = useState(() => createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    { auth: { persistSession: false } }
-  ))
-
-  // Load profile
-  useEffect(() => {
-    const clerkUser = (window as any).Clerk?.user
-    if (!clerkUser) { setProfileLoading(false); return }
-    ;(async () => {
-      try {
-        const { data } = await supabase.from("profiles").select("*").eq("clerk_user_id", clerkUser.id).maybeSingle()
-        setProfile(data)
-      } catch (e) {
-        console.error("profile load error:", e)
-      }
-      setProfileLoading(false)
-    })()
-  }, [])
+  const [supabase] = useState(() => createClient())
 
   // Saving step 1 of a NEW memorial navigates to the /edit route, which
   // mounts a fresh wizard instance — the step to resume at rides along in
@@ -121,17 +101,13 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
   }, [memorialId])
 
   async function handlePersonalDetailsSubmit(values: PersonalDetailsValues) {
-    if (!profile) {
-      toast.error("Your profile is still loading — please try again in a moment.")
-      return
-    }
     setSubmitting(true)
     try {
       if (!memorial) {
         const slug = await generateUniqueSlug(supabase, values.displayName)
         const created = await createMemorialDraft(
           supabase,
-          profile.id,
+          userId,
           values,
           slug
         )
@@ -158,7 +134,7 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
     removed: boolean
     alt: string
   }) {
-    if (!memorial || !profile) return
+    if (!memorial || !userId) return
     setSubmitting(true)
     try {
       let photoPath = memorial.primary_photo_path
@@ -166,7 +142,7 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
         photoPath = await uploadPrimaryPhoto(
           supabase,
           memorial.id,
-          profile.id,
+          userId,
           result.file
         )
       } else if (result.removed) {
@@ -279,10 +255,10 @@ export function MemorialWizard({ memorialId }: MemorialWizardProps) {
     )
   }
 
-  // In edit mode, wait for the loaded memorial to land in state before
-  // mounting any form — react-hook-form captures defaultValues on first
-  // render only, so mounting a frame early would show empty fields.
-  if (memorialId && (!memorial || profileLoading)) {
+  if (memorialId && !memorial) {
+    // In edit mode, wait for the loaded memorial to land in state before
+    // mounting any form — react-hook-form captures defaultValues on first
+    // render only, so mounting a frame early would show empty fields.
     return (
       <Container className="py-12">
         <Skeleton className="h-8 w-64" />

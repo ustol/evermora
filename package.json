@@ -17,6 +17,7 @@
     "@hookform/resolvers": "^5.4.0",
     "@paystack/inline-js": "^2.23.1",
     "@supabase/server": "^1.4.1",
+    "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.110.4",
     "@tanstack/react-query-devtools": "^5.101.2",
     "class-variance-authority": "^0.7.1",
