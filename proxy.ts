@@ -29,6 +29,8 @@ export default clerkMiddleware(async (auth, req) => {
         return NextResponse.redirect(signInUrl);
       }
     } catch {
+      // Clerk's auth() may throw on frozen headers in some Next.js versions.
+      // Fallback: check if the request has a session token directly.
       const sessionCookie = req.cookies.get("__session");
       if (!sessionCookie) {
         const signInUrl = new URL("/sign-in", req.url);

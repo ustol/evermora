@@ -37,6 +37,7 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
   const [selectedGift, setSelectedGift] = useState<Gift | null>(null)
   const [purchasing, setPurchasing] = useState(false)
   const [purchaserName, setPurchaserName] = useState("")
+  const [purchaserEmail, setPurchaserEmail] = useState("")
 
   useEffect(() => {
     if (!open) return
@@ -69,7 +70,6 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
     setPurchasing(true)
 
     try {
-      const buyerEmail = ""
       const response = await fetch("/api/verify-gift-purchase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,7 +78,7 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
           giftId: selectedGift.id,
           amount: selectedGift.price,
           purchaserDisplayName: purchaserName.trim() || undefined,
-          buyerEmail,
+          buyerEmail: purchaserEmail.trim() || undefined,
         }),
       })
 
@@ -90,6 +90,7 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
       setOpen(false)
       setSelectedGift(null)
       setPurchaserName("")
+      setPurchaserEmail("")
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong. Please try again.")
     } finally {
@@ -105,6 +106,7 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
         if (!next) {
           setSelectedGift(null)
           setPurchaserName("")
+          setPurchaserEmail("")
         }
       }}
     >
@@ -141,12 +143,23 @@ export function PurchaseGiftDialog({ memorialId, onPurchased }: PurchaseGiftDial
         </div>
 
         <Field className="mt-2">
-          <FieldLabel htmlFor="purchaser-name">Your name (optional)</FieldLabel>
+          <FieldLabel htmlFor="purchaser-name">Your name</FieldLabel>
           <Input
             id="purchaser-name"
             value={purchaserName}
             onChange={(e) => setPurchaserName(e.target.value)}
             placeholder="Displayed on the memorial"
+          />
+        </Field>
+
+        <Field className="mt-2">
+          <FieldLabel htmlFor="purchaser-email">Email address</FieldLabel>
+          <Input
+            id="purchaser-email"
+            type="email"
+            value={purchaserEmail}
+            onChange={(e) => setPurchaserEmail(e.target.value)}
+            placeholder="For receipt (not shown publicly)"
           />
         </Field>
 
