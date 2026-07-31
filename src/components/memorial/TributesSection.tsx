@@ -11,7 +11,6 @@ interface TributesSectionProps {
   slug: string;
   allowTributes: boolean;
   allowCondolences: boolean;
-  allowContributorPhotos: boolean;
   requireApproval: boolean;
   showContributorNames: boolean;
   initialTributes?: Array<{
@@ -31,7 +30,6 @@ export function TributesSection({
   slug,
   allowTributes,
   allowCondolences,
-  allowContributorPhotos,
   requireApproval,
   showContributorNames,
   initialTributes = [],
@@ -58,7 +56,6 @@ export function TributesSection({
             slug={slug}
             allowTributes={allowTributes}
             allowCondolences={allowCondolences}
-            allowPhotos={allowContributorPhotos}
             requireApproval={requireApproval}
           />
         )}

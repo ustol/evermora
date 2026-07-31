@@ -68,4 +68,23 @@ describe("Supabase cookie options", () => {
       secure: false,
     });
   });
+
+  it("can compute browser cookie options during server rendering without window", () => {
+    const originalWindow = globalThis.window;
+
+    try {
+      // @ts-expect-error Temporarily removing jsdom's window exercises the SSR path.
+      delete globalThis.window;
+      expect(getBrowserSupabaseCookieOptions()).toMatchObject({
+        path: "/",
+        sameSite: "lax",
+        secure: false,
+      });
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+  });
 });
