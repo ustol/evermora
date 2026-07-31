@@ -22,4 +22,10 @@ describe("GoogleSignInButton", () => {
 
     expect(screen.getByDisplayValue("/dashboard")).toHaveAttribute("name", "redirect_url")
   })
+
+  it("supports a custom label for sign-up surfaces", () => {
+    render(<GoogleSignInButton label="Sign up with Google" />)
+
+    expect(screen.getByRole("button", { name: "Sign up with Google" })).toBeInTheDocument()
+  })
 })

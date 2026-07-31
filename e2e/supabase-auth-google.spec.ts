@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test"
 import { trackConsoleErrors } from "./helpers"
 
 const GOOGLE_ROUTE = "/api/auth/sign-in/google"
+const OAUTH_REDIRECT_COOKIE = "akornafa_oauth_redirect_url"
 
 function parseRedirectTo(location: string) {
   const redirectTo = new URL(location).searchParams.get("redirect_to")
@@ -9,11 +10,25 @@ function parseRedirectTo(location: string) {
   return new URL(redirectTo!)
 }
 
+function cookieHeaders(response: { headersArray(): { name: string; value: string }[] }) {
+  return response
+    .headersArray()
+    .filter((header) => header.name.toLowerCase() === "set-cookie")
+    .map((header) => header.value)
+}
+
+function oauthRedirectCookie(response: { headersArray(): { name: string; value: string }[] }) {
+  return cookieHeaders(response).find((cookie) => cookie.startsWith(`${OAUTH_REDIRECT_COOKIE}=`))
+}
+
 test.describe("Supabase Google OAuth", () => {
-  test("GET /api/auth/sign-in/google starts the Google OAuth flow with a callback redirect", async ({ request, baseURL }) => {
+  test("GET /api/auth/sign-in/google starts OAuth with a clean callback URL and HTTP-only return-path cookie", async ({
+    request,
+    baseURL,
+  }) => {
     if (!baseURL) throw new Error("Playwright baseURL is not configured")
 
-    const response = await request.get(new URL(`${GOOGLE_ROUTE}?redirect_url=%2Fdashboard`, baseURL).toString(), {
+    const response = await request.get(new URL(`${GOOGLE_ROUTE}?redirect_url=%2Fdashboard%2Fmemorials%2Fnew`, baseURL).toString(), {
       maxRedirects: 0,
     })
 
@@ -27,7 +42,14 @@ test.describe("Supabase Google OAuth", () => {
 
     const callbackUrl = parseRedirectTo(location!)
     expect(callbackUrl.pathname).toBe("/api/auth/callback")
-    expect(callbackUrl.searchParams.get("redirect_url")).toBe("/dashboard")
+    expect(callbackUrl.search, "Supabase redirect_to should not leak app return path in query parameters").toBe("")
+
+    const returnPathCookie = oauthRedirectCookie(response)
+    expect(returnPathCookie, "OAuth route should store the post-auth return path in a cookie").toBeTruthy()
+    expect(returnPathCookie).toContain(`${OAUTH_REDIRECT_COOKIE}=%2Fdashboard%2Fmemorials%2Fnew`)
+    expect(returnPathCookie).toContain("HttpOnly")
+    expect(returnPathCookie).toContain("Path=/")
+    expect(returnPathCookie).toContain("Max-Age=600")
   })
 
   test("Google sign-in button submits the form to the OAuth route with redirect_url", async ({ page }) => {
@@ -62,10 +84,35 @@ test.describe("Supabase Google OAuth", () => {
     expect(errors).toEqual([])
   })
 
-  test("OAuth callback without a code redirects back to sign-in and preserves a safe redirect_url", async ({ request, baseURL }) => {
+  test("OAuth callback without a code uses the return-path cookie and clears it", async ({ request, baseURL }) => {
     if (!baseURL) throw new Error("Playwright baseURL is not configured")
 
-    const response = await request.get(new URL("/api/auth/callback?redirect_url=%2Fdashboard", baseURL).toString(), {
+    const response = await request.get(new URL("/api/auth/callback", baseURL).toString(), {
+      headers: {
+        cookie: `${OAUTH_REDIRECT_COOKIE}=${encodeURIComponent("/dashboard/memorials/new")}`,
+      },
+      maxRedirects: 0,
+    })
+
+    expect(response.status(), await response.text()).toBe(303)
+    const location = response.headers()["location"]
+    expect(location).toContain("/sign-in?error=")
+    expect(decodeURIComponent(location ?? "")).toContain("redirect_url=/dashboard/memorials/new")
+
+    const clearedCookie = oauthRedirectCookie(response)
+    expect(clearedCookie, "Callback should clear the temporary OAuth return-path cookie").toBeTruthy()
+    expect(clearedCookie).toContain(`${OAUTH_REDIRECT_COOKIE}=`)
+    expect(clearedCookie).toContain("Max-Age=0")
+    expect(clearedCookie).toContain("HttpOnly")
+  })
+
+  test("OAuth callback ignores an unsafe return-path cookie and falls back to dashboard", async ({ request, baseURL }) => {
+    if (!baseURL) throw new Error("Playwright baseURL is not configured")
+
+    const response = await request.get(new URL("/api/auth/callback", baseURL).toString(), {
+      headers: {
+        cookie: `${OAUTH_REDIRECT_COOKIE}=${encodeURIComponent("https://evil.example/phish")}`,
+      },
       maxRedirects: 0,
     })
 
@@ -73,5 +120,6 @@ test.describe("Supabase Google OAuth", () => {
     const location = response.headers()["location"]
     expect(location).toContain("/sign-in?error=")
     expect(decodeURIComponent(location ?? "")).toContain("redirect_url=/dashboard")
+    expect(decodeURIComponent(location ?? "")).not.toContain("evil.example")
   })
 })

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
 interface GoogleSignInButtonProps {
+  label?: string;
   redirectUrl?: string;
 }
 
@@ -30,7 +31,7 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleSignInButton({ redirectUrl = "/dashboard" }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ label = "Continue with Google", redirectUrl = "/dashboard" }: GoogleSignInButtonProps) {
   const [loading, setLoading] = useState(false);
 
   return (
@@ -49,7 +50,7 @@ export function GoogleSignInButton({ redirectUrl = "/dashboard" }: GoogleSignInB
         ) : (
           <>
             <GoogleIcon />
-            <span>Continue with Google</span>
+            <span>{label}</span>
           </>
         )}
       </button>
