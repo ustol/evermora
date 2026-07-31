@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { createAdminClient } from "@supabase/server/core"
 import { existsSync, readFileSync } from "node:fs"
+import type { Database } from "../src/types/supabase"
 import { trackConsoleErrors } from "./helpers"
 
 function loadDotEnv() {
@@ -15,7 +16,7 @@ function loadDotEnv() {
 
 async function createConfirmedTestUser() {
   loadDotEnv()
-  const admin = createAdminClient()
+  const admin = createAdminClient<Database>()
   const stamp = `${Date.now()}-${Math.random().toString(36).slice(2)}`
   const email = `memorial-flow-${stamp}@example.com`
   const password = `Memorial-flow-${stamp}!`
@@ -93,6 +94,53 @@ test.describe("Supabase auth and protected memorial routes", () => {
     }
   })
 
+  test("admin user lands on the requested admin redirect_url after sign-in", async ({ page }) => {
+    const auth = await createConfirmedTestUser()
+    const errors = trackConsoleErrors(page)
+    const redirectUrl = "/admin?source=login&tab=overview"
+
+    try {
+      const { error: profileError } = await auth.admin.from("profiles").upsert({
+        id: auth.userId,
+        clerk_user_id: auth.userId,
+        email: auth.email,
+        display_name: "Admin Redirect Tester",
+        role: "admin",
+      })
+      expect(profileError).toBeNull()
+
+      await page.goto(`/sign-in?${new URLSearchParams({ redirect_url: redirectUrl }).toString()}`)
+      await page.getByLabel("Email").fill(auth.email)
+      await page.locator("#password").fill(auth.password)
+      await page.getByRole("button", { name: "Sign in" }).click()
+
+      await expect(page).toHaveURL(new RegExp(`/admin\\?source=login&tab=overview$`), { timeout: 20_000 })
+      await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible()
+      await expect(page.getByText("Platform administration.")).toBeVisible()
+      expect(errors).toEqual([])
+    } finally {
+      await cleanupTestUser(auth)
+    }
+  })
+
+  test("non-admin user following an admin redirect_url is routed back to the dashboard", async ({ page }) => {
+    const auth = await createConfirmedTestUser()
+    const errors = trackConsoleErrors(page)
+
+    try {
+      await page.goto("/sign-in?redirect_url=/admin")
+      await page.getByLabel("Email").fill(auth.email)
+      await page.locator("#password").fill(auth.password)
+      await page.getByRole("button", { name: "Sign in" }).click()
+
+      await expect(page).toHaveURL(/\/dashboard$/, { timeout: 20_000 })
+      await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible()
+      expect(errors).toEqual([])
+    } finally {
+      await cleanupTestUser(auth)
+    }
+  })
+
   test("/dashboard/memorials/new redirects a signed-out visitor to sign-in", async ({ page }) => {
     const errors = trackConsoleErrors(page)
 
@@ -129,6 +177,57 @@ test.describe("Supabase auth and protected memorial routes", () => {
     expect(errors).toEqual([])
   })
 
+  test("admin sign-in failure offers a non-enumerating setup path", async ({ page }) => {
+    const errors = trackConsoleErrors(page)
+
+    await page.goto("/sign-in?redirect_url=/admin")
+    await page.getByLabel("Email").fill(`unknown-admin-${Date.now()}@example.com`)
+    await page.locator("#password").fill("wrong-password")
+    await page.getByRole("button", { name: "Sign in" }).click()
+
+    await expect(page).toHaveURL(/\/sign-in\?error=/, { timeout: 15_000 })
+    await expect(page.getByText(/Admin access now uses Supabase passwords/i)).toBeVisible()
+    await expect(page.getByText(/existing admin email/i)).toBeVisible()
+    await expect(page.getByText(/not-a-user|unknown-admin/i)).toHaveCount(0)
+    await page.getByRole("link", { name: "create your admin password" }).click()
+    await expect(page).toHaveURL(/\/sign-up\?/, { timeout: 15_000 })
+    const signUpUrl = new URL(page.url())
+    expect(signUpUrl.searchParams.get("redirect_url")).toBe("/admin")
+    expect(errors).toEqual([])
+  })
+
+  test("sign-up preserves an admin redirect_url with its query string in the submitted form", async ({ page }) => {
+    const redirectUrl = "/admin/gift-purchases?status=pending&sort=newest"
+    const errors = trackConsoleErrors(page)
+    const submission = page.waitForRequest(
+      (request) => request.url().endsWith("/api/auth/sign-up") && request.method() === "POST",
+    )
+
+    await page.route("**/api/auth/sign-up", async (route) => {
+      await route.fulfill({ status: 204, body: "" })
+    })
+    await page.goto(`/sign-up?${new URLSearchParams({
+      email: "admin@example.com",
+      message: "Create your admin password to continue.",
+      redirect_url: redirectUrl,
+    }).toString()}`)
+
+    await expect(page.getByText("Create your admin password to continue.")).toBeVisible()
+    await expect(page.getByLabel("Email")).toHaveValue("admin@example.com")
+    await expect(page.locator('input[name="redirect_url"]')).toHaveValue(redirectUrl)
+
+    await page.getByLabel("First name").fill("Admin")
+    await page.getByLabel("Last name").fill("User")
+    await page.locator("#password").fill("testpassword123")
+    await page.getByRole("button", { name: "Create account" }).click()
+
+    const request = await submission
+    const form = new URLSearchParams(request.postData() ?? "")
+    expect(form.get("redirect_url")).toBe(redirectUrl)
+    expect(form.get("email")).toBe("admin@example.com")
+    expect(errors).toEqual([])
+  })
+
   test("sign-in password visibility can be toggled", async ({ page }) => {
     await page.goto("/sign-in")
     const password = page.locator("#password")
@@ -143,7 +242,7 @@ test.describe("Supabase auth and protected memorial routes", () => {
   test("sign-up has name fields, password visibility, and submits through the app", async ({ page }) => {
     const errors = trackConsoleErrors(page)
     loadDotEnv()
-    const admin = createAdminClient()
+    const admin = createAdminClient<Database>()
     const email = `auth-regression-${Date.now()}@gmail.com`
 
     try {

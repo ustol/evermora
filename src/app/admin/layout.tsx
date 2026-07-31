@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { data: { user }, error } = await supabase.auth.getUser();
 
   if (error || !user) {
-    redirect("/sign-in?redirect_url=/admin");
+    return <AdminShell>{null}</AdminShell>;
   }
 
   const profile = await resolveProfileForUser(createAdminClient(), user);

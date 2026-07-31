@@ -12,6 +12,11 @@ interface SupabaseSignInFormProps {
 export function SupabaseSignInForm({ error, redirectUrl = "/dashboard" }: SupabaseSignInFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const showAdminSetupHelp = redirectUrl.startsWith("/admin") && error?.toLowerCase().includes("invalid");
+  const adminSetupUrl = `/sign-up?${new URLSearchParams({
+    redirect_url: redirectUrl,
+    message: "If your admin account predates the auth migration, create a Supabase password for the same email once. You will be returned to the admin dashboard.",
+  }).toString()}`;
 
   return (
     <div className="w-full max-w-sm">
@@ -68,6 +73,15 @@ export function SupabaseSignInForm({ error, redirectUrl = "/dashboard" }: Supaba
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
+        {showAdminSetupHelp && (
+          <p className="rounded-lg border border-heritage-gold/30 bg-heritage-gold/10 px-3 py-2 text-sm text-foreground">
+            Admin access now uses Supabase passwords. If this is an existing admin email, {" "}
+            <Link href={adminSetupUrl} className="font-medium underline underline-offset-2 hover:text-foreground/80">
+              create your admin password
+            </Link>
+            {" "}and then sign in again.
+          </p>
+        )}
 
         <button
           type="submit"

@@ -50,7 +50,7 @@ export async function syncProfileForUser(
 
   const { data, error } = await supabase
     .from("profiles")
-    .insert({ clerk_user_id: user.id, email, display_name: displayName })
+    .insert({ id: user.id, clerk_user_id: user.id, email, display_name: displayName })
     .select("*")
     .single();
 

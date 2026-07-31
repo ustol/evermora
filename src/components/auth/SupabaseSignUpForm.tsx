@@ -6,10 +6,17 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 interface SupabaseSignUpFormProps {
   error?: string | null;
+  initialEmail?: string;
   message?: string | null;
+  redirectUrl?: string;
 }
 
-export function SupabaseSignUpForm({ error, message }: SupabaseSignUpFormProps) {
+export function SupabaseSignUpForm({
+  error,
+  initialEmail = "",
+  message,
+  redirectUrl = "/dashboard",
+}: SupabaseSignUpFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,6 +33,7 @@ export function SupabaseSignUpForm({ error, message }: SupabaseSignUpFormProps) 
         className="space-y-4"
         onSubmit={() => setSubmitting(true)}
       >
+        <input type="hidden" name="redirect_url" value={redirectUrl} />
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="firstName" className="mb-1.5 block text-sm font-medium text-foreground">
@@ -63,6 +71,7 @@ export function SupabaseSignUpForm({ error, message }: SupabaseSignUpFormProps) 
             type="email"
             required
             autoComplete="email"
+            defaultValue={initialEmail}
             className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder="you@example.com"
           />

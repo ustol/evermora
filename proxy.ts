@@ -15,8 +15,16 @@ const publicPaths = [
   "/api",
 ];
 
+function buildForwardedHeaders(req: NextRequest, redirectPath: string) {
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-current-path", redirectPath);
+  requestHeaders.set("cookie", req.cookies.toString());
+  return requestHeaders;
+}
+
 export async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
+  const redirectPath = `${pathname}${req.nextUrl.search}`;
 
   const isProtectedCreateRoute =
     pathname === "/memorials/new" ||
@@ -36,11 +44,11 @@ export async function proxy(req: NextRequest) {
   const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !supabaseKey) {
     const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("redirect_url", pathname);
+    signInUrl.searchParams.set("redirect_url", redirectPath);
     return NextResponse.redirect(signInUrl);
   }
 
-  let response = NextResponse.next({ request: req });
+  let response = NextResponse.next({ request: { headers: buildForwardedHeaders(req, redirectPath) } });
   const supabase = createServerClient(
     supabaseUrl,
     supabaseKey,
@@ -52,7 +60,7 @@ export async function proxy(req: NextRequest) {
         },
         setAll(cookiesToSet, headers = {}) {
           cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
-          response = NextResponse.next({ request: req });
+          response = NextResponse.next({ request: { headers: buildForwardedHeaders(req, redirectPath) } });
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
           });
@@ -68,7 +76,7 @@ export async function proxy(req: NextRequest) {
 
   if (!user) {
     const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("redirect_url", pathname);
+    signInUrl.searchParams.set("redirect_url", redirectPath);
     const redirectResponse = NextResponse.redirect(signInUrl);
     response.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie);

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { requireUser } from "@/lib/require-auth"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
 import { listMemorialsOwnedBy } from "@/services/memorials"
 import { Container } from "@/components/layout/Container"
@@ -8,9 +9,8 @@ import { ErrorState } from "@/components/layout/ErrorState"
 import { OwnerMemorialCard } from "@/components/memorial/OwnerMemorialCard"
 
 export default async function DashboardMemorialsPage() {
+  const user = await requireUser("/dashboard/memorials")
   const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return <Container className="py-16"><ErrorState /></Container>
 
   let memorials: Awaited<ReturnType<typeof listMemorialsOwnedBy>>
   try {
