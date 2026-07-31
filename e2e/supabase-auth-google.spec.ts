@@ -84,6 +84,69 @@ test.describe("Supabase Google OAuth", () => {
     expect(errors).toEqual([])
   })
 
+  test("Google sign-up button submits to the OAuth route with the sanitized redirect_url", async ({ page }) => {
+    const errors = trackConsoleErrors(page)
+    let submittedUrl: URL | undefined
+    let submittedMethod: string | undefined
+
+    await page.route(`**${GOOGLE_ROUTE}?**`, async (route) => {
+      const request = route.request()
+      submittedUrl = new URL(request.url())
+      submittedMethod = request.method()
+      await route.fulfill({
+        status: 303,
+        headers: { location: "/sign-up?oauth_test=1" },
+        body: "",
+      })
+    })
+
+    await page.goto("/sign-up?redirect_url=%2Fdashboard%2Fmemorials%2Fnew")
+
+    const googleButton = page.getByRole("button", { name: "Sign up with Google" })
+    const googleForm = googleButton.locator("xpath=ancestor::form[1]")
+    await expect(googleButton).toBeVisible()
+    await expect(googleForm).toHaveAttribute("method", /get/i)
+    await expect(googleForm).toHaveAttribute("action", /\/api\/auth\/sign-in\/google$/)
+    await expect(googleForm.locator('input[name="redirect_url"]')).toHaveValue("/dashboard/memorials/new")
+
+    await googleButton.click()
+
+    await expect(page).toHaveURL(/\/sign-up\?oauth_test=1/, { timeout: 15_000 })
+    expect(submittedMethod).toBe("GET")
+    expect(submittedUrl?.pathname).toBe(GOOGLE_ROUTE)
+    expect(submittedUrl?.searchParams.get("redirect_url")).toBe("/dashboard/memorials/new")
+    expect(errors).toEqual([])
+  })
+
+  test("Google sign-up button falls back to dashboard for an unsafe redirect_url", async ({ page }) => {
+    const errors = trackConsoleErrors(page)
+    let submittedUrl: URL | undefined
+
+    await page.route(`**${GOOGLE_ROUTE}?**`, async (route) => {
+      submittedUrl = new URL(route.request().url())
+      await route.fulfill({
+        status: 303,
+        headers: { location: "/sign-up?oauth_test=unsafe" },
+        body: "",
+      })
+    })
+
+    await page.goto("/sign-up?redirect_url=https%3A%2F%2Fevil.example%2Fphish")
+
+    const googleButton = page.getByRole("button", { name: "Sign up with Google" })
+    const googleForm = googleButton.locator("xpath=ancestor::form[1]")
+    await expect(googleButton).toBeVisible()
+    await expect(googleForm.locator('input[name="redirect_url"]')).toHaveValue("/dashboard")
+
+    await googleButton.click()
+
+    await expect(page).toHaveURL(/\/sign-up\?oauth_test=unsafe/, { timeout: 15_000 })
+    expect(submittedUrl?.pathname).toBe(GOOGLE_ROUTE)
+    expect(submittedUrl?.searchParams.get("redirect_url")).toBe("/dashboard")
+    expect(submittedUrl?.toString()).not.toContain("evil.example")
+    expect(errors).toEqual([])
+  })
+
   test("OAuth callback without a code uses the return-path cookie and clears it", async ({ request, baseURL }) => {
     if (!baseURL) throw new Error("Playwright baseURL is not configured")
 
