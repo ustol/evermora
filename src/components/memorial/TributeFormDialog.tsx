@@ -73,6 +73,18 @@ export function TributeFormDialog({
     setPreviewUrl(URL.createObjectURL(selected))
   }
 
+  function setDialogChecked(checked: boolean) {
+    const toggle = document.getElementById(dialogToggleId) as HTMLInputElement | null
+    if (toggle) toggle.checked = checked
+    if (!checked) resetForm()
+  }
+
+  function handleDialogToggleKeyDown(e: React.KeyboardEvent<HTMLElement>, checked: boolean) {
+    if (e.key !== "Enter" && e.key !== " ") return
+    e.preventDefault()
+    setDialogChecked(checked)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!content.trim() && !file) {
@@ -145,9 +157,7 @@ export function TributeFormDialog({
           ? "Thank you — your message has been sent for review."
           : "Thank you — your message has been added."
       )
-      resetForm()
-      const toggle = document.getElementById(dialogToggleId) as HTMLInputElement | null
-      if (toggle) toggle.checked = false
+      setDialogChecked(false)
     } catch (err) {
       console.error("submit error:", err)
       toast.error("Something went wrong. Please try again.")
@@ -158,13 +168,14 @@ export function TributeFormDialog({
 
   return (
     <>
-      <input id={dialogToggleId} type="checkbox" className="peer sr-only" aria-hidden="true" />
+      <input id={dialogToggleId} type="checkbox" className="peer sr-only" aria-hidden="true" tabIndex={-1} />
       <label
         htmlFor={dialogToggleId}
         role="button"
         tabIndex={0}
         data-testid="tribute-form-trigger"
         className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}
+        onKeyDown={(e) => handleDialogToggleKeyDown(e, true)}
       >
         <HeartHandshake className="size-4" aria-hidden="true" />
         {allowTributes && allowCondolences ? "Leave a message" : allowTributes ? "Leave a tribute" : "Send condolences"}
@@ -183,12 +194,18 @@ export function TributeFormDialog({
           aria-labelledby="tribute-dialog-title"
           aria-describedby="tribute-dialog-description"
           className="relative z-10 grid max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setDialogChecked(false)
+          }}
         >
           <label
             htmlFor={dialogToggleId}
+            role="button"
+            tabIndex={0}
             aria-label="Close"
             className="absolute right-2 top-2 flex size-7 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={resetForm}
+            onKeyDown={(e) => handleDialogToggleKeyDown(e, false)}
           >
             <X className="size-4" aria-hidden="true" />
           </label>
@@ -285,7 +302,14 @@ export function TributeFormDialog({
             </div>
 
             <div className="-mx-4 -mb-4 mt-6 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end">
-              <label htmlFor={dialogToggleId} className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")} onClick={resetForm}>
+              <label
+                htmlFor={dialogToggleId}
+                role="button"
+                tabIndex={0}
+                className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}
+                onClick={resetForm}
+                onKeyDown={(e) => handleDialogToggleKeyDown(e, false)}
+              >
                 Cancel
               </label>
               <Button type="submit" disabled={submitting}>{submitting ? "Sending…" : "Send"}</Button>

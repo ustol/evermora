@@ -35,6 +35,13 @@ beforeEach(() => {
   })
 })
 
+function getDialogToggle() {
+  const trigger = screen.getByTestId("tribute-form-trigger")
+  const toggleId = trigger.getAttribute("for")
+  expect(toggleId).toBeTruthy()
+  return document.getElementById(toggleId!) as HTMLInputElement
+}
+
 describe("TributeFormDialog", () => {
   it("shows the optional photo upload section independently of standalone gallery photos", async () => {
     const user = userEvent.setup()
@@ -46,6 +53,57 @@ describe("TributeFormDialog", () => {
     expect(input).toHaveAttribute("type", "file")
     expect(input).toHaveAttribute("accept", "image/jpeg,image/png,image/webp")
     expect(screen.getByText(/add a picture to accompany your message/i)).toBeInTheDocument()
+  })
+
+  it("opens the leave-a-message dialog from the keyboard trigger", async () => {
+    const user = userEvent.setup()
+
+    render(<TributeFormDialog {...defaultProps} />)
+    const trigger = screen.getByRole("button", { name: /leave a message/i })
+    const toggle = getDialogToggle()
+
+    trigger.focus()
+    expect(trigger).toHaveFocus()
+    await user.keyboard("{Enter}")
+    expect(toggle).toBeChecked()
+
+    screen.getByRole("button", { name: /close/i }).focus()
+    await user.keyboard("{Enter}")
+    expect(toggle).not.toBeChecked()
+
+    trigger.focus()
+    await user.keyboard(" ")
+    expect(toggle).toBeChecked()
+  })
+
+  it("closes the dialog from keyboard-accessible close controls and resets the form", async () => {
+    const user = userEvent.setup()
+    const photo = new File(["image-bytes"], "memory.png", { type: "image/png" })
+
+    render(<TributeFormDialog {...defaultProps} />)
+    await user.click(screen.getByRole("button", { name: /leave a message/i }))
+    const toggle = getDialogToggle()
+
+    const messageBox = screen.getByRole("textbox", { name: /^message$/i })
+    await user.type(messageBox, "A cherished memory")
+    await user.upload(screen.getByLabelText(/photo \(optional\)/i), photo)
+    expect(screen.getByAltText("Selected tribute attachment preview")).toBeInTheDocument()
+
+    screen.getByRole("button", { name: /close/i }).focus()
+    expect(screen.getByRole("button", { name: /close/i })).toHaveFocus()
+    await user.keyboard(" ")
+
+    expect(toggle).not.toBeChecked()
+    expect(messageBox).toHaveValue("")
+    expect(screen.queryByAltText("Selected tribute attachment preview")).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: /leave a message/i }))
+    await user.type(messageBox, "Another memory")
+    messageBox.focus()
+    await user.keyboard("{Escape}")
+
+    expect(toggle).not.toBeChecked()
+    expect(messageBox).toHaveValue("")
   })
 
   it("keeps the photo upload available from the tributes section without contributor gallery settings", async () => {
