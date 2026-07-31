@@ -30,6 +30,18 @@ function cookiePair(name: string, value: string) {
   return `${name}=${encodeURIComponent(value)}`;
 }
 
+function mockSuccessfulOAuthExchange(user = { id: "user-cookie", email: "cookie@example.com", user_metadata: { display_name: "Cookie User" } }) {
+  const supabase = {
+    auth: {
+      exchangeCodeForSession: vi.fn().mockResolvedValue({ error: null }),
+      getUser: vi.fn().mockResolvedValue({ data: { user }, error: null }),
+      updateUser: vi.fn(),
+    },
+  };
+  mocks.createServerClient.mockReturnValue(supabase);
+  return supabase;
+}
+
 describe("GET /api/auth/callback", () => {
   const originalEnv = { ...process.env };
 
@@ -116,47 +128,50 @@ describe("GET /api/auth/callback", () => {
     expect(mocks.syncProfileForUser).toHaveBeenCalledWith({ admin: true }, user);
   });
 
-  it("does not let redirect_url override a valid flow-bound redirect cookie", async () => {
-    const flowId = "33333333333333333333333333333333";
-    const cookieName = getOAuthRedirectCookieName(flowId);
+  it("prefers the return-path cookie over a callback redirect_url query after code exchange", async () => {
+    const supabase = mockSuccessfulOAuthExchange();
 
     const { GET } = await import("./route");
     const response = await GET(
       callbackRequest(
-        `/api/auth/callback?flow=${flowId}&redirect_url=${encodeURIComponent("/admin")}`,
-        cookiePair(cookieName, "/dashboard/profile"),
+        `/api/auth/callback?code=oauth-code&redirect_url=${encodeURIComponent("/admin")}`,
+        cookiePair(OAUTH_REDIRECT_COOKIE, "/dashboard/profile"),
       ),
     );
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("/dashboard/profile");
+    expect(supabase.auth.exchangeCodeForSession).toHaveBeenCalledWith("oauth-code");
+    expect(mocks.syncProfileForUser).toHaveBeenCalledWith(
+      { admin: true },
+      expect.objectContaining({ id: "user-cookie" }),
+    );
+  });
+
+  it("falls back to legacy flow-bound return cookies from in-progress OAuth starts after code exchange", async () => {
+    const legacyFlowId = "11111111111111111111111111111111";
+    const legacyCookieName = getOAuthRedirectCookieName(legacyFlowId);
+    mockSuccessfulOAuthExchange();
+
+    const { GET } = await import("./route");
+    const response = await GET(
+      callbackRequest(
+        `/api/auth/callback?code=oauth-code&flow=${legacyFlowId}`,
+        cookiePair(legacyCookieName, "/dashboard/memorials/new"),
+      ),
+    );
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("/dashboard/memorials/new");
+  });
+
+  it("uses the return-path cookie when a code is missing", async () => {
+    const { GET } = await import("./route");
+    const response = await GET(callbackRequest("/api/auth/callback", cookiePair(OAUTH_REDIRECT_COOKIE, "/dashboard/profile")));
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
       `/sign-in?error=${encodeURIComponent("Unable to complete sign-in")}&redirect_url=${encodeURIComponent("/dashboard/profile")}`,
     );
-  });
-
-  it("uses the flow-bound redirect cookie so overlapping OAuth callbacks keep separate return paths", async () => {
-    const firstFlowId = "11111111111111111111111111111111";
-    const secondFlowId = "22222222222222222222222222222222";
-    const firstCookieName = getOAuthRedirectCookieName(firstFlowId);
-    const secondCookieName = getOAuthRedirectCookieName(secondFlowId);
-    const cookieHeader = [
-      cookiePair(OAUTH_REDIRECT_COOKIE, "/dashboard"),
-      cookiePair(firstCookieName, "/dashboard/memorials/new"),
-      cookiePair(secondCookieName, "/dashboard/profile"),
-    ].join("; ");
-
-    const { GET } = await import("./route");
-    const response = await GET(callbackRequest(`/api/auth/callback?flow=${secondFlowId}`, cookieHeader));
-
-    expect(response.status).toBe(303);
-    const location = response.headers.get("location");
-    expect(location).toBe(
-      `/sign-in?error=${encodeURIComponent("Unable to complete sign-in")}&redirect_url=${encodeURIComponent("/dashboard/profile")}`,
-    );
-
-    const setCookies = response.headers.getSetCookie();
-    expect(setCookies.some((cookie) => cookie.startsWith(`${secondCookieName}=;`) && cookie.includes("Max-Age=0"))).toBe(true);
-    expect(setCookies.some((cookie) => cookie.startsWith(`${OAUTH_REDIRECT_COOKIE}=;`) && cookie.includes("Max-Age=0"))).toBe(true);
-    expect(setCookies.some((cookie) => cookie.startsWith(`${firstCookieName}=;`))).toBe(false);
   });
 });

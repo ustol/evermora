@@ -3,34 +3,26 @@ import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/types/supabase";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { getAppManagedDisplayName, getAuthDisplayName, getProviderDisplayName, getProviderNameParts } from "@/lib/auth-metadata";
-import { getOAuthRedirectCookieName, getOAuthRedirectCookieOptions, OAUTH_REDIRECT_COOKIE } from "@/lib/oauth-redirect";
+import { getOAuthRedirectCookieName, OAUTH_REDIRECT_COOKIE } from "@/lib/oauth-redirect";
 import { syncProfileForUser } from "@/lib/profile-resolver";
 import { getSupabaseCookieOptions } from "@/lib/supabase-cookie-options";
 import { sanitizeRedirectPath } from "@/lib/utils";
 
-function redirectTo(path: string, req?: NextRequest, flowId?: string | null) {
-  const response = new NextResponse(null, { status: 303, headers: { Location: path } });
-
-  if (req) {
-    response.cookies.set(getOAuthRedirectCookieName(flowId), "", getOAuthRedirectCookieOptions(req.nextUrl, req.headers, 0));
-    response.cookies.set(OAUTH_REDIRECT_COOKIE, "", getOAuthRedirectCookieOptions(req.nextUrl, req.headers, 0));
-  }
-
-  return response;
+function redirectTo(path: string) {
+  return new NextResponse(null, { status: 303, headers: { Location: path } });
 }
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  const flowId = url.searchParams.get("flow");
-  const redirectCookieName = getOAuthRedirectCookieName(flowId);
-  const hasFlowBoundRedirect = Boolean(flowId && redirectCookieName !== OAUTH_REDIRECT_COOKIE);
-  const redirectTarget = hasFlowBoundRedirect
-    ? req.cookies.get(redirectCookieName)?.value
-    : url.searchParams.get("redirect_url") ?? req.cookies.get(OAUTH_REDIRECT_COOKIE)?.value;
+  const legacyFlowCookieName = getOAuthRedirectCookieName(url.searchParams.get("flow"));
+  const redirectTarget =
+    req.cookies.get(OAUTH_REDIRECT_COOKIE)?.value ??
+    (legacyFlowCookieName !== OAUTH_REDIRECT_COOKIE ? req.cookies.get(legacyFlowCookieName)?.value : undefined) ??
+    url.searchParams.get("redirect_url");
   const redirectUrl = sanitizeRedirectPath(redirectTarget ?? "") ?? "/dashboard";
   const code = url.searchParams.get("code");
 
-  const response = redirectTo(redirectUrl, req, flowId);
+  const response = redirectTo(redirectUrl);
 
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -38,16 +30,12 @@ export async function GET(req: NextRequest) {
   if (!supabaseUrl || !supabaseKey) {
     return redirectTo(
       `/sign-in?error=${encodeURIComponent("Supabase is not configured")}&redirect_url=${encodeURIComponent(redirectUrl)}`,
-      req,
-      flowId,
     );
   }
 
   if (!code) {
     return redirectTo(
       `/sign-in?error=${encodeURIComponent("Unable to complete sign-in")}&redirect_url=${encodeURIComponent(redirectUrl)}`,
-      req,
-      flowId,
     );
   }
 
@@ -73,8 +61,6 @@ export async function GET(req: NextRequest) {
   if (exchangeError) {
     return redirectTo(
       `/sign-in?error=${encodeURIComponent(exchangeError.message)}&redirect_url=${encodeURIComponent(redirectUrl)}`,
-      req,
-      flowId,
     );
   }
 
@@ -88,8 +74,6 @@ export async function GET(req: NextRequest) {
       `/sign-in?error=${encodeURIComponent(
         userError?.message ?? "Unable to complete sign-in",
       )}&redirect_url=${encodeURIComponent(redirectUrl)}`,
-      req,
-      flowId,
     );
   }
 

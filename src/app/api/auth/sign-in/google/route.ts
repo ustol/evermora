@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/types/supabase";
-import { createOAuthFlowId, getOAuthRedirectCookieName, getOAuthRedirectCookieOptions } from "@/lib/oauth-redirect";
+import { getOAuthRedirectCookieOptions, OAUTH_REDIRECT_COOKIE } from "@/lib/oauth-redirect";
 import { getSupabaseCookieOptions } from "@/lib/supabase-cookie-options";
 import { sanitizeRedirectPath } from "@/lib/utils";
 
@@ -51,10 +51,8 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  const flowId = createOAuthFlowId();
   const callbackUrl = new URL("/api/auth/callback", getRequestOrigin(req));
-  callbackUrl.searchParams.set("flow", flowId);
-  response.cookies.set(getOAuthRedirectCookieName(flowId), redirectUrl, getOAuthRedirectCookieOptions(req.nextUrl, req.headers));
+  response.cookies.set(OAUTH_REDIRECT_COOKIE, redirectUrl, getOAuthRedirectCookieOptions(req.nextUrl, req.headers));
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
