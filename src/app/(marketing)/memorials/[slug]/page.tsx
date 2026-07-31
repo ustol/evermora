@@ -264,7 +264,6 @@ export default async function MemorialPage({ params }: PageProps) {
             slug={slug}
             allowTributes={memorial.allow_tributes}
             allowCondolences={memorial.allow_condolences}
-            allowContributorPhotos={memorial.allow_contributor_photos}
             requireApproval={memorial.require_approval}
             showContributorNames={memorial.show_contributor_names}
             initialTributes={tributes}

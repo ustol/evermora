@@ -27,6 +27,8 @@ export function getSupabaseCookieOptions(url: URL, headers?: Headers): CookieOpt
   };
 }
 
-export function getBrowserSupabaseCookieOptions(location: Pick<Location, "href"> = window.location): CookieOptions {
-  return getSupabaseCookieOptions(new URL(location.href));
+export function getBrowserSupabaseCookieOptions(location?: Pick<Location, "href">): CookieOptions {
+  const href = location?.href ?? (typeof window === "undefined" ? "http://localhost" : window.location.href);
+
+  return getSupabaseCookieOptions(new URL(href));
 }
