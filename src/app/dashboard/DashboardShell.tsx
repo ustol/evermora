@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
+import { getAuthDisplayName } from "@/lib/auth-metadata";
 import type { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
@@ -101,7 +102,7 @@ export function DashboardShell({ children, initialUser }: { children: React.Reac
               })()}
               <div className="flex flex-col">
                 <Link href="/dashboard/profile" className="text-sm text-soft-ivory hover:underline">
-                  {user.user_metadata?.display_name as string ?? user.email}
+                  {getAuthDisplayName(user.user_metadata, user.email)}
                 </Link>
                 <button
                   onClick={handleSignOut}

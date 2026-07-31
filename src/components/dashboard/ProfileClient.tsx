@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
+import { getAuthDisplayName, getAuthNameParts } from "@/lib/auth-metadata";
 import type { User } from "@supabase/supabase-js";
 import { Container } from "@/components/layout/Container";
 
@@ -26,9 +27,10 @@ export function ProfileClient() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       const authUser = data.user ?? null;
+      const nameParts = getAuthNameParts(authUser?.user_metadata);
       setUser(authUser);
-      setFirstName((authUser?.user_metadata?.first_name as string) ?? "");
-      setLastName((authUser?.user_metadata?.last_name as string) ?? "");
+      setFirstName(nameParts.firstName);
+      setLastName(nameParts.lastName);
       setEmail(authUser?.email ?? "");
       setLoading(false);
     });
@@ -72,6 +74,7 @@ export function ProfileClient() {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         display_name: displayName,
+        profile_name_source: "user",
       },
     });
 
@@ -157,7 +160,7 @@ export function ProfileClient() {
             />
             <div>
               <p className="text-lg font-medium text-foreground">
-                {(user?.user_metadata?.display_name as string) ?? "User"}
+                {getAuthDisplayName(user?.user_metadata, user?.email)}
               </p>
               <p className="text-sm text-muted-foreground">{user?.email}</p>
               <button type="button" onClick={() => fileRef.current?.click()} className="mt-1 text-xs font-medium text-heritage-gold hover:underline">

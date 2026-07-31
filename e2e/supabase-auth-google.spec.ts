@@ -17,8 +17,9 @@ function cookieHeaders(response: { headersArray(): { name: string; value: string
     .map((header) => header.value)
 }
 
-function oauthRedirectCookie(response: { headersArray(): { name: string; value: string }[] }) {
-  return cookieHeaders(response).find((cookie) => cookie.startsWith(`${OAUTH_REDIRECT_COOKIE}=`))
+function oauthRedirectCookie(response: { headersArray(): { name: string; value: string }[] }, flowId?: string | null) {
+  const cookieName = flowId ? `${OAUTH_REDIRECT_COOKIE}_${flowId}` : OAUTH_REDIRECT_COOKIE
+  return cookieHeaders(response).find((cookie) => cookie.startsWith(`${cookieName}=`))
 }
 
 test.describe("Supabase Google OAuth", () => {
@@ -42,14 +43,36 @@ test.describe("Supabase Google OAuth", () => {
 
     const callbackUrl = parseRedirectTo(location!)
     expect(callbackUrl.pathname).toBe("/api/auth/callback")
-    expect(callbackUrl.search, "Supabase redirect_to should not leak app return path in query parameters").toBe("")
+    expect(callbackUrl.searchParams.get("redirect_url"), "Supabase redirect_to should not leak app return path in query parameters").toBeNull()
+    const flowId = callbackUrl.searchParams.get("flow")
+    expect(flowId).toMatch(/^[a-f0-9]{32}$/)
 
-    const returnPathCookie = oauthRedirectCookie(response)
-    expect(returnPathCookie, "OAuth route should store the post-auth return path in a cookie").toBeTruthy()
-    expect(returnPathCookie).toContain(`${OAUTH_REDIRECT_COOKIE}=%2Fdashboard%2Fmemorials%2Fnew`)
+    const returnPathCookie = oauthRedirectCookie(response, flowId)
+    expect(returnPathCookie, "OAuth route should store the post-auth return path in a flow-bound cookie").toBeTruthy()
+    expect(returnPathCookie).toContain(`${OAUTH_REDIRECT_COOKIE}_${flowId}=%2Fdashboard%2Fmemorials%2Fnew`)
     expect(returnPathCookie).toContain("HttpOnly")
     expect(returnPathCookie).toContain("Path=/")
     expect(returnPathCookie).toContain("Max-Age=600")
+  })
+
+  test("overlapping OAuth starts keep separate return paths", async ({ request, baseURL }) => {
+    if (!baseURL) throw new Error("Playwright baseURL is not configured")
+
+    const firstResponse = await request.get(new URL(`${GOOGLE_ROUTE}?redirect_url=%2Fdashboard%2Fmemorials%2Fnew`, baseURL).toString(), {
+      maxRedirects: 0,
+    })
+    const secondResponse = await request.get(new URL(`${GOOGLE_ROUTE}?redirect_url=%2Fdashboard%2Fprofile`, baseURL).toString(), {
+      maxRedirects: 0,
+    })
+
+    const firstFlowId = parseRedirectTo(firstResponse.headers()["location"]!).searchParams.get("flow")
+    const secondFlowId = parseRedirectTo(secondResponse.headers()["location"]!).searchParams.get("flow")
+
+    expect(firstFlowId).toMatch(/^[a-f0-9]{32}$/)
+    expect(secondFlowId).toMatch(/^[a-f0-9]{32}$/)
+    expect(firstFlowId).not.toBe(secondFlowId)
+    expect(oauthRedirectCookie(firstResponse, firstFlowId)).toContain(`${OAUTH_REDIRECT_COOKIE}_${firstFlowId}=%2Fdashboard%2Fmemorials%2Fnew`)
+    expect(oauthRedirectCookie(secondResponse, secondFlowId)).toContain(`${OAUTH_REDIRECT_COOKIE}_${secondFlowId}=%2Fdashboard%2Fprofile`)
   })
 
   test("Google sign-in button submits the form to the OAuth route with redirect_url", async ({ page }) => {
@@ -147,12 +170,13 @@ test.describe("Supabase Google OAuth", () => {
     expect(errors).toEqual([])
   })
 
-  test("OAuth callback without a code uses the return-path cookie and clears it", async ({ request, baseURL }) => {
+  test("OAuth callback without a code uses the flow-bound return-path cookie and clears it", async ({ request, baseURL }) => {
     if (!baseURL) throw new Error("Playwright baseURL is not configured")
+    const flowId = "0123456789abcdef0123456789abcdef"
 
-    const response = await request.get(new URL("/api/auth/callback", baseURL).toString(), {
+    const response = await request.get(new URL(`/api/auth/callback?flow=${flowId}`, baseURL).toString(), {
       headers: {
-        cookie: `${OAUTH_REDIRECT_COOKIE}=${encodeURIComponent("/dashboard/memorials/new")}`,
+        cookie: `${OAUTH_REDIRECT_COOKIE}_${flowId}=${encodeURIComponent("/dashboard/memorials/new")}`,
       },
       maxRedirects: 0,
     })
@@ -162,9 +186,9 @@ test.describe("Supabase Google OAuth", () => {
     expect(location).toContain("/sign-in?error=")
     expect(decodeURIComponent(location ?? "")).toContain("redirect_url=/dashboard/memorials/new")
 
-    const clearedCookie = oauthRedirectCookie(response)
+    const clearedCookie = oauthRedirectCookie(response, flowId)
     expect(clearedCookie, "Callback should clear the temporary OAuth return-path cookie").toBeTruthy()
-    expect(clearedCookie).toContain(`${OAUTH_REDIRECT_COOKIE}=`)
+    expect(clearedCookie).toContain(`${OAUTH_REDIRECT_COOKIE}_${flowId}=`)
     expect(clearedCookie).toContain("Max-Age=0")
     expect(clearedCookie).toContain("HttpOnly")
   })

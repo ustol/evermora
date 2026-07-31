@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { getAppManagedDisplayName, getAuthDisplayName } from "@/lib/auth-metadata";
 import type { Database } from "@/types/supabase";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
@@ -33,13 +34,14 @@ export async function syncProfileForUser(
   user: Pick<User, "id" | "email" | "user_metadata">,
 ): Promise<ProfileRow | null> {
   const email = user.email ?? null;
-  const displayName = (user.user_metadata?.display_name as string) ?? email ?? "Akornafa user";
+  const appManagedDisplayName = getAppManagedDisplayName(user.user_metadata);
+  const displayName = getAuthDisplayName(user.user_metadata, email);
   const existing = await resolveProfileForUser(supabase, user);
 
   if (existing) {
     const { data, error } = await supabase
       .from("profiles")
-      .update({ clerk_user_id: user.id, email, display_name: displayName })
+      .update({ clerk_user_id: user.id, email, display_name: appManagedDisplayName ?? existing.display_name })
       .eq("id", existing.id)
       .select("*")
       .single();
