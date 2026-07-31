@@ -1,13 +1,21 @@
 import { SupabaseSignUpForm } from "@/components/auth/SupabaseSignUpForm";
+import { sanitizeRedirectPath } from "@/lib/utils";
 
 interface SignUpPageProps {
   searchParams: Promise<{
     error?: string;
     message?: string;
+    redirect_url?: string;
   }>;
 }
 
 export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   const params = await searchParams;
-  return <SupabaseSignUpForm error={params.error ?? null} message={params.message ?? null} />;
+  return (
+    <SupabaseSignUpForm
+      error={params.error ?? null}
+      message={params.message ?? null}
+      redirectUrl={sanitizeRedirectPath(params.redirect_url) ?? "/dashboard"}
+    />
+  );
 }

@@ -3,13 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 interface SupabaseSignUpFormProps {
   error?: string | null;
   message?: string | null;
+  redirectUrl?: string;
 }
 
-export function SupabaseSignUpForm({ error, message }: SupabaseSignUpFormProps) {
+export function SupabaseSignUpForm({ error, message, redirectUrl = "/dashboard" }: SupabaseSignUpFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -108,6 +110,16 @@ export function SupabaseSignUpForm({ error, message }: SupabaseSignUpFormProps) 
           {submitting ? "Creating account…" : "Create account"}
         </button>
       </form>
+
+      <div className="mt-4 flex items-center gap-3">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-xs uppercase tracking-wide text-muted-foreground">or</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
+      <div className="mt-4">
+        <GoogleSignInButton label="Sign up with Google" redirectUrl={redirectUrl} />
+      </div>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
