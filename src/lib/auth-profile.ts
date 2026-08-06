@@ -8,7 +8,8 @@ type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
 
 export interface CurrentProfile {
   userId: string
-  profile: ProfileRow
+  profile: ProfileRow | null
+  ownerIds: string[]
   supabase: SupabaseClient<Database>
 }
 
@@ -26,7 +27,12 @@ export async function getCurrentProfile(): Promise<CurrentProfile | null> {
     })
   }
 
-  if (!profile) return null
+  const ownerIds = Array.from(new Set([profile?.id, user.id].filter((id): id is string => Boolean(id))))
 
-  return { userId: user.id, profile, supabase }
+  return {
+    userId: user.id,
+    profile,
+    ownerIds,
+    supabase: profile ? supabase : createAdminClient(),
+  }
 }

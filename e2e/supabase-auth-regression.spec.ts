@@ -33,7 +33,8 @@ async function createConfirmedTestUser() {
 
 async function cleanupTestUser(context: Awaited<ReturnType<typeof createConfirmedTestUser>>) {
   if (context.userId) {
-    await context.admin.from("memorials").delete().eq("owner_id", context.userId)
+    const ownerIds = [context.userId, context.profileId].filter((id): id is string => Boolean(id))
+    if (ownerIds.length > 0) await context.admin.from("memorials").delete().in("owner_id", ownerIds)
     await context.admin.from("profiles").delete().eq("clerk_user_id", context.userId)
   }
   await context.admin.auth.admin.deleteUser(context.userId)
@@ -88,6 +89,99 @@ test.describe("Supabase auth and protected memorial routes", () => {
         status: "draft",
         display_name: displayName,
       })
+      expect(errors).toEqual([])
+    } finally {
+      await cleanupTestUser(auth)
+    }
+  })
+
+  test("owner can view memorials and moderate tributes from the dashboard", async ({ page }) => {
+    const auth = await createConfirmedTestUser()
+    const errors = trackConsoleErrors(page)
+    const profileId = crypto.randomUUID()
+    const memorialId = crypto.randomUUID()
+    const tributeId = crypto.randomUUID()
+    const condolenceId = crypto.randomUUID()
+    const displayName = `Moderation Memorial ${Date.now()}`
+
+    try {
+      auth.profileId = profileId
+      const { error: profileError } = await auth.admin.from("profiles").upsert({
+        id: profileId,
+        clerk_user_id: auth.userId,
+        email: auth.email,
+        display_name: "Owner Moderator",
+      })
+      expect(profileError).toBeNull()
+
+      const { error: memorialError } = await auth.admin.from("memorials").insert({
+        id: memorialId,
+        owner_id: profileId,
+        slug: `moderation-${Date.now()}`,
+        first_name: "Ama",
+        surname: "Owusu",
+        display_name: displayName,
+        date_of_death: "2024-04-12",
+        status: "published",
+        privacy: "public",
+        require_approval: true,
+      })
+      expect(memorialError).toBeNull()
+
+      const { error: contributionError } = await auth.admin.from("contributions").insert([
+        {
+          id: tributeId,
+          memorial_id: memorialId,
+          author_name: "Kofi Tribute",
+          type: "tribute",
+          title: "A generous spirit",
+          message: "A tribute waiting for approval.",
+          status: "pending",
+        },
+        {
+          id: condolenceId,
+          memorial_id: memorialId,
+          author_name: "Akua Condolence",
+          type: "condolence",
+          message: "A condolence waiting for review.",
+          status: "pending",
+        },
+      ])
+      expect(contributionError).toBeNull()
+
+      await page.goto("/sign-in")
+      await page.getByLabel("Email").fill(auth.email)
+      await page.locator("#password").fill(auth.password)
+      await page.getByRole("button", { name: "Sign in" }).click()
+      await expect(page).toHaveURL(/\/dashboard$/, { timeout: 20_000 })
+
+      await page.goto("/dashboard/memorials")
+      await expect(page.getByRole("heading", { name: "My memorials" })).toBeVisible()
+      await expect(page.getByRole("link", { name: displayName })).toBeVisible()
+      await page.getByRole("link", { name: "Review tributes" }).click()
+
+      await expect(page).toHaveURL(new RegExp(`/dashboard/memorials/${memorialId}/content`), { timeout: 20_000 })
+      await expect(page.getByRole("heading", { name: "Tributes & condolences" })).toBeVisible()
+      await expect(page.getByText("2 pending")).toBeVisible()
+
+      await page.locator("article", { hasText: "A tribute waiting for approval." }).getByRole("button", { name: "Approve" }).click()
+      await page.locator("article", { hasText: "A condolence waiting for review." }).getByRole("button", { name: "Reject" }).click()
+
+      await expect(page.locator("article", { hasText: "A tribute waiting for approval." }).getByText("approved")).toBeVisible()
+      await expect(page.locator("article", { hasText: "A condolence waiting for review." }).getByText("rejected")).toBeVisible()
+      await expect(page.getByText("0 pending")).toBeVisible()
+
+      const { data: reviewed, error: reviewedError } = await auth.admin
+        .from("contributions")
+        .select("id, status")
+        .in("id", [tributeId, condolenceId])
+      expect(reviewedError).toBeNull()
+      expect(reviewed).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: tributeId, status: "approved" }),
+          expect.objectContaining({ id: condolenceId, status: "rejected" }),
+        ])
+      )
       expect(errors).toEqual([])
     } finally {
       await cleanupTestUser(auth)
@@ -214,7 +308,7 @@ test.describe("Supabase auth and protected memorial routes", () => {
 
     await expect(page.getByText("Create your admin password to continue.")).toBeVisible()
     await expect(page.getByLabel("Email")).toHaveValue("admin@example.com")
-    await expect(page.locator('input[name="redirect_url"]')).toHaveValue(redirectUrl)
+    await expect(page.locator('input[name="redirect_url"]').first()).toHaveValue(redirectUrl)
 
     await page.getByLabel("First name").fill("Admin")
     await page.getByLabel("Last name").fill("User")

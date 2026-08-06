@@ -11,7 +11,7 @@ export default async function DashboardPage() {
 
   let stats: Awaited<ReturnType<typeof getOwnerDashboardStats>>
   try {
-    stats = await getOwnerDashboardStats(current.supabase, current.profile.id)
+    stats = await getOwnerDashboardStats(current.supabase, current.ownerIds)
   } catch {
     return <Container className="py-16"><ErrorState /></Container>
   }

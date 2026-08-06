@@ -1,12 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
-import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { getCurrentProfile } from "@/lib/auth-profile";
 
 export async function POST(req: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) {
+  const current = await getCurrentProfile();
+  if (!current) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!current.profile) {
+    return NextResponse.json({ error: "Profile is required to upload photos" }, { status: 409 });
   }
 
   const formData = await req.formData();
@@ -18,17 +20,17 @@ export async function POST(req: NextRequest) {
   }
 
   // Verify ownership
-  const { data: memorial } = await supabase
+  const { data: memorial } = await current.supabase
     .from("memorials")
     .select("owner_id")
     .eq("id", memorialId)
     .maybeSingle();
-  if (!memorial || memorial.owner_id !== user.id) {
+  if (!memorial || !current.ownerIds.includes(memorial.owner_id)) {
     return NextResponse.json({ error: "Not your memorial" }, { status: 403 });
   }
 
   const ext = file.name.split(".").pop() ?? "jpg";
-  const path = `${memorialId}/${user.id}/${crypto.randomUUID()}.${ext}`;
+  const path = `${memorialId}/${current.profile.id}/${crypto.randomUUID()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const admin = createAdminClient();
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   const { error: insertError } = await admin.from("memorial_media").insert({
     memorial_id: memorialId,
-    uploaded_by: user.id,
+    uploaded_by: current.profile.id,
     storage_path: path,
     moderation_status: "approved",
   });

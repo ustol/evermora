@@ -20,7 +20,11 @@ import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const MAX_FILE_SIZE = 3 * 1024 * 1024
 
-export function AddGiftCatalogItemDialog() {
+interface AddGiftCatalogItemDialogProps {
+  onAdded?: () => void
+}
+
+export function AddGiftCatalogItemDialog({ onAdded }: AddGiftCatalogItemDialogProps) {
   const supabase = useSupabaseClient()
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -75,6 +79,7 @@ export function AddGiftCatalogItemDialog() {
       toast.success("Gift added to catalog.")
       setOpen(false)
       resetForm()
+      onAdded?.()
     } catch (err) {
       console.error("add gift error:", err)
       toast.error("Something went wrong.")

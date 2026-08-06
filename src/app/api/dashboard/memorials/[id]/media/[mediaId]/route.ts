@@ -1,27 +1,26 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase-admin"
-import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { getCurrentProfile } from "@/lib/auth-profile"
 
 interface RouteContext {
   params: Promise<{ id: string; mediaId: string }>
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const current = await getCurrentProfile()
+  if (!current) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const { id: memorialId, mediaId } = await params
 
   // Verify ownership
-  const { data: memorial } = await supabase
+  const { data: memorial } = await current.supabase
     .from("memorials")
     .select("owner_id")
     .eq("id", memorialId)
     .maybeSingle()
-  if (!memorial || memorial.owner_id !== user.id) {
+  if (!memorial || !current.ownerIds.includes(memorial.owner_id)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }
 

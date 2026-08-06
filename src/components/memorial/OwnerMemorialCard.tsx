@@ -66,7 +66,10 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
           Details
         </Link>
         <Link href={`/dashboard/memorials/${memorial.id}/content`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-          Content
+          Manage content
+        </Link>
+        <Link href={`/dashboard/memorials/${memorial.id}/content#contribution-review-title`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+          Review tributes
         </Link>
         <Link href={`/dashboard/memorials/${memorial.id}/gallery`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
           Gallery
