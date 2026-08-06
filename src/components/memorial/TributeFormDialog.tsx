@@ -1,16 +1,13 @@
-"use client";
+"use client"
 
 import { useEffect, useRef, useState } from "react"
-import Link from "next/link"
-import { useUser } from "@/hooks/useAuth"
 import { HeartHandshake, ImagePlus, X } from "lucide-react"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 import { toast } from "sonner"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Field, FieldLabel, FieldDescription } from "@/components/ui/field"
-import { cn, sanitizeRedirectPath } from "@/lib/utils"
+import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
+import { cn } from "@/lib/utils"
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
@@ -30,8 +27,6 @@ export function TributeFormDialog({
   allowCondolences,
   requireApproval,
 }: TributeFormDialogProps) {
-  const { isSignedIn, user } = useUser()
-  const supabase = useSupabaseClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dialogToggleId = `tribute-message-dialog-${memorialId}`
   const [submitting, setSubmitting] = useState(false)
@@ -70,6 +65,7 @@ export function TributeFormDialog({
       return
     }
     setFile(selected)
+    setError(null)
     setPreviewUrl(URL.createObjectURL(selected))
   }
 
@@ -95,62 +91,20 @@ export function TributeFormDialog({
     setSubmitting(true)
 
     try {
-      let profile: { id: string } | null = null
-      if (user) {
-        const { data, error: profileError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("clerk_user_id", user.id)
-          .maybeSingle()
-        if (profileError) throw profileError
-        profile = data
-      }
+      const formData = new FormData()
+      formData.set("type", type)
+      formData.set("message", content.trim())
+      formData.set("authorName", authorName.trim())
+      formData.set("relationship", authorRelationship.trim())
+      if (file) formData.set("photo", file)
 
-      if (file && !profile) {
-        throw new Error("Please sign in to upload a photo with your message.")
-      }
-
-      let photoMediaId: string | null = null
-      let uploadedPhotoPath: string | null = null
-      if (file && profile) {
-        const ext = file.name.split(".").pop() ?? "jpg"
-        const path = `${memorialId}/${profile.id}/tributes/${crypto.randomUUID()}.${ext}`
-        const { error: uploadError } = await supabase.storage.from("memorial-media").upload(path, file)
-        if (uploadError) throw uploadError
-        uploadedPhotoPath = path
-        const { data: media, error: mediaError } = await supabase
-          .from("memorial_media")
-          .insert({
-            memorial_id: memorialId,
-            uploaded_by: profile.id,
-            storage_path: path,
-            moderation_status: requireApproval ? "pending" : "approved",
-          })
-          .select("id")
-          .single()
-        if (mediaError) throw mediaError
-        photoMediaId = media.id
-      }
-
-      const { error: insertError } = await supabase.from("contributions").insert({
-        memorial_id: memorialId,
-        author_id: profile?.id ?? null,
-        author_name: authorName.trim() || null,
-        type,
-        relationship: authorRelationship.trim() || null,
-        message: content.trim() || "Shared a photo.",
-        photo_media_id: photoMediaId,
-        status: requireApproval ? "pending" : "approved",
+      const response = await fetch(`/api/memorials/${encodeURIComponent(slug)}/contributions`, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: formData,
       })
-      if (insertError) {
-        if (photoMediaId) {
-          await supabase.from("memorial_media").delete().eq("id", photoMediaId)
-        }
-        if (uploadedPhotoPath) {
-          await supabase.storage.from("memorial-media").remove([uploadedPhotoPath])
-        }
-        throw insertError
-      }
+      const result = (await response.json().catch(() => null)) as { error?: string } | null
+      if (!response.ok) throw new Error(result?.error ?? "Unable to send your message.")
 
       toast.success(
         requireApproval
@@ -159,8 +113,9 @@ export function TributeFormDialog({
       )
       setDialogChecked(false)
     } catch (err) {
-      console.error("submit error:", err)
-      toast.error("Something went wrong. Please try again.")
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again."
+      setError(message)
+      toast.error(message)
     } finally {
       setSubmitting(false)
     }
@@ -210,17 +165,23 @@ export function TributeFormDialog({
             <X className="size-4" aria-hidden="true" />
           </label>
 
-          <form onSubmit={handleSubmit}>
+          <form
+            action={`/api/memorials/${encodeURIComponent(slug)}/contributions`}
+            method="post"
+            encType="multipart/form-data"
+            onSubmit={handleSubmit}
+          >
             <div className="flex flex-col gap-2 pr-8">
               <h2 id="tribute-dialog-title" className="font-heading text-base leading-none font-medium">Leave a message</h2>
               <p id="tribute-dialog-description" className="text-sm text-muted-foreground">
                 {requireApproval
-                  ? "Your message will be reviewed by the family before it appears."
-                  : "Your message will appear publicly."}
+                  ? "Your message and any photo will be reviewed by the family before they appear."
+                  : "Your message and any photo will appear publicly."}
               </p>
             </div>
 
             <div className="mt-4 flex flex-col gap-4">
+              <input type="hidden" name="type" value={type} />
               {allowTributes && allowCondolences && (
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setType("tribute")} className={cn("flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors", type === "tribute" ? "border-heritage-gold bg-heritage-gold/10 text-heritage-gold" : "border-border bg-muted")}>
@@ -234,18 +195,19 @@ export function TributeFormDialog({
 
               <Field>
                 <FieldLabel htmlFor="tribute-author">Your name (optional)</FieldLabel>
-                <Input id="tribute-author" value={authorName} onChange={(e) => setAuthorName(e.target.value)} placeholder="Displayed on the memorial" />
+                <FieldDescription>Leave blank to appear as an anonymous visitor.</FieldDescription>
+                <Input id="tribute-author" name="authorName" value={authorName} onChange={(e) => setAuthorName(e.target.value)} placeholder="Displayed on the memorial" />
               </Field>
               <Field>
                 <FieldLabel htmlFor="tribute-relationship">Relationship (optional)</FieldLabel>
-                <Input id="tribute-relationship" value={authorRelationship} onChange={(e) => setAuthorRelationship(e.target.value)} placeholder="e.g. Friend, Cousin" />
+                <Input id="tribute-relationship" name="relationship" value={authorRelationship} onChange={(e) => setAuthorRelationship(e.target.value)} placeholder="e.g. Friend, Cousin" />
               </Field>
               <Field data-invalid={!!error}>
                 <FieldLabel htmlFor="tribute-content">Message</FieldLabel>
-                <Textarea id="tribute-content" rows={4} value={content} onChange={(e) => setContent(e.target.value)} placeholder={type === "tribute" ? "Share a memory…" : "Send your condolences…"} />
+                <Textarea id="tribute-content" name="message" rows={4} value={content} onChange={(e) => setContent(e.target.value)} placeholder={type === "tribute" ? "Share a memory…" : "Send your condolences…"} />
+                {error && <FieldError>{error}</FieldError>}
               </Field>
 
-              {/* Message photo attachments are independent of the standalone gallery-photo setting. */}
               <Field>
                 <div className="rounded-xl border border-dashed border-border bg-muted/35 p-3">
                   <div className="flex items-start gap-3">
@@ -253,31 +215,19 @@ export function TributeFormDialog({
                       <ImagePlus className="size-4" aria-hidden="true" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <FieldLabel htmlFor={isSignedIn ? "tribute-photo" : undefined}>Photo (optional)</FieldLabel>
+                      <FieldLabel htmlFor="tribute-photo">Photo (optional)</FieldLabel>
                       <FieldDescription>
-                        Add a picture to accompany your message. JPEG, PNG, or WebP up to 8MB.
+                        Add a picture to accompany your message. No account needed. JPEG, PNG, or WebP up to 8MB.
                       </FieldDescription>
-                      {isSignedIn ? (
-                        <Input
-                          ref={fileInputRef}
-                          type="file"
-                          accept={ALLOWED_TYPES.join(",")}
-                          onChange={handleFileChange}
-                          id="tribute-photo"
-                          className="mt-3 bg-background"
-                        />
-                      ) : (
-                        <p className="mt-3 text-sm text-muted-foreground">
-                          Please{" "}
-                          <Link
-                            href={`/sign-in?redirect_url=${encodeURIComponent(sanitizeRedirectPath(`/memorials/${slug}`) ?? "/")}`}
-                            className={cn(buttonVariants({ variant: "link" }), "h-auto p-0 text-sm")}
-                          >
-                            sign in
-                          </Link>{" "}
-                          to attach a photo. You can still leave a message without one.
-                        </p>
-                      )}
+                      <Input
+                        ref={fileInputRef}
+                        type="file"
+                        name="photo"
+                        accept={ALLOWED_TYPES.join(",")}
+                        onChange={handleFileChange}
+                        id="tribute-photo"
+                        className="mt-3 bg-background"
+                      />
                     </div>
                   </div>
                   {previewUrl && (
@@ -312,7 +262,9 @@ export function TributeFormDialog({
               >
                 Cancel
               </label>
-              <Button type="submit" disabled={submitting}>{submitting ? "Sending…" : "Send"}</Button>
+              <button type="submit" disabled={submitting} data-testid="tribute-submit" className={buttonVariants()}>
+                {submitting ? "Sending…" : "Send"}
+              </button>
             </div>
           </form>
         </div>

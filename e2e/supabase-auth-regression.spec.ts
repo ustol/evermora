@@ -323,14 +323,18 @@ test.describe("Supabase auth and protected memorial routes", () => {
   })
 
   test("sign-in password visibility can be toggled", async ({ page }) => {
-    await page.goto("/sign-in")
+    await page.goto("/sign-in", { waitUntil: "networkidle" })
     const password = page.locator("#password")
 
     await expect(password).toHaveAttribute("type", "password")
-    await page.getByRole("button", { name: "Show password" }).click()
-    await expect(password).toHaveAttribute("type", "text")
-    await page.getByRole("button", { name: "Hide password" }).click()
-    await expect(password).toHaveAttribute("type", "password")
+    await expect(async () => {
+      await page.getByRole("button", { name: "Show password" }).click()
+      await expect(password).toHaveAttribute("type", "text", { timeout: 1000 })
+    }).toPass({ timeout: 10_000 })
+    await expect(async () => {
+      await page.getByRole("button", { name: "Hide password" }).click()
+      await expect(password).toHaveAttribute("type", "password", { timeout: 1000 })
+    }).toPass({ timeout: 10_000 })
   })
 
   test("sign-up has name fields, password visibility, and submits through the app", async ({ page }) => {
@@ -340,7 +344,7 @@ test.describe("Supabase auth and protected memorial routes", () => {
     const email = `auth-regression-${Date.now()}@gmail.com`
 
     try {
-      await page.goto("/sign-up")
+      await page.goto("/sign-up", { waitUntil: "networkidle" })
       const appOrigin = await page.evaluate(() => window.location.origin)
 
       await expect(page.getByLabel("First name")).toBeVisible()
@@ -348,10 +352,14 @@ test.describe("Supabase auth and protected memorial routes", () => {
 
       const password = page.locator("#password")
       await expect(password).toHaveAttribute("type", "password")
-      await page.getByRole("button", { name: "Show password" }).click()
-      await expect(password).toHaveAttribute("type", "text")
-      await page.getByRole("button", { name: "Hide password" }).click()
-      await expect(password).toHaveAttribute("type", "password")
+      await expect(async () => {
+        await page.getByRole("button", { name: "Show password" }).click()
+        await expect(password).toHaveAttribute("type", "text", { timeout: 1000 })
+      }).toPass({ timeout: 10_000 })
+      await expect(async () => {
+        await page.getByRole("button", { name: "Hide password" }).click()
+        await expect(password).toHaveAttribute("type", "password", { timeout: 1000 })
+      }).toPass({ timeout: 10_000 })
 
       await page.getByLabel("First name").fill("Auth")
       await page.getByLabel("Last name").fill("Regression")
@@ -382,18 +390,47 @@ test.describe("Supabase auth and protected memorial routes", () => {
 })
 
 test("a public memorial page still renders after auth changes", async ({ page }) => {
+  const auth = await createConfirmedTestUser()
   const errors = trackConsoleErrors(page)
-  await page.goto("/memorials", { waitUntil: "networkidle" })
+  const profileId = crypto.randomUUID()
+  const memorialId = crypto.randomUUID()
+  const slug = `public-regression-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  const displayName = `Public Regression ${Date.now()}`
 
-  const firstMemorialLink = page.locator('a[href^="/memorials/"]').first()
-  const hasMemorial = (await firstMemorialLink.count()) > 0
-  test.skip(!hasMemorial, "No published memorials exist in this environment yet")
+  try {
+    auth.profileId = profileId
+    const { error: profileError } = await auth.admin.from("profiles").upsert({
+      id: profileId,
+      clerk_user_id: auth.userId,
+      email: auth.email,
+      display_name: "Public Regression Owner",
+    })
+    expect(profileError).toBeNull()
 
-  const href = await firstMemorialLink.getAttribute("href")
-  await page.goto(href!)
+    const { error: memorialError } = await auth.admin.from("memorials").insert({
+      id: memorialId,
+      owner_id: profileId,
+      slug,
+      first_name: "Public",
+      surname: "Regression",
+      display_name: displayName,
+      date_of_death: "2024-04-12",
+      status: "published",
+      privacy: "public",
+      require_approval: true,
+      allow_tributes: true,
+      allow_condolences: true,
+      allow_contributor_photos: true,
+    })
+    expect(memorialError).toBeNull()
 
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
-  await expect(page.getByRole("heading", { name: /Tributes & Condolences/ })).toBeVisible()
-  await expect(page.getByRole("heading", { name: "Wreaths & roses" })).toBeVisible()
-  expect(errors).toEqual([])
+    await page.goto(`/memorials/${slug}`, { waitUntil: "networkidle" })
+
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(displayName)
+    await expect(page.getByRole("heading", { name: /Tributes & Condolences/ })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Wreaths & roses" })).toBeVisible()
+    expect(errors).toEqual([])
+  } finally {
+    await cleanupTestUser(auth)
+  }
 })

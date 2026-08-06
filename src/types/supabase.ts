@@ -189,7 +189,7 @@ export interface Database {
         Row: {
           id: string
           memorial_id: string
-          uploaded_by: string
+          uploaded_by: string | null
           storage_path: string
           caption: string | null
           alt_text: string | null
@@ -201,7 +201,7 @@ export interface Database {
         Insert: {
           id?: string
           memorial_id: string
-          uploaded_by: string
+          uploaded_by: string | null
           storage_path: string
           caption?: string | null
           alt_text?: string | null

@@ -1,8 +1,6 @@
-"use client";
+"use client"
 
 import { useRef, useState } from "react"
-import Link from "next/link"
-import { useUser } from "@/hooks/useAuth"
 import { ImagePlus } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -17,8 +15,6 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { useSupabaseClient } from "@/hooks/useSupabaseClient"
-import { cn, sanitizeRedirectPath } from "@/lib/utils"
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
@@ -29,9 +25,7 @@ interface AddPhotoDialogProps {
   requireApproval: boolean
 }
 
-export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDialogProps) {
-  const { isSignedIn, user } = useUser()
-  const supabase = useSupabaseClient()
+export function AddPhotoDialog({ slug, requireApproval }: AddPhotoDialogProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -76,33 +70,17 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
     setUploading(true)
 
     try {
-      if (!user) throw new Error("You need to sign in before uploading a photo.")
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("clerk_user_id", user.id)
-        .maybeSingle()
-      if (profileError) throw profileError
-      if (!profile) throw new Error("Your profile is still being prepared. Please try again.")
+      const formData = new FormData()
+      formData.set("photo", file)
+      formData.set("caption", caption.trim())
 
-      const extension = file.name.split(".").pop() ?? "jpg"
-      const storagePath = `${memorialId}/${profile.id}/${crypto.randomUUID()}.${extension}`
-
-      const { error: uploadError } = await supabase.storage
-        .from("memorial-media")
-        .upload(storagePath, file)
-      if (uploadError) throw uploadError
-
-      const { error: insertError } = await supabase
-        .from("memorial_media")
-        .insert({
-          memorial_id: memorialId,
-          uploaded_by: profile.id,
-          storage_path: storagePath,
-          caption: caption.trim() || null,
-          moderation_status: requireApproval ? "pending" : "approved",
-        })
-      if (insertError) throw insertError
+      const response = await fetch(`/api/memorials/${encodeURIComponent(slug)}/photos`, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: formData,
+      })
+      const result = (await response.json().catch(() => null)) as { error?: string } | null
+      if (!response.ok) throw new Error(result?.error ?? "Unable to upload your photo.")
 
       toast.success(
         requireApproval
@@ -112,24 +90,12 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
       setOpen(false)
       resetForm()
     } catch (err) {
-      console.error("upload error:", err)
-      toast.error("Something went wrong uploading your photo. Please try again.")
+      const message = err instanceof Error ? err.message : "Something went wrong uploading your photo. Please try again."
+      setError(message)
+      toast.error(message)
     } finally {
       setUploading(false)
     }
-  }
-
-  if (!isSignedIn) {
-    const redirectUrl = sanitizeRedirectPath(`/memorials/${slug}`)
-    return (
-      <Link
-        href={`/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
-        className={cn(buttonVariants({ variant: "outline" }))}
-      >
-        <ImagePlus className="size-4" aria-hidden="true" />
-        Add a photo
-      </Link>
-    )
   }
 
   return (
@@ -145,19 +111,25 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
         Add a photo
       </DialogTrigger>
       <DialogContent>
-        <form onSubmit={handleSubmit}>
+        <form
+          action={`/api/memorials/${encodeURIComponent(slug)}/photos`}
+          method="post"
+          encType="multipart/form-data"
+          onSubmit={handleSubmit}
+        >
           <DialogHeader>
             <DialogTitle>Add a photo</DialogTitle>
             <DialogDescription>
               {requireApproval
-                ? "Your photo will be reviewed by the family before it appears."
-                : "Your photo will appear in the gallery right away."}
+                ? "No account is needed. Your photo will be reviewed by the family before it appears."
+                : "No account is needed. Your photo will appear in the gallery right away."}
             </DialogDescription>
           </DialogHeader>
 
           <div className="mt-4 flex flex-col gap-4">
             <Field data-invalid={!!error}>
               <FieldLabel htmlFor="gallery-photo-upload">Photo</FieldLabel>
+              <FieldDescription>JPEG, PNG, or WebP up to 8MB.</FieldDescription>
               <Input
                 ref={fileInputRef}
                 type="file"
@@ -171,7 +143,7 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
             {previewUrl && (
               <img
                 src={previewUrl}
-                alt=""
+                alt="Selected gallery upload preview"
                 className="max-h-48 w-full rounded-lg object-contain"
               />
             )}
@@ -196,9 +168,9 @@ export function AddPhotoDialog({ memorialId, slug, requireApproval }: AddPhotoDi
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={uploading}>
+            <button type="submit" disabled={uploading} data-testid="gallery-photo-submit" className={buttonVariants()}>
               {uploading ? "Uploading…" : "Upload"}
-            </Button>
+            </button>
           </DialogFooter>
         </form>
       </DialogContent>

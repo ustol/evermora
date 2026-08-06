@@ -78,6 +78,7 @@ export function TopLoader() {
   return (
     <div
       aria-hidden
+      suppressHydrationWarning
       className="pointer-events-none fixed inset-x-0 top-0 z-[9999] h-0.5"
       style={{ opacity: active ? 1 : 0, transition: "opacity 200ms ease" }}
     >

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://aned.ai/design-system.schema.json",
+  "name": "Akornafa / Evermora Memorial Design System",
+  "version": "0.1.0",
+  "status": "established",
+  "designRead": "Public memorial contribution UI for bereaved visitors and friends; calm respectful editorial/service language with warm Akornafa heritage cues.",
+  "componentsDir": "src/components/ui",
+  "route": "/design-system",
+  "tokens": {
+    "css": "design-system/tokens.css",
+    "tailwindEntry": "src/app/globals.css",
+    "colorMode": "class-based .dark with light fallback",
+    "palette": {
+      "neutralBias": "warm ivory, stone, taupe, and obsidian rather than pure grey",
+      "accent": "heritage gold / kente gold",
+      "semantic": ["good", "warn", "critical"]
+    },
+    "typography": {
+      "display": "Literata via @fontsource/literata",
+      "body": "Source Sans 3 via @fontsource/source-sans-3"
+    },
+    "radius": "soft editorial/service surfaces: 0.82rem base"
+  },
+  "docs": [
+    "design-system/guide.md",
+    "design-system/docs/foundations.md",
+    "design-system/docs/components.md"
+  ],
+  "principles": [
+    "Respectful before expressive: the interface should never compete with a loved one's story.",
+    "Service clarity under emotional load: visible labels, plain language, and one main action per section.",
+    "Warm heritage, not generic neutral: ivory, stone, taupe, obsidian, and a restrained gold accent.",
+    "Light and dark parity: memorial pages and contribution flows remain legible and dignified in both modes."
+  ]
+}

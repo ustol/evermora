@@ -1,239 +1,298 @@
-"use client";
-
 import Link from "next/link";
+import { BookOpen, CheckCircle2, HeartHandshake, Moon, Sun, TriangleAlert } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const sections = [
   {
-    id: "foundations",
     label: "Foundations",
     items: [
-      { id: "colors", label: "Colors" },
-      { id: "typography", label: "Typography" },
-      { id: "radius", label: "Radius" },
+      { id: "read", label: "Design read" },
+      { id: "color", label: "Color" },
+      { id: "type", label: "Typography" },
+      { id: "modes", label: "Light & dark" },
     ],
   },
   {
-    id: "components",
     label: "Components",
     items: [
       { id: "buttons", label: "Buttons" },
       { id: "cards", label: "Cards" },
-      { id: "forms", label: "Form fields" },
+      { id: "forms", label: "Forms" },
+      { id: "docs", label: "Docs" },
     ],
   },
 ];
 
+const brandSwatches = [
+  ["Obsidian", "--brand-obsidian", "bg-obsidian text-soft-ivory"],
+  ["Rich black", "--brand-rich-black", "bg-rich-black text-soft-ivory"],
+  ["Heritage gold", "--brand-heritage-gold", "bg-heritage-gold text-soft-ivory"],
+  ["Warm gold", "--brand-warm-gold", "bg-warm-gold text-obsidian"],
+  ["Soft ivory", "--brand-soft-ivory", "bg-soft-ivory text-obsidian"],
+  ["Warm stone", "--brand-warm-stone", "bg-warm-stone text-obsidian"],
+  ["Muted taupe", "--brand-muted-taupe", "bg-muted-taupe text-soft-ivory"],
+  ["Clay brown", "--brand-clay-brown", "bg-clay-brown text-soft-ivory"],
+  ["Deep burgundy", "--brand-deep-burgundy", "bg-deep-burgundy text-soft-ivory"],
+] as const;
+
+const semanticSwatches = [
+  ["Good", "--semantic-good", "bg-good text-success-foreground", CheckCircle2],
+  ["Warn", "--semantic-warn", "bg-warn text-warning-foreground", TriangleAlert],
+  ["Critical", "--semantic-critical", "bg-critical text-soft-ivory", TriangleAlert],
+] as const;
+
 export default function DesignSystemPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur">
-        <Container className="flex items-center justify-between py-3">
-          <div>
-            <p className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">
-              Akornafa Design System
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      <header className="sticky top-0 z-30 border-b border-border/70 bg-background/88 backdrop-blur-xl">
+        <Container className="flex items-center justify-between gap-4 py-3">
+          <div className="min-w-0">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-accent">
+              Akornafa / Evermora
             </p>
-            <h1 className="font-heading text-lg">Foundations & Components</h1>
+            <h1 className="truncate font-heading text-lg leading-tight sm:text-xl">
+              Memorial design system
+            </h1>
           </div>
-          <Link href="/" className={buttonVariants({ variant: "outline", size: "sm", className: "hidden sm:inline-flex" })}>
-            Back to site
-          </Link>
+          <nav className="hidden items-center gap-2 sm:flex">
+            <a href="#docs" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+              Documentation
+            </a>
+            <Link href="/" className={buttonVariants({ variant: "outline", size: "sm" })}>
+              Back to site
+            </Link>
+          </nav>
         </Container>
       </header>
 
-      <main className="border-t border-border/60 bg-background">
-        <Container className="flex gap-8 py-8 lg:py-10">
-          <aside className="sticky top-[4.5rem] hidden w-56 shrink-0 border-r border-border/60 pr-4 text-sm lg:block">
-            {sections.map((section) => (
-              <div key={section.id} className="mb-6">
-                <p className="mb-2 text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-                  {section.label}
-                </p>
-                <nav className="space-y-1">
-                  {section.items.map((item) => (
-                    <a
-                      key={item.id}
-                      href={`#${item.id}`}
-                      className="block rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </nav>
-              </div>
-            ))}
+      <main className="bg-[radial-gradient(circle_at_top_left,color-mix(in_oklch,var(--brand-warm-gold)_18%,transparent),transparent_34rem)]">
+        <Container className="grid gap-8 py-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:py-10">
+          <aside className="hidden lg:block">
+            <div className="sticky top-[5.25rem] space-y-6 border-r border-border/70 pr-5">
+              {sections.map((section) => (
+                <div key={section.label}>
+                  <p className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+                    {section.label}
+                  </p>
+                  <nav className="space-y-1">
+                    {section.items.map((item) => (
+                      <a
+                        key={item.id}
+                        href={`#${item.id}`}
+                        className="block rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {item.label}
+                      </a>
+                    ))}
+                  </nav>
+                </div>
+              ))}
+            </div>
           </aside>
 
-          <div className="flex-1 space-y-10 pb-16">
-            {/* Foundations */}
-            <section id="colors">
-              <SectionHeader
-                eyebrow="Foundations"
-                title="Color system"
-                description="Akornafa uses an obsidian-and-ivory base with heritage gold accents and warm neutrals, optimised for legibility in moments of grief. Neutral tokens are slightly warm rather than pure grey."
-              />
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <ColorSwatch name="Obsidian" token="--brand-obsidian" className="bg-obsidian text-soft-ivory" />
-                <ColorSwatch name="Rich black" token="--brand-rich-black" className="bg-rich-black text-soft-ivory" />
-                <ColorSwatch name="Heritage gold" token="--brand-heritage-gold" className="bg-heritage-gold text-obsidian" />
-                <ColorSwatch name="Warm gold" token="--brand-warm-gold" className="bg-warm-gold text-obsidian" />
-                <ColorSwatch name="Soft ivory" token="--brand-soft-ivory" className="bg-soft-ivory text-obsidian" />
-                <ColorSwatch name="Warm stone" token="--brand-warm-stone" className="bg-warm-stone text-obsidian" />
-                <ColorSwatch name="Muted taupe" token="--brand-muted-taupe" className="bg-muted-taupe text-soft-ivory" />
-                <ColorSwatch name="Deep burgundy" token="--brand-deep-burgundy" className="bg-deep-burgundy text-soft-ivory" />
-                <ColorSwatch name="Success" token="--brand-success" className="bg-success text-soft-ivory" />
-                <ColorSwatch name="Error" token="--brand-error" className="bg-error text-soft-ivory" />
-              </div>
-              <p className="mt-4 max-w-2xl text-xs text-muted-foreground">
-                Accent golds are reserved for primary calls to action, focus rings, and key navigation. Semantic success and error colors are separate from the decorative accent, so validation states remain clear even for users with color vision deficiencies.
-              </p>
-            </section>
-
-            <Separator className="my-6" />
-
-            <section id="typography" className="scroll-m-16">
-              <SectionHeader
-                eyebrow="Foundations"
-                title="Typography"
-                description="Chillax is used for headings and key phrases; Supreme for body copy and UI labels. Both are variable fonts, tuned for calm, dignified reading."
-              />
-              <div className="space-y-6 rounded-xl border border-border/60 bg-card p-6">
-                <div>
-                  <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-                    Display / Heading
+          <div className="min-w-0 space-y-12 pb-16">
+            <section id="read" className="scroll-m-24">
+              <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+                <div className="rounded-3xl border border-border/70 bg-card/92 p-6 shadow-sm sm:p-8">
+                  <p className="text-xs font-bold uppercase tracking-[0.24em] text-accent">Design read</p>
+                  <h2 className="mt-4 max-w-3xl font-heading text-3xl leading-tight sm:text-5xl">
+                    Calm public memorial contribution UI for bereaved visitors and friends.
+                  </h2>
+                  <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                    The system is respectful, editorial, and service-led: warm Akornafa heritage colors, careful reading rhythm, and clear form patterns for people acting under emotional load.
                   </p>
-                  <h1 className="mt-2 font-heading text-3xl">Honouring lives. Preserving memories.</h1>
-                  <p className="mt-1 text-xs text-muted-foreground">font-family: Chillax; tracking tight; used for h1–h3.</p>
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <Button className="bg-obsidian text-soft-ivory hover:bg-obsidian/90">Create a memorial</Button>
+                    <Button variant="outline">Find a memorial</Button>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-                    Body / UI
+                <Card className="border-border/70 bg-rich-black p-6 text-soft-ivory shadow-sm">
+                  <HeartHandshake className="size-9 text-warm-gold" aria-hidden="true" />
+                  <h3 className="mt-5 font-heading text-2xl">Design principles</h3>
+                  <ul className="mt-4 space-y-3 text-sm leading-relaxed text-soft-ivory/78">
+                    <li>Respectful before expressive; stories come first.</li>
+                    <li>Warm heritage neutrals instead of default grey.</li>
+                    <li>Plain service language with visible labels.</li>
+                    <li>One confident gold accent; semantics remain separate.</li>
+                  </ul>
+                </Card>
+              </div>
+            </section>
+
+            <Separator />
+
+            <section id="color" className="scroll-m-24">
+              <SectionHeader
+                eyebrow="Foundations"
+                title="Warm heritage color"
+                description="Akornafa uses a warm ivory-to-obsidian neutral ramp with a heritage/kente gold accent. The palette is drawn from solemn memorial contexts, Ghanaian heritage cues, printed funeral programmes, and candlelit service spaces."
+              />
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {brandSwatches.map(([name, token, className]) => (
+                  <ColorSwatch key={token} name={name} token={token} className={className} />
+                ))}
+              </div>
+              <div className="mt-5 grid gap-3 md:grid-cols-3">
+                {semanticSwatches.map(([name, token, className, Icon]) => (
+                  <div key={token} className="rounded-2xl border border-border/70 bg-card p-4">
+                    <div className={cn("flex items-center gap-3 rounded-xl p-4", className)}>
+                      <Icon className="size-5" aria-hidden="true" />
+                      <div>
+                        <p className="text-sm font-semibold">{name}</p>
+                        <p className="text-xs opacity-80">{token}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <UsageNote>
+                Do not use gold for success, warning, or error. Gold is for brand emphasis, selected states, primary focus rings, and sparing calls to action.
+              </UsageNote>
+            </section>
+
+            <section id="type" className="scroll-m-24">
+              <SectionHeader
+                eyebrow="Foundations"
+                title="Editorial/service typography"
+                description="Literata gives memorial names and stories an editorial register; Source Sans 3 keeps forms and contribution UI clear, human, and highly readable. Both are installed through Fontsource packages."
+              />
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Card className="border-border/70 bg-card p-6">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Display / Literata</p>
+                  <p className="mt-4 font-heading text-4xl leading-tight">Honouring lives. Preserving memories.</p>
+                  <p className="mt-4 text-sm text-muted-foreground">Use for memorial names, page titles, section headers, and story-led moments.</p>
+                </Card>
+                <Card className="border-border/70 bg-card p-6">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Body / Source Sans 3</p>
+                  <p className="mt-4 text-lg leading-relaxed">
+                    Leave a tribute for the family to read, share a photograph, or add funeral details with labels that stay visible at every step.
                   </p>
-                  <p className="mt-2 text-sm leading-relaxed">
-                    Supreme is a humanist sans-serif used across body copy, forms, and navigation. Line heights are slightly relaxed to make longer condolence messages easier to read on both mobile and desktop.
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">font-family: Supreme; used for paragraphs, inputs, and labels.</p>
+                  <p className="mt-4 text-sm text-muted-foreground">Use for paragraphs, metadata, form controls, helper text, and navigation.</p>
+                </Card>
+              </div>
+            </section>
+
+            <section id="modes" className="scroll-m-24">
+              <SectionHeader
+                eyebrow="Foundations"
+                title="Light and dark parity"
+                description="Tokens define both :root and .dark. Components should not hard-code alternate dark palettes; inherit the same variables for predictable contrast."
+              />
+              <div className="grid gap-4 lg:grid-cols-2">
+                <ModePreview mode="light" />
+                <div className="dark">
+                  <ModePreview mode="dark" />
                 </div>
               </div>
             </section>
 
-            <Separator className="my-6" />
+            <Separator />
 
-            <section id="radius" className="scroll-m-16">
-              <SectionHeader
-                eyebrow="Foundations"
-                title="Radius & surfaces"
-                description="Akornafa leans on soft, rounded corners and subtle borders to keep layouts gentle without feeling ornamental."
-              />
-              <div className="grid gap-4 md:grid-cols-3">
-                <RadiusPreview label="Sm" className="rounded-[var(--radius-sm)]" token="--radius-sm" />
-                <RadiusPreview label="Md" className="rounded-[var(--radius-md)]" token="--radius-md" />
-                <RadiusPreview label="Lg" className="rounded-[var(--radius-lg)]" token="--radius-lg" />
-                <RadiusPreview label="Xl" className="rounded-[var(--radius-xl)]" token="--radius-xl" />
-                <RadiusPreview label="2Xl" className="rounded-[var(--radius-2xl)]" token="--radius-2xl" />
-                <RadiusPreview label="3Xl" className="rounded-[var(--radius-3xl)]" token="--radius-3xl" />
-              </div>
-            </section>
-
-            {/* Components */}
-            <section id="buttons" className="scroll-m-16">
+            <section id="buttons" className="scroll-m-24">
               <SectionHeader
                 eyebrow="Components"
                 title="Buttons"
-                description="Buttons use the heritage gold and obsidian palette with calm hover states and clear focus rings. Use the primary style for main actions and the outline variant on dark or photographic backgrounds."
+                description="Buttons are calm, compact, and direct. Use one primary action per section; secondary actions should not compete with the memorial story."
               />
-              <Card className="space-y-4 border-border/60 bg-card p-6">
-                <Tabs defaultValue="states">
-                  <TabsList className="bg-muted/40">
-                    <TabsTrigger value="states">States</TabsTrigger>
-                    <TabsTrigger value="usage">Usage</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="states" className="mt-4 space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Button>Primary</Button>
-                      <Button variant="outline">Outline</Button>
-                      <Button variant="ghost">Ghost</Button>
-                      <Button variant="secondary">Secondary</Button>
-                      <Button disabled>Disabled</Button>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-border/70 bg-muted/30 p-3 text-xs text-muted-foreground">
-                      <p>
-                        Focus rings use <code className="rounded bg-muted/70 px-1 py-0.5 text-[10px]">--ring</code> (heritage gold) at 2px with a subtle inset, ensuring clarity against both ivory and dark surfaces.
-                      </p>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="usage" className="mt-4 text-xs text-muted-foreground">
-                    <p className="mb-2">Use exactly one primary button per section. Prefer outline or ghost styles for secondary paths like "+ Add another" or "Cancel".</p>
-                    <p>On the hero and other dark sections, pair outline buttons with warm-gold borders and text to maintain contrast without overpowering the content.</p>
-                  </TabsContent>
-                </Tabs>
-              </Card>
-            </section>
-
-            <section id="cards" className="scroll-m-16">
-              <SectionHeader
-                eyebrow="Components"
-                title="Cards"
-                description="Cards are used for memorial summaries, administrative lists, and feature callouts. They sit on a soft ivory base with hairline borders and generous padding."
-              />
-              <Card className="space-y-4 border-border/60 bg-card p-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-xl border border-border/70 bg-background/60 p-4">
-                    <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-                      Memorial preview
-                    </p>
-                    <h3 className="mt-2 font-heading text-lg">Ama Serwaa Mensah</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">1948 – 2024 • Mother, teacher, and cherished friend.</p>
-                    <Button size="sm" className="mt-3">View memorial</Button>
-                  </div>
-                  <div className="rounded-xl border border-dashed border-border/70 bg-background/30 p-4 text-xs text-muted-foreground">
-                    <p>Use cards for discrete, self-contained pieces of content. Avoid nesting more than one primary action per card to keep choices clear under emotional load.</p>
-                  </div>
+              <PreviewSurface>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button>Leave a tribute</Button>
+                  <Button variant="outline">Share memorial</Button>
+                  <Button variant="secondary">Add a photograph</Button>
+                  <Button variant="ghost">Cancel</Button>
+                  <Button variant="destructive">Report</Button>
                 </div>
-              </Card>
+                <UsageNote compact>
+                  CTA labels use sentence case and plain service language. Avoid urgency or sales-like language in bereavement flows.
+                </UsageNote>
+              </PreviewSurface>
             </section>
 
-            <section id="forms" className="scroll-m-16">
+            <section id="cards" className="scroll-m-24">
               <SectionHeader
                 eyebrow="Components"
-                title="Form fields"
-                description="Form controls privilege clarity, spacing, and accessible descriptions over raw density. Labels stay visible at all times; helper text explains why we ask for each detail."
+                title="Memorial cards"
+                description="Cards frame names, dates, and contributions with quiet borders, generous padding, and one clear next step."
               />
-              <Card className="space-y-4 border-border/60 bg-card p-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-3">
-                    <label className="flex flex-col gap-1 text-sm">
-                      <span className="text-xs font-medium text-muted-foreground">Full name of the deceased</span>
+              <PreviewSurface>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <article className="rounded-2xl border border-border/70 bg-background/70 p-5 text-center shadow-sm">
+                    <div className="mx-auto flex size-24 items-center justify-center rounded-full border-2 border-warm-stone bg-muted text-muted-foreground">
+                      <BookOpen className="size-9" aria-hidden="true" />
+                    </div>
+                    <h3 className="mt-4 font-heading text-2xl">Ama Serwaa Mensah</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">1948 – 2024 • Mother, teacher, and cherished friend</p>
+                    <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-foreground/78">
+                      A generous life remembered through photographs, tributes, and service details for family and friends.
+                    </p>
+                    <Button size="sm" className="mt-4">View memorial</Button>
+                  </article>
+                  <article className="rounded-2xl border border-dashed border-border/80 bg-muted/35 p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Usage</p>
+                    <ul className="mt-3 list-disc space-y-2 pl-4 text-sm leading-relaxed text-muted-foreground">
+                      <li>Use cards for self-contained memorial summaries and contribution previews.</li>
+                      <li>Keep one primary action per card.</li>
+                      <li>Prefer meaningful metadata over dashboard-style density.</li>
+                    </ul>
+                  </article>
+                </div>
+              </PreviewSurface>
+            </section>
+
+            <section id="forms" className="scroll-m-24">
+              <SectionHeader
+                eyebrow="Components"
+                title="Contribution forms"
+                description="Forms prioritize clarity and reassurance: visible labels, helper text, accessible focus rings, and clear validation states."
+              />
+              <PreviewSurface>
+                <div className="grid gap-5 lg:grid-cols-[1fr_0.85fr]">
+                  <div className="space-y-4">
+                    <label className="block text-sm font-medium">
+                      <span>Full name of the deceased</span>
                       <input
-                        className="h-10 rounded-md border border-input bg-background px-3 text-sm shadow-[0_0_0_1px_theme(colors.border/40)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         placeholder="e.g. Ama Serwaa Mensah"
                       />
-                      <span className="text-[11px] text-muted-foreground">Used on the memorial page and in search results.</span>
+                      <span className="mt-1 block text-xs font-normal text-muted-foreground">Shown on the memorial page and search results.</span>
                     </label>
-                    <label className="flex flex-col gap-1 text-sm">
-                      <span className="text-xs font-medium text-muted-foreground">Short tribute headline</span>
+                    <label className="block text-sm font-medium">
+                      <span>Tribute message</span>
                       <textarea
-                        rows={3}
-                        className="rounded-md border border-input bg-background px-3 py-2 text-sm shadow-[0_0_0_1px_theme(colors.border/40)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                        placeholder="A beloved mother, teacher, and friend."
+                        rows={4}
+                        className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        placeholder="Share a memory or condolence for the family."
                       />
-                      <span className="text-[11px] text-muted-foreground">Shows near the top of the memorial to quickly introduce who they were.</span>
+                      <span className="mt-1 block text-xs font-normal text-muted-foreground">Messages are reviewed with care before appearing publicly.</span>
                     </label>
                   </div>
-                  <div className="space-y-2 text-xs text-muted-foreground">
-                    <p>Every form should:</p>
-                    <ul className="list-disc space-y-1 pl-4">
-                      <li>Keep labels outside inputs, never hidden.</li>
-                      <li>Use helper text to explain why a field matters.</li>
-                      <li>Group related fields (e.g. dates, locations) into clear sections.</li>
+                  <div className="rounded-2xl border border-border/70 bg-muted/35 p-5 text-sm leading-relaxed text-muted-foreground">
+                    <p className="font-semibold text-foreground">Form checklist</p>
+                    <ul className="mt-3 list-disc space-y-2 pl-4">
+                      <li>Never rely on placeholder-only labels.</li>
+                      <li>Explain why sensitive details are requested.</li>
+                      <li>Use critical semantics only for real errors or moderation danger.</li>
                     </ul>
                   </div>
                 </div>
-              </Card>
+              </PreviewSurface>
+            </section>
+
+            <section id="docs" className="scroll-m-24">
+              <SectionHeader
+                eyebrow="Documentation"
+                title="Source files"
+                description="The design-system folder records tokens, guidance, and component usage so future feature work can compose from the same visual decisions."
+              />
+              <div className="grid gap-3 md:grid-cols-3">
+                <DocFile path="design-system/tokens.css" label="tokens.css" detail="Theme variables and Tailwind tokens" />
+                <DocFile path="design-system/guide.md" label="guide.md" detail="Design read, principles, and content rules" />
+                <DocFile path="design-system/design-system.json" label="design-system.json" detail="Machine-readable system metadata" />
+              </div>
             </section>
           </div>
         </Container>
@@ -242,64 +301,69 @@ export default function DesignSystemPage() {
   );
 }
 
-function SectionHeader({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-}) {
+function SectionHeader({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
   return (
-    <header className="mb-4 space-y-1">
-      <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-        {eyebrow}
-      </p>
-      <h2 className="font-heading text-xl">{title}</h2>
-      <p className="max-w-2xl text-xs text-muted-foreground">{description}</p>
+    <header className="mb-4 max-w-3xl space-y-2">
+      <p className="text-xs font-bold uppercase tracking-[0.24em] text-accent">{eyebrow}</p>
+      <h2 className="font-heading text-2xl leading-tight sm:text-3xl">{title}</h2>
+      <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
     </header>
   );
 }
 
-function ColorSwatch({
-  name,
-  token,
-  className,
-}: {
-  name: string;
-  token: string;
-  className?: string;
-}) {
+function ColorSwatch({ name, token, className }: { name: string; token: string; className: string }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
-      <div className={`flex h-20 items-center justify-between px-4 py-3 text-xs ${className}`}>
+    <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+      <div className={cn("flex min-h-24 items-end justify-between gap-4 p-4", className)}>
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-80">
-            {name}
-          </p>
-          <p className="mt-1 text-[11px] opacity-80">{token}</p>
+          <p className="text-sm font-semibold">{name}</p>
+          <p className="mt-1 text-xs opacity-80">{token}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function RadiusPreview({
-  label,
-  token,
-  className,
-}: {
-  label: string;
-  token: string;
-  className?: string;
-}) {
+function PreviewSurface({ children }: { children: React.ReactNode }) {
+  return <Card className="space-y-4 border-border/70 bg-card/92 p-5 shadow-sm sm:p-6">{children}</Card>;
+}
+
+function UsageNote({ children, compact = false }: { children: React.ReactNode; compact?: boolean }) {
   return (
-    <div className="space-y-2 text-xs">
-      <div className={`flex h-20 items-center justify-center border border-border/70 bg-card ${className}`}>
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+    <div className={cn("rounded-xl border border-dashed border-border/80 bg-muted/35 text-sm leading-relaxed text-muted-foreground", compact ? "p-3" : "mt-4 p-4")}>
+      {children}
+    </div>
+  );
+}
+
+function ModePreview({ mode }: { mode: "light" | "dark" }) {
+  const isDark = mode === "dark";
+  return (
+    <Card className="border-border/70 bg-card p-5 text-card-foreground shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">{isDark ? "Dark" : "Light"} mode</p>
+          <h3 className="mt-2 font-heading text-2xl">A quiet place for memory</h3>
+        </div>
+        {isDark ? <Moon className="size-5 text-accent" aria-hidden="true" /> : <Sun className="size-5 text-accent" aria-hidden="true" />}
       </div>
-      <p className="text-[11px] text-muted-foreground">{token}</p>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+        Names, dates, tributes, and funeral details stay legible while the gold accent remains restrained.
+      </p>
+      <div className="mt-4 flex gap-2">
+        <Button size="sm">Leave a tribute</Button>
+        <Button size="sm" variant="outline">Read details</Button>
+      </div>
+    </Card>
+  );
+}
+
+function DocFile({ path, label, detail }: { path: string; label: string; detail: string }) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
+      <p className="font-mono text-sm text-accent">{label}</p>
+      <p className="mt-1 font-mono text-[0.7rem] text-muted-foreground">{path}</p>
+      <p className="mt-2 text-sm text-muted-foreground">{detail}</p>
     </div>
   );
 }

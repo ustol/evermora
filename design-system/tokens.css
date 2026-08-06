@@ -1,0 +1,179 @@
+@theme inline {
+  --font-sans: "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: "Literata", Georgia, Cambria, "Times New Roman", serif;
+  --font-serif: "Literata", Georgia, Cambria, "Times New Roman", serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Akornafa/Evermora brand palette utilities */
+  --color-obsidian: var(--brand-obsidian);
+  --color-rich-black: var(--brand-rich-black);
+  --color-kente-gold: var(--brand-kente-gold);
+  --color-heritage-gold: var(--brand-heritage-gold);
+  --color-warm-gold: var(--brand-warm-gold);
+  --color-soft-ivory: var(--brand-soft-ivory);
+  --color-warm-stone: var(--brand-warm-stone);
+  --color-muted-taupe: var(--brand-muted-taupe);
+  --color-clay-brown: var(--brand-clay-brown);
+  --color-deep-burgundy: var(--brand-deep-burgundy);
+  --color-good: var(--semantic-good);
+  --color-warn: var(--semantic-warn);
+  --color-critical: var(--semantic-critical);
+
+  --radius-sm: calc(var(--radius) * 0.58);
+  --radius-md: calc(var(--radius) * 0.78);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.35);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.25);
+  --radius-4xl: calc(var(--radius) * 2.75);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+
+  /* Brand primitives: warm memorial neutrals, one confident heritage-gold accent. */
+  --brand-obsidian: #11100e;
+  --brand-rich-black: #1b1815;
+  --brand-kente-gold: #b9893b;
+  --brand-heritage-gold: #8a6429;
+  --brand-warm-gold: #d6ad63;
+  --brand-soft-ivory: #fbf7ef;
+  --brand-warm-stone: #ebe1d2;
+  --brand-muted-taupe: #736857;
+  --brand-clay-brown: #6a432d;
+  --brand-deep-burgundy: #5b2028;
+
+  /* Semantics stay separate from the accent. */
+  --semantic-good: #2f7655;
+  --semantic-warn: #9b6424;
+  --semantic-critical: #b2433f;
+
+  --background: var(--brand-soft-ivory);
+  --foreground: var(--brand-obsidian);
+  --card: #fffdf8;
+  --card-foreground: var(--brand-obsidian);
+  --popover: #fffdf8;
+  --popover-foreground: var(--brand-obsidian);
+  --primary: var(--brand-obsidian);
+  --primary-foreground: var(--brand-soft-ivory);
+  --secondary: var(--brand-warm-stone);
+  --secondary-foreground: var(--brand-obsidian);
+  --muted: #efe8dc;
+  --muted-foreground: var(--brand-muted-taupe);
+  --accent: var(--brand-heritage-gold);
+  --accent-foreground: #fff7e7;
+  --destructive: var(--semantic-critical);
+  --warning: var(--semantic-warn);
+  --warning-foreground: #fff8ec;
+  --success: var(--semantic-good);
+  --success-foreground: #f4fff8;
+  --border: color-mix(in oklch, var(--brand-obsidian) 13%, transparent);
+  --input: color-mix(in oklch, var(--brand-obsidian) 17%, transparent);
+  --ring: var(--brand-heritage-gold);
+  --chart-1: var(--brand-heritage-gold);
+  --chart-2: var(--brand-deep-burgundy);
+  --chart-3: var(--brand-clay-brown);
+  --chart-4: var(--semantic-good);
+  --chart-5: var(--brand-rich-black);
+  --radius: 0.82rem;
+  --sidebar: var(--brand-rich-black);
+  --sidebar-foreground: var(--brand-soft-ivory);
+  --sidebar-primary: var(--brand-warm-gold);
+  --sidebar-primary-foreground: var(--brand-obsidian);
+  --sidebar-accent: color-mix(in oklch, var(--brand-soft-ivory) 11%, transparent);
+  --sidebar-accent-foreground: var(--brand-soft-ivory);
+  --sidebar-border: color-mix(in oklch, var(--brand-soft-ivory) 15%, transparent);
+  --sidebar-ring: var(--brand-warm-gold);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --brand-obsidian: #0d0c0a;
+  --brand-rich-black: #171410;
+  --brand-kente-gold: #d2a257;
+  --brand-heritage-gold: #c49346;
+  --brand-warm-gold: #e4bd73;
+  --brand-soft-ivory: #f8f1e4;
+  --brand-warm-stone: #2d261d;
+  --brand-muted-taupe: #cbbda8;
+  --brand-clay-brown: #b9825a;
+  --brand-deep-burgundy: #d18690;
+
+  --semantic-good: #72b58f;
+  --semantic-warn: #d6a15c;
+  --semantic-critical: #e18a86;
+
+  --background: #11100e;
+  --foreground: #f7efe2;
+  --card: #1b1815;
+  --card-foreground: #f7efe2;
+  --popover: #211d19;
+  --popover-foreground: #f7efe2;
+  --primary: var(--brand-warm-gold);
+  --primary-foreground: #16120d;
+  --secondary: #2d261d;
+  --secondary-foreground: #f7efe2;
+  --muted: #29231b;
+  --muted-foreground: #cbbda8;
+  --accent: var(--brand-warm-gold);
+  --accent-foreground: #17120c;
+  --destructive: var(--semantic-critical);
+  --warning: var(--semantic-warn);
+  --warning-foreground: #1f1609;
+  --success: var(--semantic-good);
+  --success-foreground: #07170e;
+  --border: color-mix(in oklch, var(--brand-soft-ivory) 15%, transparent);
+  --input: color-mix(in oklch, var(--brand-soft-ivory) 18%, transparent);
+  --ring: var(--brand-warm-gold);
+  --chart-1: var(--brand-warm-gold);
+  --chart-2: var(--brand-deep-burgundy);
+  --chart-3: var(--brand-clay-brown);
+  --chart-4: var(--semantic-good);
+  --chart-5: #f7efe2;
+  --sidebar: #0d0c0a;
+  --sidebar-foreground: #f7efe2;
+  --sidebar-primary: var(--brand-warm-gold);
+  --sidebar-primary-foreground: #17120c;
+  --sidebar-accent: color-mix(in oklch, var(--brand-soft-ivory) 12%, transparent);
+  --sidebar-accent-foreground: #f7efe2;
+  --sidebar-border: color-mix(in oklch, var(--brand-soft-ivory) 14%, transparent);
+  --sidebar-ring: var(--brand-warm-gold);
+}
