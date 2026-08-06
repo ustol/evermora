@@ -1,17 +1,10 @@
-"use client";
-
-import { use } from "react"
-import { Container } from "@/components/layout/Container"
+import { BlogPostEditor } from "@/components/admin/BlogPostEditor"
 
 interface PageProps {
   params: Promise<{ id: string }>
 }
 
-export default function AdminBlogEditorPage({ params }: PageProps) {
-  const { id } = use(params)
-  return (
-    <Container className="py-12">
-      <h1 className="font-heading text-2xl">{id === "new" ? "New" : "Edit"} blog post</h1>
-    </Container>
-  )
+export default async function AdminBlogEditorPage({ params }: PageProps) {
+  const { id } = await params
+  return <BlogPostEditor postId={id} />
 }
