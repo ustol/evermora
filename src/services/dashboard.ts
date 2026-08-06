@@ -13,12 +13,13 @@ export interface OwnerDashboardStats {
 
 export async function getOwnerDashboardStats(
   supabase: SupabaseClient<Database>,
-  ownerId: string
+  ownerIds: string | string[]
 ): Promise<OwnerDashboardStats> {
+  const ids = Array.isArray(ownerIds) ? ownerIds : [ownerIds]
   const { data: memorials, error: memorialsError } = await supabase
     .from("memorials")
     .select("id, status")
-    .eq("owner_id", ownerId)
+    .in("owner_id", ids)
 
   if (memorialsError) throw memorialsError
 

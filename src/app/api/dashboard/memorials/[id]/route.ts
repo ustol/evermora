@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { getCurrentProfile } from "@/lib/auth-profile"
 import { getMemorialById, deleteMemorial } from "@/services/memorials"
 
 interface RouteContext {
@@ -8,19 +8,18 @@ interface RouteContext {
 
 /** Delete a memorial, but only if the caller owns it. */
 export async function DELETE(_request: Request, { params }: RouteContext) {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const current = await getCurrentProfile()
+  if (!current) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const { id } = await params
   try {
-    const memorial = await getMemorialById(supabase, id)
-    if (!memorial || memorial.owner_id !== user.id) {
+    const memorial = await getMemorialById(current.supabase, id)
+    if (!memorial || !current.ownerIds.includes(memorial.owner_id)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
-    await deleteMemorial(supabase, id)
+    await deleteMemorial(current.supabase, id)
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error("dashboard memorial delete failed", err)

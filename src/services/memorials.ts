@@ -157,12 +157,13 @@ export async function getMemorialById(
 
 export async function listMemorialsOwnedBy(
   supabase: SupabaseClient<Database>,
-  ownerId: string
+  ownerIds: string | string[]
 ) {
+  const ids = Array.isArray(ownerIds) ? ownerIds : [ownerIds]
   const { data, error } = await supabase
     .from("memorials")
     .select("*")
-    .eq("owner_id", ownerId)
+    .in("owner_id", ids)
     .order("updated_at", { ascending: false })
 
   if (error) throw error

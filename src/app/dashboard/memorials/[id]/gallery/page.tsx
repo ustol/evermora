@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase-server"
+import { getCurrentProfile } from "@/lib/auth-profile"
 import { getMemorialById } from "@/services/memorials"
 import { listMediaForModeration } from "@/services/media"
 import { Container } from "@/components/layout/Container"
@@ -8,15 +8,14 @@ import { GalleryClient } from "./GalleryClient"
 interface PageProps { params: Promise<{ id: string }> }
 
 export default async function MemorialGalleryPage({ params }: PageProps) {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect("/sign-in?redirect_url=/dashboard/memorials")
+  const current = await getCurrentProfile()
+  if (!current) redirect("/sign-in?redirect_url=/dashboard/memorials")
 
   const { id } = await params
-  const memorial = await getMemorialById(supabase, id)
-  if (!memorial || memorial.owner_id !== user.id) notFound()
+  const memorial = await getMemorialById(current.supabase, id)
+  if (!memorial || !current.ownerIds.includes(memorial.owner_id)) notFound()
 
-  const photos = await listMediaForModeration(supabase, id)
+  const photos = await listMediaForModeration(current.supabase, id)
 
   return (
     <Container className="py-12">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import type { User } from "@supabase/supabase-js";
 import { cn } from "@/lib/utils";
@@ -21,28 +21,38 @@ const adminNavLinks = [
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [serverAuthRefreshing, setServerAuthRefreshing] = useState(false);
 
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
+  const currentPath = `${pathname || "/admin"}${searchParams.size > 0 ? `?${searchParams.toString()}` : ""}`;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ?? null);
       setLoading(false);
       if (!data.user) {
-        router.replace(`/sign-in?redirect_url=${encodeURIComponent(pathname || "/admin")}`);
+        router.replace(`/sign-in?redirect_url=${encodeURIComponent(currentPath)}`);
       }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (!session?.user) {
-        router.replace(`/sign-in?redirect_url=${encodeURIComponent(pathname || "/admin")}`);
+        router.replace(`/sign-in?redirect_url=${encodeURIComponent(currentPath)}`);
       }
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [currentPath, router, supabase]);
+
+  useEffect(() => {
+    if (user && children == null && !serverAuthRefreshing) {
+      setServerAuthRefreshing(true);
+      router.refresh();
+    }
+  }, [children, router, serverAuthRefreshing, user]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -54,7 +64,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return pathname.startsWith(link.to);
   }
 
-  if (loading) {
+  if (loading || (user && children == null)) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-background">
         <div className="size-8 animate-spin rounded-full border-2 border-muted border-t-heritage-gold" />
