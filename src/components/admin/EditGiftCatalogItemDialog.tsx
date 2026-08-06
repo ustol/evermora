@@ -15,14 +15,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
 
 interface EditGiftCatalogItemDialogProps {
   gift: {
     id: string
     name: string
-    description: string | null
     price: number
   }
   onUpdated?: () => void
@@ -33,7 +31,6 @@ export function EditGiftCatalogItemDialog({ gift, onUpdated }: EditGiftCatalogIt
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [name, setName] = useState(gift.name)
-  const [description, setDescription] = useState(gift.description ?? "")
   const [price, setPrice] = useState(String(gift.price))
   const [error, setError] = useState<string | null>(null)
 
@@ -48,7 +45,7 @@ export function EditGiftCatalogItemDialog({ gift, onUpdated }: EditGiftCatalogIt
     try {
         const { error: updateError } = await supabase
         .from("gift_catalog")
-        .update({ name: name.trim(), description: description.trim() || null, price: numericPrice })
+        .update({ name: name.trim(), price: numericPrice })
         .eq("id", gift.id)
       if (updateError) throw updateError
 
@@ -77,10 +74,6 @@ export function EditGiftCatalogItemDialog({ gift, onUpdated }: EditGiftCatalogIt
               <FieldLabel>Name</FieldLabel>
               <Input value={name} onChange={(e) => setName(e.target.value)} />
               {error && <FieldError>{error}</FieldError>}
-            </Field>
-            <Field>
-              <FieldLabel>Description</FieldLabel>
-              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
             </Field>
             <Field>
               <FieldLabel>Price (₵)</FieldLabel>

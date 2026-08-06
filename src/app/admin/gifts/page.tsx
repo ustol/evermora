@@ -43,9 +43,6 @@ export default function AdminGiftCatalogPage() {
               <p className="text-sm text-muted-foreground">
                 {g.currency} {g.price.toLocaleString()}
               </p>
-              {g.description && (
-                <p className="text-xs text-muted-foreground line-clamp-2">{g.description}</p>
-              )}
               <div className="mt-auto flex items-center justify-between pt-2">
                 <span className="text-[11px] text-muted-foreground">
                   {g.is_active ? "Active" : "Inactive"} · Order {g.sort_order}
