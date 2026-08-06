@@ -41,3 +41,4 @@ supabase/.temp/.env
 
 # clerk configuration (can include secrets)
 /.clerk/
+tsconfig.tsbuildinfo
