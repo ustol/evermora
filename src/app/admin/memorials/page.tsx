@@ -47,7 +47,7 @@ export default function AdminMemorialsPage() {
         description="View and manage every memorial on the platform."
       />
       {loading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-14 pt-12 sm:grid-cols-2 lg:grid-cols-3">{/* skeleton loading */}
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-56 rounded-2xl" />
           ))}
@@ -55,7 +55,7 @@ export default function AdminMemorialsPage() {
       ) : !memorials?.length ? (
         <p className="text-sm text-muted-foreground">No memorials yet.</p>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-14 pt-12 sm:grid-cols-2 lg:grid-cols-3">{/* cards */}
           {memorials.map((m) => {
             const name = m.display_name || `${m.first_name} ${m.surname}`
             const photoUrl = m.photoUrl ?? null

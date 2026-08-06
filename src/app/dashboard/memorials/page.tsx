@@ -31,7 +31,7 @@ export default async function DashboardMemorialsPage() {
         }
       />
       {memorials.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-14 pt-12 sm:grid-cols-2 lg:grid-cols-3">
           {memorials.map((m) => <OwnerMemorialCard key={m.id} memorial={m} />)}
         </div>
       ) : (
