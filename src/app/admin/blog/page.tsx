@@ -7,7 +7,8 @@ import { Container } from "@/components/layout/Container"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { Pencil, ExternalLink, Plus, FileEdit } from "lucide-react"
 import { listAllPostsAdmin, type BlogPostWithCover } from "@/services/blog"
 import { formatDayMonthYear } from "@/lib/date"
@@ -34,11 +35,9 @@ export default function AdminBlogPage() {
         title="Blog posts"
         description="Manage published and draft blog posts."
         actions={
-          <Link href="/admin/blog/new">
-            <Button>
-              <Plus className="size-4" />
-              New post
-            </Button>
+          <Link href="/admin/blog/new" className={cn(buttonVariants())}>
+            <Plus className="size-4" />
+            New post
           </Link>
         }
       />
@@ -52,11 +51,9 @@ export default function AdminBlogPage() {
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-16">
           <FileEdit className="size-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">No blog posts yet.</p>
-          <Link href="/admin/blog/new">
-            <Button variant="outline" size="sm">
-              <Plus className="size-4" />
-              Create your first post
-            </Button>
+          <Link href="/admin/blog/new" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <Plus className="size-4" />
+            Create your first post
           </Link>
         </div>
       ) : (
