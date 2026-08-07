@@ -9,7 +9,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { data: { user }, error } = await supabase.auth.getUser();
 
   if (error || !user) {
-    return <AdminShell>{null}</AdminShell>;
+    // Server-side auth can be unavailable during client-side admin navigation
+    // because the browser session is restored by Supabase on the client. Keep
+    // the requested route mounted so AdminShell can resolve the client session
+    // instead of showing an empty admin shell/spinner.
+    return <AdminShell>{children}</AdminShell>;
   }
 
   const profile = await resolveProfileForUser(createAdminClient(), user);
