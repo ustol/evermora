@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { UserRound } from "lucide-react"
 import { formatLifespanYears } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import {
@@ -23,6 +24,11 @@ interface OwnerMemorialCardProps {
 
 export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [imgError, setImgError] = useState(false)
+
+  // Reset image error when photo URL changes
+  const photoUrl = memorial.photoUrl ?? null
+  useEffect(() => { setImgError(false) }, [photoUrl])
 
   async function handleDelete() {
     setDeletingId(memorial.id)
@@ -43,10 +49,31 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
   const lifespan = formatLifespanYears(memorial.date_of_birth, memorial.date_of_death)
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
+    <div className="relative flex flex-col gap-3 rounded-2xl border border-border bg-card pt-16 pb-5 px-5 shadow-sm transition-shadow hover:shadow-md">
+      {/* Featured image — half inside, half outside the card */}
+      <div className="absolute inset-x-0 -top-12 flex justify-center">
+        <div className="relative size-24 overflow-hidden rounded-full border-4 border-background bg-muted shadow-md">
+          {photoUrl && !imgError ? (
+            <img
+              src={photoUrl}
+              alt={name}
+              className="h-full w-full object-cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-muted/50">
+              <UserRound className="size-8 text-muted-foreground/40" />
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <Link href={`/dashboard/memorials/${memorial.id}/content`} className="font-heading text-lg text-foreground hover:underline">
+        <div className="min-w-0 text-center w-full">
+          <Link
+            href={`/dashboard/memorials/${memorial.id}/content`}
+            className="font-heading text-lg text-foreground hover:underline"
+          >
             {name}
           </Link>
           {lifespan && <p className="text-sm text-muted-foreground">{lifespan}</p>}
@@ -61,7 +88,7 @@ export function OwnerMemorialCard({ memorial }: OwnerMemorialCardProps) {
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-center gap-2">
         <Link href={`/dashboard/memorials/${memorial.id}/edit`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
           Details
         </Link>
