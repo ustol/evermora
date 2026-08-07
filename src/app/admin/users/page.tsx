@@ -18,6 +18,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -146,8 +147,9 @@ export default function AdminUsersPage() {
                         <MoreHorizontal className="size-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
                         {p.role !== "admin" ? (
                           <DropdownMenuItem
                             onClick={() => handleRoleChange(p.id, "admin")}
@@ -179,6 +181,7 @@ export default function AdminUsersPage() {
                             Suspend user
                           </DropdownMenuItem>
                         )}
+                        </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
