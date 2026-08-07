@@ -54,7 +54,24 @@ export function BlogPostEditor({ postId }: BlogPostEditorProps) {
         router.push("/sign-in")
         return
       }
-      setAuthorId(user.id)
+
+      // Resolve the profile id (may differ from auth user id for legacy profiles)
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("clerk_user_id", user.id)
+        .maybeSingle()
+      if (profileError) {
+        console.error("Failed to load profile", profileError)
+        toast.error("Failed to load your profile. Please try again.")
+        return
+      }
+      if (!profile) {
+        toast.error("Profile not found. Please sign out and sign in again.")
+        router.push("/sign-in")
+        return
+      }
+      setAuthorId(profile.id)
 
       if (postId) {
         const post = await getPostById(supabase, postId)
