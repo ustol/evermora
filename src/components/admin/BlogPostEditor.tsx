@@ -17,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { getPostById, createPost, updatePost, type BlogPostWithCover } from "@/services/blog"
+import { getPostById, updatePost, type BlogPostWithCover } from "@/services/blog"
+import { createBlogPost } from "@/app/admin/blog/actions"
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const MAX_FILE_SIZE = 3 * 1024 * 1024
@@ -33,7 +34,6 @@ export function BlogPostEditor({ postId }: BlogPostEditorProps) {
 
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
-  const [authorId, setAuthorId] = useState<string>("")
   const [title, setTitle] = useState("")
   const [excerpt, setExcerpt] = useState("")
   const [content, setContent] = useState("")
@@ -54,7 +54,23 @@ export function BlogPostEditor({ postId }: BlogPostEditorProps) {
         router.push("/sign-in")
         return
       }
-      setAuthorId(user.id)
+
+      // Resolve the profile id (may differ from auth user id for legacy profiles)
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("clerk_user_id", user.id)
+        .maybeSingle()
+      if (profileError) {
+        console.error("Failed to load profile", profileError)
+        toast.error("Failed to load your profile. Please try again.")
+        return
+      }
+      if (!profile) {
+        toast.error("Profile not found. Please sign out and sign in again.")
+        router.push("/sign-in")
+        return
+      }
 
       if (postId) {
         const post = await getPostById(supabase, postId)
@@ -124,24 +140,17 @@ export function BlogPostEditor({ postId }: BlogPostEditorProps) {
         }
         toast.success("Post updated.")
       } else {
-        await createPost(supabase, {
-          authorId,
+        const result = await createBlogPost({
           title: title.trim(),
           excerpt: excerpt.trim() || undefined,
           content: content.trim(),
           status,
+          coverImagePath: coverImagePath ?? undefined,
         })
-        // Update cover if one was uploaded (need to find the created post)
-        if (coverImagePath) {
-          const { data: created } = await supabase
-            .from("blog_posts")
-            .select("id")
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single()
-          if (created) {
-            await supabase.from("blog_posts").update({ cover_image_path: coverImagePath }).eq("id", created.id)
-          }
+        if (!result.success) {
+          toast.error(result.error ?? "Something went wrong.")
+          setSaving(false)
+          return
         }
         toast.success("Post created.")
       }
