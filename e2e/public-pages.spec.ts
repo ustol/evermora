@@ -16,10 +16,26 @@ test("homepage renders brand chrome with no console errors", async ({ page }) =>
   expect(errors).toEqual([])
 })
 
-test("about page renders with no console errors", async ({ page }) => {
+test("about page renders its refreshed content with no console errors", async ({ page }) => {
   const errors = trackConsoleErrors(page)
   await page.goto("/about")
+
   await expect(page).toHaveURL(/\/about$/)
+  await expect(page.getByRole("heading", { level: 1, name: "About Akornafa" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "What we believe" })).toBeVisible()
+  await expect(page.getByRole("article").getByText("Honouring lives. Preserving memories.")).toBeVisible()
+  expect(errors).toEqual([])
+})
+
+test("design-system page renders foundations and components with no console errors", async ({ page }) => {
+  const errors = trackConsoleErrors(page)
+  await page.goto("/design-system")
+
+  await expect(page).toHaveURL(/\/design-system$/)
+  await expect(page.getByRole("heading", { level: 1, name: "Memorial foundations & components" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Color system" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Buttons" })).toBeVisible()
+  await expect(page.getByText("Akornafa Design System")).toBeVisible()
   expect(errors).toEqual([])
 })
 

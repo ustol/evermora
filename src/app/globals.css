@@ -1,156 +1,255 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Self-hosted (not Fontsource — Chillax/Supreme aren't published there;
-   these are the actual variable-font files from Fontshare's own CDN,
-   downloaded once rather than loaded from a third party at runtime).
-   In Next.js, fonts live in src/app/fonts or src/assets/fonts — path
-   resolved relative to the CSS file. */
 @font-face {
-  font-family: 'Chillax';
-  src: url('../assets/fonts/chillax-variable.woff2') format('woff2');
-  font-weight: 200 700;
+  font-family: "Chillax";
+  src: url("/fonts/chillax/chillax-regular.woff2") format("woff2");
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
-  font-family: 'Supreme';
-  src: url('../assets/fonts/supreme-variable.woff2') format('woff2');
-  font-weight: 100 800;
+  font-family: "Chillax";
+  src: url("/fonts/chillax/chillax-medium.woff2") format("woff2");
+  font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
-  font-family: 'Supreme';
-  src: url('../assets/fonts/supreme-variable-italic.woff2') format('woff2');
-  font-weight: 100 800;
-  font-style: italic;
+  font-family: "Chillax";
+  src: url("/fonts/chillax/chillax-semibold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
   font-display: swap;
 }
+
+@font-face {
+  font-family: "Chillax";
+  src: url("/fonts/chillax/chillax-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-    --font-sans: 'Supreme', system-ui, sans-serif;
-    --font-heading: 'Chillax', Georgia, serif;
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
+  --font-sans: 'Source Sans 3', system-ui, sans-serif;
+  --font-heading: "Chillax", 'Source Sans 3', system-ui, sans-serif;
+  --font-display: "Chillax", 'Source Sans 3', system-ui, sans-serif;
 
-    /* Akornafa brand palette, exposed as Tailwind utilities (bg-obsidian, text-heritage-gold, etc.) */
-    --color-obsidian: var(--brand-obsidian);
-    --color-rich-black: var(--brand-rich-black);
-    --color-heritage-gold: var(--brand-heritage-gold);
-    --color-warm-gold: var(--brand-warm-gold);
-    --color-soft-ivory: var(--brand-soft-ivory);
-    --color-warm-stone: var(--brand-warm-stone);
-    --color-muted-taupe: var(--brand-muted-taupe);
-    --color-deep-burgundy: var(--brand-deep-burgundy);
-    --color-success: var(--brand-success);
-    --color-error: var(--brand-error);
+  /* Replace default neutral ramp with warm ceremonial neutrals, not pure grey. */
+  --color-neutral-50: #fbf6ec;
+  --color-neutral-100: #f4ead9;
+  --color-neutral-200: #eadbc3;
+  --color-neutral-300: #d9c4a8;
+  --color-neutral-400: #b99f7f;
+  --color-neutral-500: #91785f;
+  --color-neutral-600: #746453;
+  --color-neutral-700: #574236;
+  --color-neutral-800: #33251e;
+  --color-neutral-900: #211712;
+  --color-neutral-950: #17100d;
 
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  /* Akornafa memorial palette, exposed as Tailwind utilities. */
+  --color-ink: var(--brand-ink);
+  --color-charcoal: var(--brand-charcoal);
+  --color-kente-gold: var(--brand-kente-gold);
+  --color-ceremonial-gold: var(--brand-ceremonial-gold);
+  --color-ivory: var(--brand-ivory);
+  --color-parchment: var(--brand-parchment);
+  --color-clay: var(--brand-clay);
+  --color-taupe: var(--brand-taupe);
+  --color-cocoa: var(--brand-cocoa);
+  --color-burgundy: var(--brand-burgundy);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-critical: var(--critical);
+
+  /* Backward-compatible aliases used by existing Akornafa surfaces. */
+  --color-obsidian: var(--brand-ink);
+  --color-rich-black: var(--brand-charcoal);
+  --color-heritage-gold: var(--brand-kente-gold);
+  --color-warm-gold: var(--brand-ceremonial-gold);
+  --color-soft-ivory: var(--brand-ivory);
+  --color-warm-stone: var(--brand-parchment);
+  --color-muted-taupe: var(--brand-taupe);
+  --color-deep-burgundy: var(--brand-burgundy);
+  --color-error: var(--critical);
+
+  --radius-sm: calc(var(--radius) * 0.55);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.35);
+  --radius-2xl: calc(var(--radius) * 1.75);
+  --radius-3xl: calc(var(--radius) * 2.25);
+  --radius-4xl: calc(var(--radius) * 2.75);
 }
 
 :root {
-    /* Akornafa brand palette (source of truth — see design brief) */
-    --brand-obsidian: #0B0B0D;
-    --brand-rich-black: #151517;
-    --brand-heritage-gold: #8A6A34;
-    --brand-warm-gold: #D4AF67;
-    --brand-soft-ivory: #FAF8F3;
-    --brand-warm-stone: #E8E1D5;
-    --brand-muted-taupe: #766B5D;
-    --brand-deep-burgundy: #5B2028;
-    --brand-success: #357A55;
-    --brand-error: #B54747;
+  color-scheme: light;
 
-    --background: var(--brand-soft-ivory);
-    --foreground: var(--brand-obsidian);
-    --card: #FFFFFF;
-    --card-foreground: var(--brand-obsidian);
-    --popover: #FFFFFF;
-    --popover-foreground: var(--brand-obsidian);
-    --primary: var(--brand-obsidian);
-    --primary-foreground: var(--brand-soft-ivory);
-    --secondary: var(--brand-warm-stone);
-    --secondary-foreground: var(--brand-obsidian);
-    --muted: var(--brand-warm-stone);
-    --muted-foreground: var(--brand-muted-taupe);
-    --accent: var(--brand-heritage-gold);
-    --accent-foreground: var(--brand-obsidian);
-    --destructive: var(--brand-error);
-    --border: color-mix(in oklch, var(--brand-obsidian) 12%, transparent);
-    --input: color-mix(in oklch, var(--brand-obsidian) 16%, transparent);
-    --ring: var(--brand-heritage-gold);
-    --chart-1: var(--brand-heritage-gold);
-    --chart-2: var(--brand-deep-burgundy);
-    --chart-3: var(--brand-muted-taupe);
-    --chart-4: var(--brand-success);
-    --chart-5: var(--brand-rich-black);
-    --radius: 0.75rem;
-    --sidebar: var(--brand-rich-black);
-    --sidebar-foreground: var(--brand-soft-ivory);
-    --sidebar-primary: var(--brand-heritage-gold);
-    --sidebar-primary-foreground: var(--brand-obsidian);
-    --sidebar-accent: color-mix(in oklch, var(--brand-soft-ivory) 10%, transparent);
-    --sidebar-accent-foreground: var(--brand-soft-ivory);
-    --sidebar-border: color-mix(in oklch, var(--brand-soft-ivory) 14%, transparent);
-    --sidebar-ring: var(--brand-heritage-gold);
+  /* Subject-led palette: Ghanaian funeral cloth warmth, candlelight gold, clay earth, deep ceremonial ink. */
+  --brand-ink: #18120f;
+  --brand-charcoal: #251812;
+  --brand-kente-gold: #86610f;
+  --brand-ceremonial-gold: #c79538;
+  --brand-ivory: #fbf6ec;
+  --brand-parchment: #f4ead9;
+  --brand-clay: #d9c4a8;
+  --brand-taupe: #746453;
+  --brand-cocoa: #443229;
+  --brand-burgundy: #5c2528;
+
+  /* Semantic colors are intentionally separate from the decorative accent. */
+  --success: #2f6f4e;
+  --warning: #9a5a12;
+  --critical: #a64232;
+
+  --background: var(--brand-ivory);
+  --foreground: var(--brand-ink);
+  --card: #fffaf2;
+  --card-foreground: var(--brand-ink);
+  --popover: #fffaf2;
+  --popover-foreground: var(--brand-ink);
+  --primary: var(--brand-charcoal);
+  --primary-foreground: var(--brand-ivory);
+  --secondary: var(--brand-parchment);
+  --secondary-foreground: var(--brand-ink);
+  --muted: #eadbc3;
+  --muted-foreground: #695a4a;
+  --accent: var(--brand-kente-gold);
+  --accent-foreground: var(--brand-ivory);
+  --destructive: var(--critical);
+  --border: color-mix(in oklch, var(--brand-cocoa) 22%, transparent);
+  --input: color-mix(in oklch, var(--brand-cocoa) 28%, transparent);
+  --ring: #a77a1b;
+  --chart-1: var(--brand-kente-gold);
+  --chart-2: var(--brand-burgundy);
+  --chart-3: var(--brand-cocoa);
+  --chart-4: var(--success);
+  --chart-5: var(--warning);
+  --radius: 0.8rem;
+  --sidebar: var(--brand-charcoal);
+  --sidebar-foreground: var(--brand-ivory);
+  --sidebar-primary: var(--brand-ceremonial-gold);
+  --sidebar-primary-foreground: var(--brand-ink);
+  --sidebar-accent: color-mix(in oklch, var(--brand-ivory) 10%, transparent);
+  --sidebar-accent-foreground: var(--brand-ivory);
+  --sidebar-border: color-mix(in oklch, var(--brand-ivory) 15%, transparent);
+  --sidebar-ring: var(--brand-ceremonial-gold);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #17100d;
+  --foreground: #f8efdf;
+  --card: #211712;
+  --card-foreground: #f8efdf;
+  --popover: #211712;
+  --popover-foreground: #f8efdf;
+  --primary: #d6a849;
+  --primary-foreground: #17100d;
+  --secondary: #35261e;
+  --secondary-foreground: #f8efdf;
+  --muted: #2b201a;
+  --muted-foreground: #cbbba6;
+  --accent: #d6a849;
+  --accent-foreground: #17100d;
+  --destructive: #e07a67;
+  --success: #77bc8b;
+  --warning: #e5aa55;
+  --critical: #e07a67;
+  --border: color-mix(in oklch, var(--foreground) 15%, transparent);
+  --input: color-mix(in oklch, var(--foreground) 20%, transparent);
+  --ring: #d6a849;
+  --chart-1: #d6a849;
+  --chart-2: #d98a92;
+  --chart-3: #cbbba6;
+  --chart-4: #77bc8b;
+  --chart-5: #e5aa55;
+  --sidebar: #110b08;
+  --sidebar-foreground: #f8efdf;
+  --sidebar-primary: #d6a849;
+  --sidebar-primary-foreground: #17100d;
+  --sidebar-accent: color-mix(in oklch, var(--foreground) 10%, transparent);
+  --sidebar-accent-foreground: #f8efdf;
+  --sidebar-border: color-mix(in oklch, var(--foreground) 12%, transparent);
+  --sidebar-ring: #d6a849;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
+  }
+
   html {
     @apply font-sans;
-    }
-  h1, h2, h3, h4 {
-    @apply font-heading;
-    }
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-semibold tracking-[-0.025em];
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--accent) 34%, transparent);
+    color: var(--foreground);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
+  *,
+  ::before,
+  ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
