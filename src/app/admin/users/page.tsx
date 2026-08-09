@@ -15,15 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   listAllProfiles,
   setProfileStatus,
@@ -32,7 +24,7 @@ import {
 } from "@/services/admin"
 import { formatDayMonthYear } from "@/lib/date"
 import { toast } from "sonner"
-import { MoreHorizontal, ShieldBan, ShieldCheck, UserCog, ShieldUser } from "lucide-react"
+import { ShieldBan, ShieldCheck, ShieldUser, UserCog } from "lucide-react"
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   active: "default",
@@ -116,11 +108,13 @@ export default function AdminUsersPage() {
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="hidden sm:table-cell">Joined</TableHead>
-                <TableHead className="w-12" />
+                <TableHead className="w-[72px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {profiles.map((p) => (
+              {profiles.map((p) => {
+                const busy = actionLoading?.startsWith(`${p.id}__`)
+                return (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.displayName}</TableCell>
                   <TableCell className="text-muted-foreground">{p.email ?? "—"}</TableCell>
@@ -138,55 +132,49 @@ export default function AdminUsersPage() {
                     {p.createdAt ? formatDayMonthYear(p.createdAt) : "—"}
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                        aria-label="Actions"
-                        disabled={actionLoading?.startsWith(`${p.id}__`)}
-                      >
-                        <MoreHorizontal className="size-4" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuGroup>
-                          <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                        {p.role !== "admin" ? (
-                          <DropdownMenuItem
-                            onClick={() => handleRoleChange(p.id, "admin")}
-                          >
-                            <ShieldUser className="size-4" />
-                            Make admin
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem
-                            onClick={() => handleRoleChange(p.id, "user")}
-                          >
+                    <div className="flex items-center gap-0.5">
+                      {/* Role toggle */}
+                      <Tooltip>
+                        <TooltipTrigger
+                          className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                          aria-label={p.role === "admin" ? "Remove admin role" : "Make admin"}
+                          disabled={busy}
+                          onClick={() => handleRoleChange(p.id, p.role === "admin" ? "user" : "admin")}
+                        >
+                          {p.role === "admin" ? (
                             <UserCog className="size-4" />
-                            Remove admin
-                          </DropdownMenuItem>
-                        )}
-                        {p.status === "suspended" ? (
-                          <DropdownMenuItem
-                            onClick={() => handleStatusChange(p.id, "active")}
-                          >
+                          ) : (
+                            <ShieldUser className="size-4" />
+                          )}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {p.role === "admin" ? "Remove admin" : "Make admin"}
+                        </TooltipContent>
+                      </Tooltip>
+
+                      {/* Status toggle */}
+                      <Tooltip>
+                        <TooltipTrigger
+                          className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                          aria-label={p.status === "suspended" ? "Reactivate user" : "Suspend user"}
+                          disabled={busy}
+                          onClick={() => handleStatusChange(p.id, p.status === "suspended" ? "active" : "suspended")}
+                        >
+                          {p.status === "suspended" ? (
                             <ShieldCheck className="size-4" />
-                            Reactivate
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() => handleStatusChange(p.id, "suspended")}
-                          >
+                          ) : (
                             <ShieldBan className="size-4" />
-                            Suspend user
-                          </DropdownMenuItem>
-                        )}
-                        </DropdownMenuGroup>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          )}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {p.status === "suspended" ? "Reactivate" : "Suspend"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                )
+              })}
             </TableBody>
           </Table>
         </div>
