@@ -39,31 +39,31 @@ const features = [
     icon: MessageCircleHeart,
     title: "Tributes & condolences",
     description:
-      "Let family, friends, and colleagues leave a tribute or condolence message for the family to read.",
+      "Give family, friends, and colleagues a place to pour out their memories and kind words, so the family feels held by every voice that mattered.",
   },
   {
     icon: Images,
     title: "Photograph galleries",
     description:
-      "Bring together photographs from a lifetime, with captions and a respectful, uncluttered layout.",
+      "Bring a lifetime of moments together in one place, where a single photograph can bring back a whole story and a familiar smile.",
   },
   {
     icon: Flower2,
     title: "Wreaths & roses",
     description:
-      "Well-wishers can lay a virtual wreath or rose in the deceased's honour, shown on the memorial with their name.",
+      "Let well-wishers lay a virtual wreath or rose in their honour, a small and heartfelt gesture that shows the family they are not grieving alone.",
   },
   {
     icon: Share2,
     title: "Simple sharing",
     description:
-      "Every memorial gets a clean, memorable link that's easy to share by message, email, or social media.",
+      "Every memorial gets a clean, memorable link, so reaching everyone who cared takes nothing more than a single message.",
   },
   {
     icon: Lock,
-    title: "Privacy by design",
+    title: "Privacy stays with the family",
     description:
-      "Make a memorial public, unlisted, or private — and decide who can contribute photographs or messages.",
+      "Choose public, unlisted, or private, and decide who can add photographs or messages, so this tender space always stays exactly as the family wants it.",
   },
 ]
 
@@ -76,12 +76,17 @@ const steps = [
   {
     title: "Share the page",
     description:
-      "Share the memorial's link with family, friends, and community via any messaging platform or social media.",
+      "Send the memorial's link to family, friends, and community through any messaging app or social platform.",
   },
   {
     title: "Gather tributes",
     description:
-      "Visitors leave messages, lay virtual wreaths, and share photographs — building a lasting collection of memories.",
+      "Visitors leave messages, lay virtual wreaths, and share photographs in your loved one's honour.",
+  },
+  {
+    title: "Keep the memory alive",
+    description:
+      "The memorial stays online as a lasting place to return to, remember, and revisit on anniversaries and beyond.",
   },
 ]
 
@@ -203,7 +208,7 @@ export default async function HomePage() {
       <section className="py-20">
         <Container>
           <h2 className="font-heading text-2xl text-foreground sm:text-3xl">How it works</h2>
-          <div className="mt-10 grid grid-cols-1 gap-10 sm:grid-cols-3">
+          <div className="mt-10 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, index) => (
               <StepCard key={step.title} step={index + 1} {...step} />
             ))}
