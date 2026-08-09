@@ -17,7 +17,7 @@ const sections = [
 
 export default function AboutPage() {
   return (
-    <Container className="py-16 sm:py-24">
+    <Container className="pt-7 pb-16 sm:pt-8 sm:pb-24">
       <article className="mx-auto max-w-3xl">
         <header className="border-b border-border pb-10">
           <h1 className="font-heading text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
