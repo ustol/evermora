@@ -272,10 +272,10 @@ export default async function HomePage() {
       <section className="border-t border-border/60 bg-obsidian py-20 text-soft-ivory">
         <Container className="grid grid-cols-1 gap-10 sm:grid-cols-2">
           <div>
-            <h2 className="font-heading text-2xl">Privacy stays with the family</h2>
+            <h2 className="font-heading text-2xl">A lasting life story</h2>
             <p className="mt-3 max-w-md text-soft-ivory/70">
-              Every memorial can be public, unlisted, or private. Owners choose whether tributes and
-              photographs need approval before they're visible, and can remove anything at any time.
+              Tell the fuller story of who they were, their journey, their faith, the people and
+              places they loved, so their memory is carried forward in their own light.
             </p>
           </div>
           <div>
