@@ -6,7 +6,7 @@ interface StepCardProps {
 
 export function StepCard({ step, title, description }: StepCardProps) {
   return (
-    <div className="flex flex-col items-start gap-3">
+    <div className="flex flex-col items-center gap-3 text-center">
       <div className="flex size-9 items-center justify-center rounded-full bg-obsidian font-heading text-sm text-soft-ivory">
         {step}
       </div>
