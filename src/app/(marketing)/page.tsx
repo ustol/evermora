@@ -207,7 +207,7 @@ export default async function HomePage() {
 
       <section className="py-20">
         <Container>
-          <h2 className="font-heading text-2xl text-foreground sm:text-3xl">How it works</h2>
+          <h2 className="text-center font-heading text-2xl text-foreground sm:text-3xl">How it works</h2>
           <div className="mt-10 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, index) => (
               <StepCard key={step.title} step={index + 1} {...step} />
@@ -216,14 +216,14 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      <section className="border-y border-border/60 bg-warm-stone/40 py-20">
+      <section className="border-y border-border/60 bg-obsidian py-20 text-soft-ivory">
         <Container>
-          <h2 className="font-heading text-2xl text-foreground sm:text-3xl">
-            Everything a family needs, nothing they don't
+          <h2 className="text-center font-heading text-2xl sm:text-3xl">
+            Everything a family needs, nothing they don&rsquo;t
           </h2>
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => (
-              <FeatureCard key={feature.title} {...feature} />
+              <FeatureCard key={feature.title} variant="dark" {...feature} />
             ))}
           </div>
         </Container>
@@ -231,11 +231,8 @@ export default async function HomePage() {
 
       <section className="py-20">
         <Container>
-          <div className="flex items-end justify-between">
+          <div className="text-center">
             <h2 className="font-heading text-2xl text-foreground sm:text-3xl">Recently published</h2>
-            <Link href="/memorials" className="text-sm font-medium text-heritage-gold hover:underline">
-              View all
-            </Link>
           </div>
           <div className="mt-10">
             {highlighted.length > 0 ? (
@@ -265,22 +262,27 @@ export default async function HomePage() {
                 description="Published memorials will appear here once families start sharing them."
               />
             )}
+            <div className="mt-8 text-center">
+              <Link href="/memorials" className="text-sm font-medium text-heritage-gold hover:underline">
+                View all
+              </Link>
+            </div>
           </div>
         </Container>
       </section>
 
       <section className="border-t border-border/60 bg-obsidian py-20 text-soft-ivory">
         <Container className="grid grid-cols-1 gap-10 sm:grid-cols-2">
-          <div>
+          <div className="text-center">
             <h2 className="font-heading text-2xl">A lasting life story</h2>
-            <p className="mt-3 max-w-md text-soft-ivory/70">
+            <p className="mt-3 mx-auto max-w-md text-soft-ivory/70">
               Tell the fuller story of who they were, their journey, their faith, the people and
               places they loved, so their memory is carried forward in their own light.
             </p>
           </div>
-          <div>
+          <div className="text-center">
             <h2 className="font-heading text-2xl">Built for moderation</h2>
-            <p className="mt-3 max-w-md text-soft-ivory/70">
+            <p className="mt-3 mx-auto max-w-md text-soft-ivory/70">
               Every submission can be reviewed before it appears. Visitors can report anything that
               shouldn't be there, and it goes straight to the memorial's owner.
             </p>
