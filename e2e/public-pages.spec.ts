@@ -46,6 +46,26 @@ test("memorials directory renders with no console errors", async ({ page }) => {
   expect(errors).toEqual([])
 })
 
+test("public homepage navigates to the uncached memorial directory", async ({ page }) => {
+  const errors = trackConsoleErrors(page)
+
+  const homeResponse = await page.goto("/")
+  expect(homeResponse?.headers()["cache-control"]).toMatch(/no-cache|no-store/i)
+
+  const directoryLink = page.getByRole("banner").getByRole("link", { name: "Find a memorial" })
+  await expect(directoryLink).toHaveAttribute("href", "/memorials")
+  await Promise.all([
+    page.waitForURL(/\/memorials$/),
+    directoryLink.click(),
+  ])
+  await expect(page.getByRole("heading", { level: 1, name: "Find a memorial" })).toBeVisible()
+
+  const directoryResponse = await page.goto("/memorials")
+  expect(directoryResponse?.headers()["cache-control"]).toMatch(/no-cache|no-store/i)
+
+  expect(errors).toEqual([])
+})
+
 test("a real memorial page renders its core sections with no console errors", async ({
   page,
 }) => {

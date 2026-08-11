@@ -7,6 +7,9 @@ import { MemorialCard } from "@/components/memorial/MemorialCard";
 import { FieldsForm } from "./FieldsForm";
 import { Search } from "lucide-react";
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 const PAGE_SIZE = 12;
 
 interface PageProps {

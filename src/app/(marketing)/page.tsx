@@ -24,6 +24,9 @@ import { cn } from "@/lib/utils";
 import type { HighlightedMemorial } from "@/services/publicMemorials";
 import type { HeroImage } from "@/services/heroImages";
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 // Hidden per request — kept in place (data still loads) rather than removed,
 // so it can be turned back on by flipping this flag.
 const SHOW_STATS_SECTION = false

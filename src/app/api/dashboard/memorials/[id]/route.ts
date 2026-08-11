@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache"
 import { NextResponse } from "next/server"
 import { getCurrentProfile } from "@/lib/auth-profile"
 import { getMemorialById, deleteMemorial } from "@/services/memorials"
@@ -20,6 +21,10 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
     await deleteMemorial(current.supabase, id)
+    revalidatePath("/")
+    revalidatePath("/memorials")
+    revalidatePath(`/memorials/${memorial.slug}`)
+    revalidatePath("/dashboard/memorials")
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error("dashboard memorial delete failed", err)
