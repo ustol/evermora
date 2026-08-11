@@ -174,12 +174,16 @@ export async function deleteMemorial(
   supabase: SupabaseClient<Database>,
   memorialId: string
 ) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("memorials")
     .delete()
     .eq("id", memorialId)
+    .select("id")
 
   if (error) throw error
+  if (!data?.length) {
+    throw new Error("Memorial was not deleted")
+  }
 }
 
 export async function getFuneralEvents(

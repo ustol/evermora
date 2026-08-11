@@ -5,7 +5,6 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase-browser"
 import { updateMemorial, publishMemorial } from "@/services/memorialDrafts"
-import { deleteMemorial } from "@/services/memorials"
 import { Button } from "@/components/ui/button"
 import type { Database } from "@/types/supabase"
 
@@ -78,9 +77,13 @@ export function MemorialSettingsClient({ memorial }: Props) {
     if (!confirm("Delete this memorial permanently? This cannot be undone.")) return
     setDeleting(true)
     try {
-      await deleteMemorial(supabase, memorial.id)
+      const response = await fetch(`/api/dashboard/memorials/${memorial.id}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) throw new Error("delete failed")
       toast.success("Memorial deleted.")
       router.push("/dashboard/memorials")
+      router.refresh()
     } catch {
       toast.error("Couldn't delete.")
     } finally {

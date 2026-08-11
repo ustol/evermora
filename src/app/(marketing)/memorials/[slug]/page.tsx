@@ -11,6 +11,9 @@ import { MediaGallerySection } from "@/components/memorial/MediaGallerySection";
 import { TruncatedWriteup } from "@/components/memorial/TruncatedWriteup";
 import { calculateAge, formatDayMonthYear, formatLifespanYears } from "@/lib/date";
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 const eventTypeLabels: Record<string, string> = {
   wake: "Wake",
   burial: "Burial",
