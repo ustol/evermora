@@ -93,9 +93,11 @@ export default async function BlogPostPage({ params }: PageProps) {
           />
         </div>
 
-        <div className="prose prose-stone mt-10 max-w-none">
+        <div className="prose prose-stone mt-10 max-w-none md:text-justify md:hyphens-auto md:[text-align-last:left]">
           {post.content?.split("\n").map((paragraph: string, i: number) => (
-            <p key={i}>{paragraph}</p>
+            <p key={i} className="md:text-justify md:hyphens-auto md:[text-align-last:left]">
+              {paragraph}
+            </p>
           ))}
         </div>
 
