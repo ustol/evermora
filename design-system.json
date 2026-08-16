@@ -1,0 +1,21 @@
+{
+  "$schema": "https://aned.ai/schemas/design-system.json",
+  "name": "Akornafa Design System",
+  "status": "adopted-in-place",
+  "componentsDir": "src/components",
+  "uiComponentsDir": "src/components/ui",
+  "docsRoute": "/design-system",
+  "docsFile": "src/app/design-system/page.tsx",
+  "tokens": {
+    "css": "src/app/globals.css",
+    "source": "src/config/design-system.ts"
+  },
+  "brand": {
+    "read": "Calm, dignified memorial/funeral service with a trust-first editorial feel.",
+    "palette": "warm-gold, obsidian, cream, parchment, cocoa",
+    "typography": {
+      "body": "Source Sans 3 via @fontsource/source-sans-3",
+      "headings": "Chillax via local public font files"
+    }
+  }
+}

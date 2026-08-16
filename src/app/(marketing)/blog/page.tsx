@@ -7,6 +7,9 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/layout/EmptyState";
 import { formatDayMonthYear } from "@/lib/date";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function getSupabase() {
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
