@@ -41,5 +41,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
+  // Keep profiles.avatar_url in sync so public surfaces (blog author
+  // avatars, tribute authors) can read the photo via public_profiles
+  // without needing the auth session's user_metadata.
+  const { error: profileError } = await admin
+    .from("profiles")
+    .update({ avatar_url: publicUrl })
+    .eq("clerk_user_id", user.id);
+  if (profileError) {
+    console.error("profile avatar sync failed", profileError);
+  }
+
   return NextResponse.json({ ok: true, avatar_url: publicUrl, user: updatedUser.user });
 }

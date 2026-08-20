@@ -168,7 +168,7 @@ async function fetchRecentPosts(limit = 3): Promise<BlogPostSummary[]> {
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from("blog_posts")
-    .select("slug, title, excerpt, author_name, cover_image_path, published_at")
+    .select("slug, title, excerpt, author_id, author_name, cover_image_path, published_at")
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(limit)
@@ -176,16 +176,33 @@ async function fetchRecentPosts(limit = 3): Promise<BlogPostSummary[]> {
     console.error("fetchRecentPosts:", error.message);
     return []
   }
-  return (data ?? []).map((p) => ({
-    slug: p.slug,
-    title: p.title,
-    excerpt: p.excerpt,
-    authorName: p.author_name ?? "Akornafa",
-    coverImageUrl: p.cover_image_path
-      ? supabase.storage.from("blog-images").getPublicUrl(p.cover_image_path).data.publicUrl
-      : null,
-    publishedAt: p.published_at,
-  }))
+
+  const authorIds = [...new Set((data ?? []).map((p) => p.author_id))]
+  const authorByProfileId = new Map<string, { display_name: string; avatar_url: string | null }>()
+  if (authorIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("public_profiles")
+      .select("id, display_name, avatar_url")
+      .in("id", authorIds)
+    for (const profile of profiles ?? []) {
+      authorByProfileId.set(profile.id, profile)
+    }
+  }
+
+  return (data ?? []).map((p) => {
+    const profile = authorByProfileId.get(p.author_id)
+    return {
+      slug: p.slug,
+      title: p.title,
+      excerpt: p.excerpt,
+      authorName: profile?.display_name ?? p.author_name ?? "Akornafa",
+      authorAvatarUrl: profile?.avatar_url ?? null,
+      coverImageUrl: p.cover_image_path
+        ? supabase.storage.from("blog-images").getPublicUrl(p.cover_image_path).data.publicUrl
+        : null,
+      publishedAt: p.published_at,
+    }
+  })
 }
 
 /* ─── page ─────────────────────────────────────────────────────── */

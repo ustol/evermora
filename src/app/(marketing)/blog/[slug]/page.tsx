@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/Container";
 import { ShareButton } from "@/components/shared/ShareButton";
 import { MarkdownContent } from "@/components/shared/MarkdownContent";
-import { UserRound } from "lucide-react";
+import { BlogAuthor } from "@/components/marketing/BlogAuthor";
 import { formatDayMonthYear } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +29,15 @@ async function fetchPost(slug: string) {
 
   if (error || !post) return null;
 
+  // Resolve the author's name + photo from the public profile view (the
+  // profiles table itself is RLS-locked to the owner/admin, so public pages
+  // read the RLS-bypassing public_profiles view instead).
+  const { data: profile } = await supabase
+    .from("public_profiles")
+    .select("id, display_name, avatar_url")
+    .eq("id", post.author_id)
+    .maybeSingle();
+
   const { data: images } = await supabase
     .from("blog_post_images")
     .select("*")
@@ -41,7 +50,8 @@ async function fetchPost(slug: string) {
       coverImageUrl: post.cover_image_path
         ? supabase.storage.from("blog-images").getPublicUrl(post.cover_image_path).data.publicUrl
         : null,
-      authorName: post.author_name ?? "Akornafa",
+      authorName: profile?.display_name ?? post.author_name ?? "Akornafa",
+      authorAvatarUrl: profile?.avatar_url ?? null,
     },
     images: (images ?? []).map((img) => ({
       ...img,
@@ -76,10 +86,12 @@ export default async function BlogPostPage({ params }: PageProps) {
         )}
 
         <div className="mb-8 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <UserRound className="size-4" />
-            {post.authorName}
-          </span>
+          <BlogAuthor
+            name={post.authorName}
+            avatarUrl={post.authorAvatarUrl}
+            size="default"
+            nameClassName="text-sm font-medium text-foreground"
+          />
           <span>{post.published_at ? formatDayMonthYear(post.published_at) : ""}</span>
         </div>
 

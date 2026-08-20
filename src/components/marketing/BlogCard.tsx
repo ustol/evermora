@@ -1,19 +1,22 @@
 import Link from "next/link"
 import { Newspaper } from "lucide-react"
 import { formatDayMonthYear } from "@/lib/date"
+import { BlogAuthor } from "@/components/marketing/BlogAuthor"
 
 export interface BlogPostSummary {
   slug: string
   title: string
   excerpt: string | null
   authorName: string
+  authorAvatarUrl: string | null
   coverImageUrl: string | null
   publishedAt: string | null
 }
 
 /**
  * A blog post card in the exact style used on /blog — cover image on top,
- * then author, title, a two-line excerpt, and the publish date.
+ * then the author (photo in a small circle + name), title, a two-line
+ * excerpt, and the publish date.
  */
 export function BlogCard({ post }: { post: BlogPostSummary }) {
   return (
@@ -35,9 +38,12 @@ export function BlogCard({ post }: { post: BlogPostSummary }) {
         )}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-5">
-        <span className="text-xs font-medium tracking-wide text-heritage-gold uppercase">
-          {post.authorName}
-        </span>
+        <BlogAuthor
+          name={post.authorName}
+          avatarUrl={post.authorAvatarUrl}
+          size="sm"
+          nameClassName="text-xs font-medium tracking-wide text-heritage-gold uppercase"
+        />
         <h3 className="font-heading text-lg leading-snug text-foreground">{post.title}</h3>
         <p className="line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
         <span className="mt-auto pt-2 text-xs text-muted-foreground">
