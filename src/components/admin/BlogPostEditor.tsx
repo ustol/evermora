@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import { getPostById, updatePost, type BlogPostWithCover } from "@/services/blog"
 import { createBlogPost } from "@/app/admin/blog/actions"
+import { RichTextEditor } from "@/components/admin/RichTextEditor"
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const MAX_FILE_SIZE = 3 * 1024 * 1024
@@ -220,12 +221,12 @@ export function BlogPostEditor({ postId }: BlogPostEditorProps) {
 
           <Field>
             <FieldLabel>Content</FieldLabel>
-            <FieldDescription>Write the full article. Each blank line starts a new paragraph.</FieldDescription>
-            <Textarea
+            <FieldDescription>
+              Format with the toolbar — bold, italics, headings, quotes, and lists.
+            </FieldDescription>
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={16}
-              className="font-mono text-sm"
+              onChange={setContent}
               placeholder="Start writing…"
             />
           </Field>

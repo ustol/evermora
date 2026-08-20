@@ -18,6 +18,7 @@ import { MemorialCard } from "@/components/memorial/MemorialCard";
 import { FeatureCard } from "@/components/marketing/FeatureCard";
 import { StepCard } from "@/components/marketing/StepCard";
 import { HeroBackground } from "@/components/marketing/HeroBackground";
+import { BlogCard, type BlogPostSummary } from "@/components/marketing/BlogCard";
 import { buttonVariants } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -163,12 +164,37 @@ async function fetchHighlightedMemorials(limit = 3): Promise<HighlightedMemorial
   return memorials.map((m) => ({ ...m, giftCount: counts.get(m.id) ?? 0 }))
 }
 
+async function fetchRecentPosts(limit = 3): Promise<BlogPostSummary[]> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("slug, title, excerpt, author_name, cover_image_path, published_at")
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .limit(limit)
+  if (error) {
+    console.error("fetchRecentPosts:", error.message);
+    return []
+  }
+  return (data ?? []).map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    excerpt: p.excerpt,
+    authorName: p.author_name ?? "Akornafa",
+    coverImageUrl: p.cover_image_path
+      ? supabase.storage.from("blog-images").getPublicUrl(p.cover_image_path).data.publicUrl
+      : null,
+    publishedAt: p.published_at,
+  }))
+}
+
 /* ─── page ─────────────────────────────────────────────────────── */
 
 export default async function HomePage() {
-  const [heroImages, highlighted] = await Promise.all([
+  const [heroImages, highlighted, recentPosts] = await Promise.all([
     fetchHeroImages(),
     fetchHighlightedMemorials(3),
+    fetchRecentPosts(3),
   ])
 
   return (
@@ -229,6 +255,40 @@ export default async function HomePage() {
               <FeatureCard key={feature.title} variant="dark" {...feature} />
             ))}
           </div>
+        </Container>
+      </section>
+
+      {recentPosts.length > 0 && (
+        <section className="py-20">
+          <Container>
+            <div className="text-center">
+              <h2 className="font-heading text-2xl text-foreground sm:text-3xl">From the blog</h2>
+            </div>
+            <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {recentPosts.map((post) => (
+                <BlogCard key={post.slug} post={post} />
+              ))}
+            </div>
+            <div className="mt-8 text-center">
+              <Link href="/blog" className="text-sm font-medium text-heritage-gold hover:underline">
+                View all
+              </Link>
+            </div>
+          </Container>
+        </section>
+      )}
+
+      <section className="border-y border-border/60 bg-obsidian py-20 text-soft-ivory">
+        <Container className="flex flex-col items-center gap-4 text-center">
+          <h2 className="max-w-2xl font-heading text-2xl sm:text-3xl">
+            A Small Note About Virtual Wreaths &amp; Roses
+          </h2>
+          <p className="max-w-3xl text-soft-ivory/70">
+            All wreaths and roses on Akornafa are virtual tributes. Purchasing or placing one does
+            not mean that a physical wreath or rose will be delivered. Your purchase simply
+            represents your heartfelt expression of love, respect, and remembrance for the departed,
+            creating a lasting digital tribute on their memorial.
+          </p>
         </Container>
       </section>
 
