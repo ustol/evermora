@@ -5,6 +5,7 @@ import { Container } from "@/components/layout/Container";
 import { ShareButton } from "@/components/shared/ShareButton";
 import { MarkdownContent } from "@/components/shared/MarkdownContent";
 import { BlogAuthor } from "@/components/marketing/BlogAuthor";
+import { RecentBlogSidebar, type RecentBlogPost } from "@/components/marketing/RecentBlogSidebar";
 import { formatDayMonthYear } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +45,14 @@ async function fetchPost(slug: string) {
     .eq("post_id", post.id)
     .order("sort_order", { ascending: true });
 
+  const { data: recentPosts } = await supabase
+    .from("blog_posts")
+    .select("slug, title, excerpt, cover_image_path, published_at")
+    .eq("status", "published")
+    .neq("slug", slug)
+    .order("published_at", { ascending: false })
+    .limit(4);
+
   return {
     post: {
       ...post,
@@ -56,6 +65,15 @@ async function fetchPost(slug: string) {
     images: (images ?? []).map((img) => ({
       ...img,
       url: supabase.storage.from("blog-images").getPublicUrl(img.storage_path).data.publicUrl,
+    })),
+    recentPosts: (recentPosts ?? []).map<RecentBlogPost>((recentPost) => ({
+      slug: recentPost.slug,
+      title: recentPost.title,
+      excerpt: recentPost.excerpt,
+      coverImageUrl: recentPost.cover_image_path
+        ? supabase.storage.from("blog-images").getPublicUrl(recentPost.cover_image_path).data.publicUrl
+        : null,
+      publishedAt: recentPost.published_at,
     })),
   };
 }
@@ -70,60 +88,64 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   if (!result) notFound();
 
-  const { post, images } = result;
+  const { post, images, recentPosts } = result;
 
   return (
-    <Container className="py-16">
-      <article className="mx-auto max-w-3xl">
-        {post.coverImageUrl && (
-          <div className="mb-8 overflow-hidden rounded-2xl">
-            <img
-              src={post.coverImageUrl}
-              alt={post.title}
-              className="w-full object-cover"
+    <Container className="py-12 sm:py-16">
+      <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start xl:gap-14">
+        <article className="max-w-3xl">
+          {post.coverImageUrl && (
+            <div className="mb-8 overflow-hidden rounded-3xl border border-border/70 bg-card shadow-sm">
+              <img
+                src={post.coverImageUrl}
+                alt={post.title}
+                className="w-full object-cover"
+              />
+            </div>
+          )}
+
+          <div className="mb-8 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <BlogAuthor
+              name={post.authorName}
+              avatarUrl={post.authorAvatarUrl}
+              size="default"
+              nameClassName="text-sm font-medium text-foreground"
+            />
+            <span>{post.published_at ? formatDayMonthYear(post.published_at) : ""}</span>
+          </div>
+
+          <h1 className="font-heading text-4xl leading-tight text-foreground sm:text-5xl">
+            {post.title}
+          </h1>
+
+          <div className="mt-8 flex items-center gap-3">
+            <ShareButton
+              path={`/blog/${slug}`}
+              title={post.title}
             />
           </div>
-        )}
 
-        <div className="mb-8 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-          <BlogAuthor
-            name={post.authorName}
-            avatarUrl={post.authorAvatarUrl}
-            size="default"
-            nameClassName="text-sm font-medium text-foreground"
-          />
-          <span>{post.published_at ? formatDayMonthYear(post.published_at) : ""}</span>
-        </div>
+          <MarkdownContent className="mt-10">{post.content ?? ""}</MarkdownContent>
 
-        <h1 className="font-heading text-3xl leading-tight text-foreground sm:text-4xl">
-          {post.title}
-        </h1>
-
-        <div className="mt-8 flex items-center gap-3">
-          <ShareButton
-            path={`/blog/${slug}`}
-            title={post.title}
-          />
-        </div>
-
-        <MarkdownContent className="mt-10">{post.content ?? ""}</MarkdownContent>
-
-        {images.length > 0 && (
-          <div className="mt-12">
-            <h2 className="font-heading text-xl">Gallery</h2>
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {images.map((image) => (
-                <img
-                  key={image.id}
-                  src={image.url}
-                  alt=""
-                  className="aspect-square w-full rounded-xl object-cover"
-                />
-              ))}
+          {images.length > 0 && (
+            <div className="mt-12">
+              <h2 className="font-heading text-xl">Gallery</h2>
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {images.map((image) => (
+                  <img
+                    key={image.id}
+                    src={image.url}
+                    alt=""
+                    className="aspect-square w-full rounded-xl object-cover"
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-      </article>
+          )}
+        </article>
+
+        <RecentBlogSidebar posts={recentPosts} />
+      </div>
     </Container>
   );
 }

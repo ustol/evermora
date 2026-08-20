@@ -23,6 +23,7 @@ const sections = [
     items: [
       { id: "buttons", label: "Buttons" },
       { id: "cards", label: "Cards" },
+      { id: "editorial-sidebar", label: "Editorial sidebar" },
       { id: "forms", label: "Form fields" },
     ],
   },
@@ -57,7 +58,7 @@ export default function DesignSystemPage() {
               Akornafa Design System
             </p>
             <h1 className="truncate font-heading text-xl leading-tight sm:text-2xl">
-              Memorial foundations & components
+              Editorial foundations & components
             </h1>
           </div>
           <Link
@@ -103,15 +104,15 @@ export default function DesignSystemPage() {
                   Design read
                 </p>
                 <h2 className="mt-3 max-w-3xl font-heading text-3xl leading-[1.05] sm:text-5xl">
-                  Dignified Ghanaian remembrance, composed for families at home and across the diaspora.
+                  Warm editorial reading, composed for Akornafa stories, guides, and public memorial knowledge.
                 </h2>
                 <p className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-                  The system favours warm ceremonial neutrals, editorial rhythm, accessible contrast, and quiet confidence. Gold is used as a measured accent, never as a flashy gradient; semantic states stay separate so sensitive memorial workflows remain clear.
+                  The system preserves Akornafa’s dignified warmth while adding a reader-first publication layer: cream paper surfaces, cocoa ink, serif headlines, calm navigation, and sidebar utilities that support—not interrupt—long-form reading.
                 </p>
                 <div className="mt-6 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-                  <Principle label="Variance" value="Composed, not rigid" />
-                  <Principle label="Motion" value="Respectfully restrained" />
-                  <Principle label="Density" value="Airy enough for grief" />
+                  <Principle label="Variance" value="Editorial, not templated" />
+                  <Principle label="Motion" value="Quiet reader cues" />
+                  <Principle label="Density" value="Airy long-form rhythm" />
                 </div>
               </div>
             </section>
@@ -120,7 +121,7 @@ export default function DesignSystemPage() {
               <SectionHeader
                 eyebrow="Foundations"
                 title="Color system"
-                description="Akornafa uses an ivory, parchment, cocoa, and ceremonial-gold palette drawn from memorial cloth, candlelight, earth, and printed tribute programs. The neutral ramp is warm and hue-biased, not default grey."
+                description="Akornafa uses an ivory, parchment, cocoa, and ceremonial-gold palette drawn from memorial cloth, candlelight, earth, printed tribute programs, and warm editorial paper. The neutral ramp is warm and hue-biased, not default grey."
               />
 
               <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
@@ -167,26 +168,26 @@ export default function DesignSystemPage() {
               <SectionHeader
                 eyebrow="Foundations"
                 title="Typography"
-                description="Chillax provides a warm, characterful display voice for names, page titles, and tribute headers. Source Sans 3 carries UI, forms, and long memorial copy with clarity. Chillax is self-hosted in /public/fonts and wired into Tailwind heading tokens."
+                description="Source Serif 4 provides a literary display voice for article titles, names, and tribute headers. Source Sans 3 carries UI, forms, sidebar navigation, and long support copy with clarity. Both families load locally through @fontsource and are wired into Tailwind tokens."
               />
               <Card className="border-border/70 bg-card p-6">
                 <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">Display / Chillax</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">Display / Source Serif 4</p>
                     <p className="mt-3 font-heading text-5xl leading-[0.98] tracking-[-0.045em] sm:text-6xl">
-                      Ama Serwaa Mensah
+                      How to write a lasting tribute
                     </p>
                     <p className="mt-3 font-heading text-2xl font-medium text-muted-foreground">
-                      1948–2024
+                      Reader-first editorial rhythm
                     </p>
                   </div>
                   <div className="space-y-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Body / Source Sans 3</p>
                     <p className="max-w-prose text-base leading-8 text-muted-foreground">
-                      Use relaxed line-height for condolences, biographies, service details, and explanatory form copy. Avoid tiny paragraphs in grief-state flows; the system should feel steady and legible on mobile, tablets, and printed-program-inspired pages.
+                      Use relaxed line-height for blog posts, condolences, biographies, service details, and explanatory form copy. Long-form pages should read like a thoughtful publication: generous measures, clear anchors, and sidebar utilities that remain secondary to the article.
                     </p>
                     <div className="grid gap-3 text-sm sm:grid-cols-3">
-                      <TypeSpec label="H1" value="Chillax / 48–72" />
+                      <TypeSpec label="H1" value="Source Serif 4 / 48–72" />
                       <TypeSpec label="Body" value="Source Sans 3 / 16–18" />
                       <TypeSpec label="Label" value="Source Sans 3 / 12 / tracked" />
                     </div>
@@ -279,6 +280,68 @@ export default function DesignSystemPage() {
                   </p>
                 </Card>
               </div>
+            </section>
+
+            <section id="editorial-sidebar" className="scroll-m-24">
+              <SectionHeader
+                eyebrow="Components"
+                title="Editorial sidebar"
+                description="Use this pattern for blog detail pages: a calm sticky reader utility rail on desktop, stacked after the article intro on mobile. It supports table-of-contents scanning, author confidence, and related reading without becoming a second navigation system."
+              />
+              <Card className="overflow-hidden border-border/70 bg-card p-0">
+                <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                  <article className="min-w-0 p-6 sm:p-8">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">Article surface</p>
+                    <h3 className="mt-3 max-w-2xl font-heading text-4xl leading-[1.02] sm:text-5xl">
+                      Planning a meaningful memorial announcement
+                    </h3>
+                    <p className="mt-4 max-w-prose text-base leading-8 text-muted-foreground">
+                      Blog pages should privilege reading comfort: a generous content measure, warm paper cards, cocoa-toned dividers, and measured gold for orientation. Keep sidebar content helpful and scannable so the article remains the hero.
+                    </p>
+                    <div className="mt-8 max-w-prose space-y-4 text-sm leading-7 text-muted-foreground">
+                      <p>
+                        Lead paragraphs can carry a slightly larger size, while secondary metadata should stay quiet. Avoid dense promotional blocks in the first screen of an article.
+                      </p>
+                      <p>
+                        Related content belongs in a bordered panel with clear section labels and restrained links, not colorful cards competing with the story.
+                      </p>
+                    </div>
+                  </article>
+                  <aside className="border-t border-border/70 bg-muted/35 p-5 lg:border-l lg:border-t-0">
+                    <div className="space-y-4 lg:sticky lg:top-24">
+                      <SidebarPanel title="In this article">
+                        <nav className="space-y-2 text-sm">
+                          {["Writing with care", "Service details", "Sharing with family"].map((item) => (
+                            <a
+                              key={item}
+                              href="#editorial-sidebar"
+                              className="block rounded-lg px-2 py-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                            >
+                              {item}
+                            </a>
+                          ))}
+                        </nav>
+                      </SidebarPanel>
+                      <SidebarPanel title="Written by">
+                        <div className="flex items-center gap-3">
+                          <div className="grid size-10 place-items-center rounded-full bg-accent text-sm font-bold text-accent-foreground">AK</div>
+                          <div>
+                            <p className="font-semibold text-foreground">Akornafa Editorial</p>
+                            <p className="text-xs leading-5 text-muted-foreground">Guides for remembrance, family planning, and tribute writing.</p>
+                          </div>
+                        </div>
+                      </SidebarPanel>
+                      <SidebarPanel title="Related reading">
+                        <div className="space-y-3 text-sm">
+                          <a className="block font-medium leading-6 text-foreground underline-offset-4 hover:underline" href="#editorial-sidebar">How to collect tribute photos</a>
+                          <a className="block font-medium leading-6 text-foreground underline-offset-4 hover:underline" href="#editorial-sidebar">Choosing service announcement details</a>
+                        </div>
+                      </SidebarPanel>
+                    </div>
+                  </aside>
+                </div>
+              </Card>
+              <UsageNote>Implementation note: sidebar panels use existing Card, border, muted, accent, and focus-ring tokens. On small screens, place the rail below the article heading/metadata, before related posts.</UsageNote>
             </section>
 
             <section id="forms" className="scroll-m-24">
@@ -421,6 +484,15 @@ function RadiusPreview({ label, token, className }: { label: string; token: stri
       </div>
       <p className="mt-3 text-xs text-muted-foreground">{token}</p>
     </div>
+  );
+}
+
+function SidebarPanel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-[0_12px_36px_color-mix(in_oklch,var(--brand-cocoa)_8%,transparent)]">
+      <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">{title}</h4>
+      {children}
+    </section>
   );
 }
 

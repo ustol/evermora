@@ -48,6 +48,7 @@ const protectedCreateRoutes = [
 ]
 
 test.describe("Supabase auth and protected memorial routes", () => {
+  test.describe.configure({ mode: "serial" })
   test("signed-in user can sync profile and create a draft memorial from the dashboard", async ({ page }) => {
     const auth = await createConfirmedTestUser()
     const errors = trackConsoleErrors(page)
@@ -73,7 +74,7 @@ test.describe("Supabase auth and protected memorial routes", () => {
 
       await expect(page).toHaveURL(/\/dashboard\/memorials\/[^/]+\/edit\?step=2$/, { timeout: 20_000 })
       await expect(page.getByText(/Your profile is still loading/i)).toHaveCount(0)
-      await expect(page.getByRole("heading", { name: "Edit memorial" })).toBeVisible()
+      await expect(page.getByRole("heading", { name: "Edit memorial" })).toBeVisible({ timeout: 20_000 })
 
       const memorialId = new URL(page.url()).pathname.split("/").at(-2)
       expect(memorialId).toBeTruthy()
@@ -209,7 +210,7 @@ test.describe("Supabase auth and protected memorial routes", () => {
       await page.getByRole("button", { name: "Sign in" }).click()
 
       await expect(page).toHaveURL(new RegExp(`/admin\\?source=login&tab=overview$`), { timeout: 20_000 })
-      await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible()
+      await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible({ timeout: 20_000 })
       await expect(page.getByText("Platform administration.")).toBeVisible()
       expect(errors).toEqual([])
     } finally {

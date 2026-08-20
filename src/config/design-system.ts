@@ -1,17 +1,17 @@
 export const designSystem = {
   name: "Akornafa Design System",
   designRead:
-    "Calm, dignified memorial and funeral-service editorial system for families, with warm gold, obsidian, and cream foundations.",
+    "Warm modern editorial publication system for readers and families, preserving Akornafa's dignified memorial brand while adding stronger blog-reading rhythm.",
   componentsDir: "src/components",
   uiComponentsDir: "src/components/ui",
   docsRoute: "/design-system",
   tokenFiles: ["src/app/globals.css", "src/config/design-system.ts"],
   typography: {
     body: "Source Sans 3",
-    heading: "Chillax",
+    heading: "Source Serif 4",
     source: {
       body: "@fontsource/source-sans-3",
-      heading: "public/fonts/chillax/*.woff2",
+      heading: "@fontsource/source-serif-4",
     },
   },
   color: {
