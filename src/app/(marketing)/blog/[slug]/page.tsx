@@ -3,6 +3,7 @@ import type { Database } from "@/types/supabase";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/Container";
 import { ShareButton } from "@/components/shared/ShareButton";
+import { MarkdownContent } from "@/components/shared/MarkdownContent";
 import { UserRound } from "lucide-react";
 import { formatDayMonthYear } from "@/lib/date";
 
@@ -93,13 +94,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           />
         </div>
 
-        <div className="prose prose-stone mt-10 max-w-none md:text-justify md:hyphens-auto md:[text-align-last:left]">
-          {post.content?.split("\n").map((paragraph: string, i: number) => (
-            <p key={i} className="md:text-justify md:hyphens-auto md:[text-align-last:left]">
-              {paragraph}
-            </p>
-          ))}
-        </div>
+        <MarkdownContent className="mt-10">{post.content ?? ""}</MarkdownContent>
 
         {images.length > 0 && (
           <div className="mt-12">

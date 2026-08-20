@@ -1,11 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
-import Link from "next/link";
 import { Newspaper } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/layout/EmptyState";
-import { formatDayMonthYear } from "@/lib/date";
+import { BlogCard, type BlogPostSummary } from "@/components/marketing/BlogCard";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,7 +17,7 @@ function getSupabase() {
   );
 }
 
-async function fetchPublishedPosts() {
+async function fetchPublishedPosts(): Promise<BlogPostSummary[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("blog_posts")
@@ -32,11 +31,14 @@ async function fetchPublishedPosts() {
   }
 
   return (data ?? []).map((p) => ({
-    ...p,
+    slug: p.slug,
+    title: p.title,
+    excerpt: p.excerpt,
+    authorName: p.author_name ?? "Akornafa",
     coverImageUrl: p.cover_image_path
       ? supabase.storage.from("blog-images").getPublicUrl(p.cover_image_path).data.publicUrl
       : null,
-    authorName: p.author_name ?? "Akornafa",
+    publishedAt: p.published_at,
   }));
 }
 
@@ -53,35 +55,7 @@ export default async function BlogListPage() {
       {posts.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
-            <Link
-              key={post.id}
-              href={`/blog/${post.slug}`}
-              className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-            >
-              <div className="aspect-video w-full overflow-hidden bg-muted">
-                {post.coverImageUrl ? (
-                  <img
-                    src={post.coverImageUrl}
-                    alt=""
-                    className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex size-full items-center justify-center bg-heritage-gold/10">
-                    <Newspaper className="size-10 text-heritage-gold/40" />
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-1 flex-col gap-2 p-5">
-                <span className="text-xs font-medium tracking-wide text-heritage-gold uppercase">
-                  {post.authorName}
-                </span>
-                <h3 className="font-heading text-lg leading-snug text-foreground">{post.title}</h3>
-                <p className="line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
-                <span className="mt-auto pt-2 text-xs text-muted-foreground">
-                  {post.published_at ? formatDayMonthYear(post.published_at) : ""}
-                </span>
-              </div>
-            </Link>
+            <BlogCard key={post.slug} post={post} />
           ))}
         </div>
       ) : (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { ImagePlus, Loader2, Trash2 } from "lucide-react"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import { getPostById, updatePost, type BlogPostWithCover } from "@/services/blog"
 import { createBlogPost } from "@/app/admin/blog/actions"
+import { RichTextEditor } from "@/components/admin/RichTextEditor"
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const MAX_FILE_SIZE = 3 * 1024 * 1024
@@ -29,8 +30,11 @@ interface BlogPostEditorProps {
 
 export function BlogPostEditor({ postId }: BlogPostEditorProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = useSupabaseClient()
   const isEdit = Boolean(postId)
+
+  const signInUrl = `/sign-in?redirect_url=${encodeURIComponent(pathname ?? "/admin/blog")}`
 
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
@@ -51,7 +55,7 @@ export function BlogPostEditor({ postId }: BlogPostEditorProps) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         toast.error("You must be signed in.")
-        router.push("/sign-in")
+        router.push(signInUrl)
         return
       }
 
@@ -68,7 +72,7 @@ export function BlogPostEditor({ postId }: BlogPostEditorProps) {
       }
       if (!profile) {
         toast.error("Profile not found. Please sign out and sign in again.")
-        router.push("/sign-in")
+        router.push(signInUrl)
         return
       }
 
@@ -220,12 +224,12 @@ export function BlogPostEditor({ postId }: BlogPostEditorProps) {
 
           <Field>
             <FieldLabel>Content</FieldLabel>
-            <FieldDescription>Write the full article. Each blank line starts a new paragraph.</FieldDescription>
-            <Textarea
+            <FieldDescription>
+              Format with the toolbar — bold, italics, headings, quotes, and lists.
+            </FieldDescription>
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={16}
-              className="font-mono text-sm"
+              onChange={setContent}
               placeholder="Start writing…"
             />
           </Field>
