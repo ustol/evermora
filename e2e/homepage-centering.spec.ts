@@ -33,9 +33,12 @@ test.describe("homepage centering and FeatureCard variant", () => {
     await expect(featuresHeading).toBeVisible()
     await expect(featuresHeading).toHaveClass(/text-center/)
 
-    // The features section container should have the dark bg
-    const darkSection = page.locator("section.border-y.border-border\\/60.bg-obsidian")
+    // The features section container should have the dark bg. Scope to the
+    // features heading so the home blog section (also on a dark bg) doesn't
+    // make this selector ambiguous.
+    const darkSection = featuresHeading.locator("xpath=ancestor::section")
     await expect(darkSection).toBeVisible()
+    await expect(darkSection).toHaveClass(/bg-obsidian/)
 
     // Within that section, FeatureCards should exist and have dark variant styling
     const featureCards = darkSection.locator(".flex.flex-col.rounded-2xl.border.p-6")
@@ -66,8 +69,11 @@ test.describe("homepage centering and FeatureCard variant", () => {
     const recentlyWrapper = recentlyHeading.locator("..")
     await expect(recentlyWrapper).toHaveClass(/text-center/)
 
-    // The "View all" link should exist and be below the heading area
-    const viewAllLink = page.getByRole("link", { name: "View all" })
+    // The "View all" link should exist and be below the heading area. Scope to
+    // the memorials section because the home blog section adds its own link.
+    const viewAllLink = recentlyHeading
+      .locator("xpath=ancestor::section")
+      .getByRole("link", { name: "View all" })
     await expect(viewAllLink).toBeVisible()
     await expect(viewAllLink).toHaveAttribute("href", "/memorials")
 

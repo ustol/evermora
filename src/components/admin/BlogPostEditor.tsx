@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { ImagePlus, Loader2, Trash2 } from "lucide-react"
 import { useSupabaseClient } from "@/hooks/useSupabaseClient"
@@ -30,8 +30,11 @@ interface BlogPostEditorProps {
 
 export function BlogPostEditor({ postId }: BlogPostEditorProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = useSupabaseClient()
   const isEdit = Boolean(postId)
+
+  const signInUrl = `/sign-in?redirect_url=${encodeURIComponent(pathname ?? "/admin/blog")}`
 
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
@@ -52,7 +55,7 @@ export function BlogPostEditor({ postId }: BlogPostEditorProps) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         toast.error("You must be signed in.")
-        router.push("/sign-in")
+        router.push(signInUrl)
         return
       }
 
@@ -69,7 +72,7 @@ export function BlogPostEditor({ postId }: BlogPostEditorProps) {
       }
       if (!profile) {
         toast.error("Profile not found. Please sign out and sign in again.")
-        router.push("/sign-in")
+        router.push(signInUrl)
         return
       }
 
