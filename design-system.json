@@ -11,11 +11,11 @@
     "source": "src/config/design-system.ts"
   },
   "brand": {
-    "read": "Calm, dignified memorial/funeral service with a trust-first editorial feel.",
+    "read": "Warm modern editorial publication system for readers, preserving the dignified Akornafa memorial brand.",
     "palette": "warm-gold, obsidian, cream, parchment, cocoa",
     "typography": {
       "body": "Source Sans 3 via @fontsource/source-sans-3",
-      "headings": "Chillax via local public font files"
+      "headings": "Source Serif 4 via @fontsource/source-serif-4"
     }
   }
 }

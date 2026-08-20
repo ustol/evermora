@@ -12,7 +12,8 @@ test("signed-out visitors can open the tribute form without being redirected to 
   test.skip(!hasMemorial, "No published memorials exist in this environment yet")
 
   const href = await firstMemorialLink.getAttribute("href")
-  await page.goto(href!, { waitUntil: "networkidle" })
+  await firstMemorialLink.click()
+  await expect(page).toHaveURL(new RegExp(`${href!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
 
   await page.getByRole("button", { name: /Leave a (message|tribute|condolence)/i }).click()
 
@@ -35,7 +36,8 @@ test("signed-out visitors can open the gift purchase dialog without being redire
   test.skip(!hasMemorial, "No published memorials exist in this environment yet")
 
   const href = await firstMemorialLink.getAttribute("href")
-  await page.goto(href!, { waitUntil: "networkidle" })
+  await firstMemorialLink.click()
+  await expect(page).toHaveURL(new RegExp(`${href!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`))
 
   await page.getByRole("button", { name: /Send a wreath or rose/i }).click()
 

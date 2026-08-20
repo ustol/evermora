@@ -1,6 +1,6 @@
 # Akornafa Design System
 
-Akornafa's design system is adopted in place for the existing Next.js app. It preserves the calm, dignified memorial/funeral-service brand and should be extended without overhauling product UI.
+Akornafa's design system is adopted in place for the existing Next.js app. It preserves the calm, dignified memorial/funeral-service brand while extending it with a polished editorial blog language for reader-facing pages.
 
 ## Source of truth
 
@@ -13,12 +13,12 @@ Akornafa's design system is adopted in place for the existing Next.js app. It pr
 
 ## Brand read
 
-Trust-first editorial memorial service: warm ceremonial neutrals, obsidian depth, cream/parchment surfaces, measured gold accents, and restrained motion. Interfaces should feel composed and supportive for families under emotional load.
+Trust-first editorial memorial publication: warm ceremonial neutrals, obsidian depth, cream/parchment surfaces, measured gold accents, and restrained motion. Reader-facing blog pages should feel like a thoughtful magazine layer on top of the existing memorial product.
 
 ## Foundations
 
 - Body type: Source Sans 3, loaded from `@fontsource/source-sans-3`
-- Heading/display type: Chillax, loaded from `public/fonts/chillax/*.woff2`
+- Heading/display type: Source Serif 4, loaded from `@fontsource/source-serif-4`
 - Accent: warm gold (`--brand-kente-gold` / `--brand-ceremonial-gold`)
 - Neutrals: warm parchment/cocoa ramp; do not replace with default grey/slate tokens
 - Semantic states: success, warning, and critical stay separate from gold brand accent
@@ -30,4 +30,5 @@ Trust-first editorial memorial service: warm ceremonial neutrals, obsidian depth
 2. Add or update tokens in `src/app/globals.css` before introducing one-off colors.
 3. Keep gold sparse: primary orientation, focus, and ceremonial emphasis—not every CTA.
 4. Preserve visible labels and helper text for sensitive memorial workflows.
-5. Verify `/design-system` after token or primitive changes.
+5. Blog sidebars are editorial utilities: table of contents, related posts, author metadata, and newsletter/prompts should sit in quiet bordered panels with sticky desktop behavior and stacked mobile flow.
+6. Verify `/design-system` after token or primitive changes.
