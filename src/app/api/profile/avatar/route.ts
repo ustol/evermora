@@ -44,12 +44,18 @@ export async function POST(req: NextRequest) {
   // Keep profiles.avatar_url in sync so public surfaces (blog author
   // avatars, tribute authors) can read the photo via public_profiles
   // without needing the auth session's user_metadata.
-  const { error: profileError } = await admin
+  const { data: matched, error: profileError } = await admin
     .from("profiles")
     .update({ avatar_url: publicUrl })
-    .eq("clerk_user_id", user.id);
+    .eq("clerk_user_id", user.id)
+    .select("id");
   if (profileError) {
     console.error("profile avatar sync failed", profileError);
+  } else if (!matched || matched.length === 0) {
+    // No profiles row yet (e.g. upload before the first profile sync).
+    // The next syncProfileForUser call picks avatar_url up from the auth
+    // user_metadata we just wrote, so this is non-fatal.
+    console.warn("profile avatar sync: no profiles row for clerk_user_id", user.id);
   }
 
   return NextResponse.json({ ok: true, avatar_url: publicUrl, user: updatedUser.user });
