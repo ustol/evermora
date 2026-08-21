@@ -18,7 +18,7 @@ Trust-first editorial memorial publication: warm ceremonial neutrals, obsidian d
 ## Foundations
 
 - Body type: Source Sans 3, loaded from `@fontsource/source-sans-3`
-- Heading/display type: Source Serif 4, loaded from `@fontsource/source-serif-4`
+- Heading/display type: Chillax, self-hosted from `public/fonts/chillax/*.woff2`
 - Accent: warm gold (`--brand-kente-gold` / `--brand-ceremonial-gold`)
 - Neutrals: warm parchment/cocoa ramp; do not replace with default grey/slate tokens
 - Semantic states: success, warning, and critical stay separate from gold brand accent
