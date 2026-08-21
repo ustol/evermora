@@ -8,10 +8,10 @@ export const designSystem = {
   tokenFiles: ["src/app/globals.css", "src/config/design-system.ts"],
   typography: {
     body: "Source Sans 3",
-    heading: "Source Serif 4",
+    heading: "Chillax",
     source: {
       body: "@fontsource/source-sans-3",
-      heading: "@fontsource/source-serif-4",
+      heading: "public/fonts/chillax/*.woff2",
     },
   },
   color: {

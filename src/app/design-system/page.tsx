@@ -168,12 +168,12 @@ export default function DesignSystemPage() {
               <SectionHeader
                 eyebrow="Foundations"
                 title="Typography"
-                description="Source Serif 4 provides a literary display voice for article titles, names, and tribute headers. Source Sans 3 carries UI, forms, sidebar navigation, and long support copy with clarity. Both families load locally through @fontsource and are wired into Tailwind tokens."
+                description="Chillax restores Akornafa's distinctive display voice for article titles, names, and tribute headers. Source Sans 3 carries UI, forms, sidebar navigation, and long support copy with clarity. Chillax is self-hosted and wired into Tailwind heading/display tokens."
               />
               <Card className="border-border/70 bg-card p-6">
                 <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">Display / Source Serif 4</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">Display / Chillax</p>
                     <p className="mt-3 font-heading text-5xl leading-[0.98] tracking-[-0.045em] sm:text-6xl">
                       How to write a lasting tribute
                     </p>
@@ -187,7 +187,7 @@ export default function DesignSystemPage() {
                       Use relaxed line-height for blog posts, condolences, biographies, service details, and explanatory form copy. Long-form pages should read like a thoughtful publication: generous measures, clear anchors, and sidebar utilities that remain secondary to the article.
                     </p>
                     <div className="grid gap-3 text-sm sm:grid-cols-3">
-                      <TypeSpec label="H1" value="Source Serif 4 / 48–72" />
+                      <TypeSpec label="H1" value="Chillax / 48–72" />
                       <TypeSpec label="Body" value="Source Sans 3 / 16–18" />
                       <TypeSpec label="Label" value="Source Sans 3 / 12 / tracked" />
                     </div>
