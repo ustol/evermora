@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { UserRound, ExternalLink, Pencil, ShieldAlert } from "lucide-react"
 import { attachSignedPhotoUrls, type MemorialWithPhoto } from "@/services/memorials"
+import { UpdateFeaturedImageDialog } from "@/components/memorial/UpdateFeaturedImageDialog"
 import { formatDayMonthYear } from "@/lib/date"
 import { cn } from "@/lib/utils"
 
@@ -17,6 +18,7 @@ export default function AdminMemorialsPage() {
   const supabase = useSupabaseClient()
   const [memorials, setMemorials] = useState<MemorialWithPhoto[] | null>(null)
   const [loading, setLoading] = useState(true)
+  const [reloadKey, setReloadKey] = useState(0)
   const [imgErrors, setImgErrors] = useState<Set<string>>(new Set())
   // Reset image errors when memorials reload
   useEffect(() => { setImgErrors(new Set()) }, [memorials])
@@ -38,7 +40,7 @@ export default function AdminMemorialsPage() {
       }
     }
     load()
-  }, [supabase])
+  }, [supabase, reloadKey])
 
   return (
     <Container className="flex flex-col gap-8 py-12">
@@ -122,6 +124,13 @@ export default function AdminMemorialsPage() {
                     <ExternalLink className="size-3.5" />
                     View
                   </Link>
+                  <UpdateFeaturedImageDialog
+                    endpoint={`/api/admin/memorials/${m.id}/featured-image`}
+                    memorialName={name}
+                    currentAlt={m.primary_photo_alt}
+                    currentPhotoUrl={m.photoUrl}
+                    onUpdated={() => setReloadKey((k) => k + 1)}
+                  />
                   <Link href={`/dashboard/memorials/${m.id}/edit`}>
                     <Button variant="outline" size="sm">
                       <Pencil className="size-3.5" />
