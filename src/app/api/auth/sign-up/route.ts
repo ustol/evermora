@@ -3,7 +3,8 @@ import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/types/supabase";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { syncProfileForUser } from "@/lib/profile-resolver";
-import { sanitizeRedirectPath } from "@/lib/utils";
+
+const AUTH_SUCCESS_REDIRECT = "/dashboard";
 
 function redirectTo(_req: NextRequest, path: string) {
   return new NextResponse(null, { status: 303, headers: { Location: path } });
@@ -15,10 +16,9 @@ export async function POST(req: NextRequest) {
   const lastName = String(formData.get("lastName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const redirectUrl = sanitizeRedirectPath(String(formData.get("redirect_url") ?? "")) ?? "/dashboard";
   const displayName = `${firstName} ${lastName}`.trim();
   const signUpRedirect = (params: Record<string, string>) => {
-    const searchParams = new URLSearchParams({ ...params, redirect_url: redirectUrl });
+    const searchParams = new URLSearchParams({ ...params, redirect_url: AUTH_SUCCESS_REDIRECT });
     if (email) searchParams.set("email", email);
     return `/sign-up?${searchParams.toString()}`;
   };
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     return redirectTo(req, signUpRedirect({ error: "Please fill in all fields" }));
   }
 
-  const response = redirectTo(req, redirectUrl);
+  const response = redirectTo(req, AUTH_SUCCESS_REDIRECT);
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !supabaseKey) {

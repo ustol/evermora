@@ -6,6 +6,8 @@ import { syncProfileForUser } from "@/lib/profile-resolver";
 import { getSupabaseCookieOptions } from "@/lib/supabase-cookie-options";
 import { sanitizeRedirectPath } from "@/lib/utils";
 
+const AUTH_SUCCESS_REDIRECT = "/dashboard";
+
 function redirectTo(_req: NextRequest, path: string) {
   return new NextResponse(null, { status: 303, headers: { Location: path } });
 }
@@ -14,15 +16,15 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const redirectUrl = sanitizeRedirectPath(String(formData.get("redirect_url") ?? "")) ?? "/dashboard";
+  const requestedRedirectUrl = sanitizeRedirectPath(String(formData.get("redirect_url") ?? "")) ?? AUTH_SUCCESS_REDIRECT;
   const signInErrorRedirect = (message: string) =>
-    `/sign-in?error=${encodeURIComponent(message)}&redirect_url=${encodeURIComponent(redirectUrl)}`;
+    `/sign-in?error=${encodeURIComponent(message)}&redirect_url=${encodeURIComponent(requestedRedirectUrl)}`;
 
   if (!email || !password) {
     return redirectTo(req, signInErrorRedirect("Email and password are required"));
   }
 
-  const response = redirectTo(req, redirectUrl);
+  const response = redirectTo(req, AUTH_SUCCESS_REDIRECT);
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !supabaseKey) {

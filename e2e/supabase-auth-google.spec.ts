@@ -22,7 +22,7 @@ function oauthRedirectCookie(response: { headersArray(): { name: string; value: 
 }
 
 test.describe("Supabase Google OAuth", () => {
-  test("GET /api/auth/sign-in/google starts OAuth with a clean callback URL and HTTP-only return-path cookie", async ({
+  test("GET /api/auth/sign-in/google starts OAuth with a clean callback URL and dashboard return-path cookie", async ({
     request,
     baseURL,
   }) => {
@@ -45,8 +45,8 @@ test.describe("Supabase Google OAuth", () => {
     expect(callbackUrl.search, "Supabase redirect_to should not leak app return path in query parameters").toBe("")
 
     const returnPathCookie = oauthRedirectCookie(response)
-    expect(returnPathCookie, "OAuth route should store the post-auth return path in a cookie").toBeTruthy()
-    expect(returnPathCookie).toContain(`${OAUTH_REDIRECT_COOKIE}=%2Fdashboard%2Fmemorials%2Fnew`)
+    expect(returnPathCookie, "OAuth route should store the post-auth dashboard path in a cookie").toBeTruthy()
+    expect(returnPathCookie).toContain(`${OAUTH_REDIRECT_COOKIE}=%2Fdashboard`)
     expect(returnPathCookie).toContain("HttpOnly")
     expect(returnPathCookie).toContain("Path=/")
     expect(returnPathCookie).toContain("Max-Age=600")
@@ -147,7 +147,7 @@ test.describe("Supabase Google OAuth", () => {
     expect(errors).toEqual([])
   })
 
-  test("OAuth callback without a code uses the return-path cookie and clears it", async ({ request, baseURL }) => {
+  test("OAuth callback without a code falls back to dashboard and clears the return-path cookie", async ({ request, baseURL }) => {
     if (!baseURL) throw new Error("Playwright baseURL is not configured")
 
     const response = await request.get(new URL("/api/auth/callback", baseURL).toString(), {
@@ -160,7 +160,7 @@ test.describe("Supabase Google OAuth", () => {
     expect(response.status(), await response.text()).toBe(303)
     const location = response.headers()["location"]
     expect(location).toContain("/sign-in?error=")
-    expect(decodeURIComponent(location ?? "")).toContain("redirect_url=/dashboard/memorials/new")
+    expect(decodeURIComponent(location ?? "")).toContain("redirect_url=/dashboard")
 
     const clearedCookie = oauthRedirectCookie(response)
     expect(clearedCookie, "Callback should clear the temporary OAuth return-path cookie").toBeTruthy()

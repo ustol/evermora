@@ -40,9 +40,10 @@ export function ContributionModerationPanel({ initialContributions }: Contributi
 
   async function handleModerate(contributionId: string, status: ReviewStatus) {
     setUpdatingId(contributionId)
+    const contribution = contributions.find((c) => c.id === contributionId)
 
     try {
-      await moderateContribution(supabase, contributionId, status)
+      await moderateContribution(supabase, contributionId, status, contribution?.photoMediaId)
       setContributions((current) =>
         current.map((contribution) =>
           contribution.id === contributionId ? { ...contribution, status } : contribution
