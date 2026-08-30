@@ -5,7 +5,8 @@ import { createAdminClient } from "@/lib/supabase-admin";
 import { getOAuthRedirectCookieOptions, OAUTH_REDIRECT_COOKIE } from "@/lib/oauth-redirect";
 import { syncProfileForUser } from "@/lib/profile-resolver";
 import { getSupabaseCookieOptions } from "@/lib/supabase-cookie-options";
-import { sanitizeRedirectPath } from "@/lib/utils";
+
+const AUTH_SUCCESS_REDIRECT = "/dashboard";
 
 function redirectTo(path: string, req?: NextRequest) {
   const response = new NextResponse(null, { status: 303, headers: { Location: path } });
@@ -19,12 +20,10 @@ function redirectTo(path: string, req?: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  const redirectUrl =
-    sanitizeRedirectPath(url.searchParams.get("redirect_url") ?? req.cookies.get(OAUTH_REDIRECT_COOKIE)?.value ?? "") ??
-    "/dashboard";
+  const redirectUrl = AUTH_SUCCESS_REDIRECT;
   const code = url.searchParams.get("code");
 
-  const response = redirectTo(redirectUrl, req);
+  const response = redirectTo(AUTH_SUCCESS_REDIRECT, req);
 
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;

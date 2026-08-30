@@ -189,7 +189,7 @@ test.describe("Supabase auth and protected memorial routes", () => {
     }
   })
 
-  test("admin user lands on the requested admin redirect_url after sign-in", async ({ page }) => {
+  test("admin user lands on dashboard after sign-in even with an admin redirect_url", async ({ page }) => {
     const auth = await createConfirmedTestUser()
     const errors = trackConsoleErrors(page)
     const redirectUrl = "/admin?source=login&tab=overview"
@@ -209,9 +209,8 @@ test.describe("Supabase auth and protected memorial routes", () => {
       await page.locator("#password").fill(auth.password)
       await page.getByRole("button", { name: "Sign in" }).click()
 
-      await expect(page).toHaveURL(new RegExp(`/admin\\?source=login&tab=overview$`), { timeout: 20_000 })
-      await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible({ timeout: 20_000 })
-      await expect(page.getByText("Platform administration.")).toBeVisible()
+      await expect(page).toHaveURL(/\/dashboard$/, { timeout: 20_000 })
+      await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible({ timeout: 20_000 })
       expect(errors).toEqual([])
     } finally {
       await cleanupTestUser(auth)

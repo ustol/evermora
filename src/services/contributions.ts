@@ -15,13 +15,14 @@ export interface ContributionWithAuthor {
   authorDisplayName: string
   authorAvatarUrl: string | null
   photoUrl: string | null
+  photoMediaId: string | null
 }
 
 // profiles!author_id disambiguates the embed: contributions has two FKs to
 // profiles (author_id and reviewed_by), so an unqualified profiles(...)
 // embed is ambiguous to PostgREST and returns a 300 Multiple Choices error.
 const CONTRIBUTION_SELECT =
-  "id, type, relationship, title, message, status, created_at, author_name, author:profiles!author_id(display_name, avatar_url), photo:memorial_media(storage_path)"
+  "id, type, relationship, title, message, status, created_at, author_name, photo_media_id, author:profiles!author_id(display_name, avatar_url), photo:memorial_media(storage_path)"
 
 type ContributionRow = {
   id: string
@@ -32,6 +33,7 @@ type ContributionRow = {
   status: ModerationStatus
   created_at: string
   author_name: string | null
+  photo_media_id: string | null
   author: unknown
   photo: unknown
 }
@@ -66,6 +68,7 @@ async function mapContribution(
     authorDisplayName: row.author_name ?? author?.display_name ?? "A well-wisher",
     authorAvatarUrl: author?.avatar_url ?? null,
     photoUrl,
+    photoMediaId: row.photo_media_id ?? null,
   }
 }
 
@@ -163,13 +166,28 @@ export async function uploadContributionPhoto(
 export async function moderateContribution(
   supabase: SupabaseClient<Database>,
   contributionId: string,
-  status: "approved" | "rejected" | "flagged"
+  status: "approved" | "rejected" | "flagged",
+  photoMediaId?: string | null
 ) {
   const { error } = await supabase.rpc("moderate_contribution", {
     p_contribution_id: contributionId,
     p_status: status,
   })
   if (error) throw error
+
+  // A tribute's attached photo lives in memorial_media and is gated by its
+  // own moderation_status (RLS only serves 'approved' media to visitors).
+  // Resolve the photo together with the contribution so an approved tribute
+  // actually shows the image the poster uploaded, rather than silently
+  // dropping it. (The moderate_contribution migration mirrors this in the DB;
+  // this call keeps it working until that migration is applied.)
+  if (photoMediaId) {
+    const { error: mediaError } = await supabase.rpc("moderate_media", {
+      p_media_id: photoMediaId,
+      p_status: status,
+    })
+    if (mediaError) throw mediaError
+  }
 }
 
 export async function deleteContribution(

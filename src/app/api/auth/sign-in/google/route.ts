@@ -5,6 +5,8 @@ import { getOAuthRedirectCookieOptions, OAUTH_REDIRECT_COOKIE } from "@/lib/oaut
 import { getSupabaseCookieOptions } from "@/lib/supabase-cookie-options";
 import { sanitizeRedirectPath } from "@/lib/utils";
 
+const AUTH_SUCCESS_REDIRECT = "/dashboard";
+
 function redirectTo(path: string) {
   return new NextResponse(null, { status: 303, headers: { Location: path } });
 }
@@ -22,14 +24,14 @@ function getRequestOrigin(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  const redirectUrl = sanitizeRedirectPath(url.searchParams.get("redirect_url") ?? "") ?? "/dashboard";
+  const errorRedirectUrl = sanitizeRedirectPath(url.searchParams.get("redirect_url") ?? "") ?? AUTH_SUCCESS_REDIRECT;
 
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     return redirectTo(
-      `/sign-in?error=${encodeURIComponent("Supabase is not configured")}&redirect_url=${encodeURIComponent(redirectUrl)}`,
+      `/sign-in?error=${encodeURIComponent("Supabase is not configured")}&redirect_url=${encodeURIComponent(errorRedirectUrl)}`,
     );
   }
 
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
   });
 
   const callbackUrl = new URL("/api/auth/callback", getRequestOrigin(req));
-  response.cookies.set(OAUTH_REDIRECT_COOKIE, redirectUrl, getOAuthRedirectCookieOptions(req.nextUrl, req.headers));
+  response.cookies.set(OAUTH_REDIRECT_COOKIE, AUTH_SUCCESS_REDIRECT, getOAuthRedirectCookieOptions(req.nextUrl, req.headers));
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -65,7 +67,7 @@ export async function GET(req: NextRequest) {
     return redirectTo(
       `/sign-in?error=${encodeURIComponent(
         error?.message ?? "Unable to start Google sign-in",
-      )}&redirect_url=${encodeURIComponent(redirectUrl)}`,
+      )}&redirect_url=${encodeURIComponent(errorRedirectUrl)}`,
     );
   }
 
