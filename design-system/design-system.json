@@ -22,5 +22,9 @@
     }
   },
   "modes": ["light", "dark"],
-  "canonicalRecord": "design-system/design-system.json"
+  "notes": [
+    "Neutral ramp is warm and subject-led, not default grey/slate.",
+    "Gold is a restrained brand/accent cue, not a semantic status color.",
+    "Success, warning, and critical tokens remain separate for operational trust."
+  ]
 }

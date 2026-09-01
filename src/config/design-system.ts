@@ -1,22 +1,28 @@
 export const designSystem = {
-  name: "Akornafa Design System",
+  name: "Akornafa / Evermora Design System",
   designRead:
-    "Warm modern editorial publication system for readers and families, preserving Akornafa's dignified memorial brand while adding stronger blog-reading rhythm.",
+    "Calm trust-first memorial/admin analytics system for operators and families, preserving the dignified Akornafa/Evermora brand while adding polished Linear/Vercel-like dashboard surfaces.",
   componentsDir: "src/components",
   uiComponentsDir: "src/components/ui",
   docsRoute: "/design-system",
-  tokenFiles: ["src/app/globals.css", "src/config/design-system.ts"],
+  tokenFiles: ["design-system/tokens.css", "src/app/globals.css", "src/config/design-system.ts"],
+  docs: {
+    guide: "design-system/guide.md",
+    components: "design-system/components",
+  },
   typography: {
     body: "Source Sans 3",
     heading: "Chillax",
+    display: "Chillax",
     source: {
       body: "@fontsource/source-sans-3",
-      heading: "public/fonts/chillax/*.woff2",
+      heading: "local /public/fonts/chillax files",
+      display: "local /public/fonts/chillax files",
     },
   },
   color: {
     accent: "--brand-kente-gold",
-    neutralBias: "warm ceremonial parchment/cocoa, not default grey",
+    neutralBias: "warm memorial parchment/cocoa, not default grey",
     brand: {
       ink: "#18120f",
       charcoal: "#251812",
