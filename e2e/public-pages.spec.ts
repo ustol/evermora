@@ -32,11 +32,11 @@ test("design-system page renders foundations and components with no console erro
   await page.goto("/design-system")
 
   await expect(page).toHaveURL(/\/design-system$/)
-  await expect(page.getByRole("heading", { level: 1, name: "Editorial foundations & components" })).toBeVisible()
+  await expect(page.getByRole("heading", { level: 1, name: "Memorial admin foundations & components" })).toBeVisible()
   await expect(page.getByRole("heading", { name: "Color system" })).toBeVisible()
   await expect(page.getByRole("heading", { name: "Buttons" })).toBeVisible()
-  await expect(page.getByRole("heading", { name: "Editorial sidebar" })).toBeVisible()
-  await expect(page.getByText("Akornafa Design System")).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Admin analytics surfaces" })).toBeVisible()
+  await expect(page.getByText("Akornafa / Evermora Design System")).toBeVisible()
   expect(errors).toEqual([])
 })
 

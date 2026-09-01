@@ -23,7 +23,7 @@ const sections = [
     items: [
       { id: "buttons", label: "Buttons" },
       { id: "cards", label: "Cards" },
-      { id: "editorial-sidebar", label: "Editorial sidebar" },
+      { id: "analytics-surfaces", label: "Admin analytics" },
       { id: "forms", label: "Form fields" },
     ],
   },
@@ -55,10 +55,10 @@ export default function DesignSystemPage() {
         <Container className="flex items-center justify-between gap-4 py-3">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Akornafa Design System
+              Akornafa / Evermora Design System
             </p>
             <h1 className="truncate font-heading text-xl leading-tight sm:text-2xl">
-              Editorial foundations & components
+              Memorial admin foundations & components
             </h1>
           </div>
           <Link
@@ -104,15 +104,15 @@ export default function DesignSystemPage() {
                   Design read
                 </p>
                 <h2 className="mt-3 max-w-3xl font-heading text-3xl leading-[1.05] sm:text-5xl">
-                  Warm editorial reading, composed for Akornafa stories, guides, and public memorial knowledge.
+                  Calm trust-first operations for memorial care, approvals, contributions, and analytics.
                 </h2>
                 <p className="mt-4 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
-                  The system preserves Akornafa’s dignified warmth while adding a reader-first publication layer: cream paper surfaces, cocoa ink, serif headlines, calm navigation, and sidebar utilities that support—not interrupt—long-form reading.
+                  The system preserves Akornafa/Evermora’s dignified warmth while adding polished admin surfaces: cream paper panels, cocoa ink, Chillax display, clear data hierarchy, and restrained semantic cues for sensitive workflows.
                 </p>
                 <div className="mt-6 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-                  <Principle label="Variance" value="Editorial, not templated" />
-                  <Principle label="Motion" value="Quiet reader cues" />
-                  <Principle label="Density" value="Airy long-form rhythm" />
+                  <Principle label="Variance" value="Trust-first, not generic" />
+                  <Principle label="Motion" value="Restrained state cues" />
+                  <Principle label="Density" value="Calm dashboard rhythm" />
                 </div>
               </div>
             </section>
@@ -121,7 +121,7 @@ export default function DesignSystemPage() {
               <SectionHeader
                 eyebrow="Foundations"
                 title="Color system"
-                description="Akornafa uses an ivory, parchment, cocoa, and ceremonial-gold palette drawn from memorial cloth, candlelight, earth, printed tribute programs, and warm editorial paper. The neutral ramp is warm and hue-biased, not default grey."
+                description="Akornafa/Evermora uses an ivory, parchment, cocoa, and ceremonial-gold palette drawn from memorial paper, candlelight, earth, printed tribute programs, and warm admin surfaces. The neutral ramp is warm and hue-biased, not default grey."
               />
 
               <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
@@ -168,26 +168,26 @@ export default function DesignSystemPage() {
               <SectionHeader
                 eyebrow="Foundations"
                 title="Typography"
-                description="Chillax restores Akornafa's distinctive display voice for article titles, names, and tribute headers. Source Sans 3 carries UI, forms, sidebar navigation, and long support copy with clarity. Chillax is self-hosted and wired into Tailwind heading/display tokens."
+                description="Chillax gives Akornafa/Evermora a distinctive display voice for memorial names, dashboard headings, and approvals. Source Sans 3 carries UI, forms, tables, charts, and support copy with clarity. Both fonts load via @fontsource and are wired into Tailwind tokens."
               />
               <Card className="border-border/70 bg-card p-6">
                 <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">Display / Chillax</p>
                     <p className="mt-3 font-heading text-5xl leading-[0.98] tracking-[-0.045em] sm:text-6xl">
-                      How to write a lasting tribute
+                      Memorial insights, handled with care
                     </p>
                     <p className="mt-3 font-heading text-2xl font-medium text-muted-foreground">
-                      Reader-first editorial rhythm
+                      Trust-first dashboard rhythm
                     </p>
                   </div>
                   <div className="space-y-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Body / Source Sans 3</p>
                     <p className="max-w-prose text-base leading-8 text-muted-foreground">
-                      Use relaxed line-height for blog posts, condolences, biographies, service details, and explanatory form copy. Long-form pages should read like a thoughtful publication: generous measures, clear anchors, and sidebar utilities that remain secondary to the article.
+                      Use generous line-height for admin copy, contribution review, family-facing help text, service details, and analytics summaries. Dashboard pages should feel composed: clear measures, stable columns, subdued borders, and semantic cues that explain status without shouting.
                     </p>
                     <div className="grid gap-3 text-sm sm:grid-cols-3">
-                      <TypeSpec label="H1" value="Chillax / 48–72" />
+                      <TypeSpec label="H1" value="Chillax / 44–64" />
                       <TypeSpec label="Body" value="Source Sans 3 / 16–18" />
                       <TypeSpec label="Label" value="Source Sans 3 / 12 / tracked" />
                     </div>
@@ -257,7 +257,7 @@ export default function DesignSystemPage() {
               <SectionHeader
                 eyebrow="Components"
                 title="Cards"
-                description="Cards are quiet containers for memorial summaries, condolence prompts, contribution states, and admin lists. They should feel like editorial panels, not dashboard tiles."
+                description="Cards are quiet containers for memorial summaries, KPI modules, contribution states, and admin lists. They should feel like polished Linear/Vercel dashboard surfaces, not decorative tiles."
               />
               <div className="grid gap-4 lg:grid-cols-2">
                 <Card className="border-border/70 bg-card p-6">
@@ -282,39 +282,44 @@ export default function DesignSystemPage() {
               </div>
             </section>
 
-            <section id="editorial-sidebar" className="scroll-m-24">
+            <section id="analytics-surfaces" className="scroll-m-24">
               <SectionHeader
                 eyebrow="Components"
-                title="Editorial sidebar"
-                description="Use this pattern for blog detail pages: a calm sticky reader utility rail on desktop, stacked after the article intro on mobile. It supports table-of-contents scanning, author confidence, and related reading without becoming a second navigation system."
+                title="Admin analytics surfaces"
+                description="Use this pattern for dashboard UI: calm KPI cards, review queues, and scoped utility rails that summarize memorial activity without overwhelming families or operators. Data hierarchy stays clear; status color stays semantic."
               />
               <Card className="overflow-hidden border-border/70 bg-card p-0">
                 <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_20rem]">
                   <article className="min-w-0 p-6 sm:p-8">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">Article surface</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">Analytics surface</p>
                     <h3 className="mt-3 max-w-2xl font-heading text-4xl leading-[1.02] sm:text-5xl">
-                      Planning a meaningful memorial announcement
+                      Memorial activity overview
                     </h3>
                     <p className="mt-4 max-w-prose text-base leading-8 text-muted-foreground">
-                      Blog pages should privilege reading comfort: a generous content measure, warm paper cards, cocoa-toned dividers, and measured gold for orientation. Keep sidebar content helpful and scannable so the article remains the hero.
+                      Admin pages should privilege confident scanning: warm paper cards, cocoa-toned dividers, precise numbers, and measured gold for orientation. Keep utility panels helpful and scannable so the workflow remains the hero.
                     </p>
                     <div className="mt-8 max-w-prose space-y-4 text-sm leading-7 text-muted-foreground">
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <KpiPreview label="Tributes pending" value="18" tone="warn" />
+                        <KpiPreview label="Published memorials" value="142" tone="good" />
+                        <KpiPreview label="Failed gifts" value="3" tone="critical" />
+                      </div>
                       <p>
-                        Lead paragraphs can carry a slightly larger size, while secondary metadata should stay quiet. Avoid dense promotional blocks in the first screen of an article.
+                        KPI captions can carry a slightly larger size, while secondary metadata stays quiet. Avoid dense chart chrome in the first screen of sensitive dashboards.
                       </p>
                       <p>
-                        Related content belongs in a bordered panel with clear section labels and restrained links, not colorful cards competing with the story.
+                        Operational queues belong in bordered panels with clear section labels and restrained links, not colorful cards competing with the primary workflow.
                       </p>
                     </div>
                   </article>
                   <aside className="border-t border-border/70 bg-muted/35 p-5 lg:border-l lg:border-t-0">
                     <div className="space-y-4 lg:sticky lg:top-24">
-                      <SidebarPanel title="In this article">
+                      <SidebarPanel title="Review queue">
                         <nav className="space-y-2 text-sm">
-                          {["Writing with care", "Service details", "Sharing with family"].map((item) => (
+                          {["Pending tributes", "Service edits", "Family invites"].map((item) => (
                             <a
                               key={item}
-                              href="#editorial-sidebar"
+                              href="#analytics-surfaces"
                               className="block rounded-lg px-2 py-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                             >
                               {item}
@@ -322,26 +327,26 @@ export default function DesignSystemPage() {
                           ))}
                         </nav>
                       </SidebarPanel>
-                      <SidebarPanel title="Written by">
+                      <SidebarPanel title="Maintained by">
                         <div className="flex items-center gap-3">
                           <div className="grid size-10 place-items-center rounded-full bg-accent text-sm font-bold text-accent-foreground">AK</div>
                           <div>
-                            <p className="font-semibold text-foreground">Akornafa Editorial</p>
-                            <p className="text-xs leading-5 text-muted-foreground">Guides for remembrance, family planning, and tribute writing.</p>
+                            <p className="font-semibold text-foreground">Akornafa Admin</p>
+                            <p className="text-xs leading-5 text-muted-foreground">Operational guidance for remembrance workflows, moderation, and analytics.</p>
                           </div>
                         </div>
                       </SidebarPanel>
-                      <SidebarPanel title="Related reading">
+                      <SidebarPanel title="Dashboard cues">
                         <div className="space-y-3 text-sm">
-                          <a className="block font-medium leading-6 text-foreground underline-offset-4 hover:underline" href="#editorial-sidebar">How to collect tribute photos</a>
-                          <a className="block font-medium leading-6 text-foreground underline-offset-4 hover:underline" href="#editorial-sidebar">Choosing service announcement details</a>
+                          <a className="block font-medium leading-6 text-foreground underline-offset-4 hover:underline" href="#analytics-surfaces">Use success only for completed approvals</a>
+                          <a className="block font-medium leading-6 text-foreground underline-offset-4 hover:underline" href="#analytics-surfaces">Use warning for attention, not brand emphasis</a>
                         </div>
                       </SidebarPanel>
                     </div>
                   </aside>
                 </div>
               </Card>
-              <UsageNote>Implementation note: sidebar panels use existing Card, border, muted, accent, and focus-ring tokens. On small screens, place the rail below the article heading/metadata, before related posts.</UsageNote>
+              <UsageNote>Implementation note: dashboard panels use existing Card, border, muted, accent, chart, and focus-ring tokens. On small screens, stack the rail below the primary summary before queues.</UsageNote>
             </section>
 
             <section id="forms" className="scroll-m-24">
@@ -483,6 +488,32 @@ function RadiusPreview({ label, token, className }: { label: string; token: stri
         <span className="font-semibold text-muted-foreground">{label}</span>
       </div>
       <p className="mt-3 text-xs text-muted-foreground">{token}</p>
+    </div>
+  );
+}
+
+function KpiPreview({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "good" | "warn" | "critical";
+}) {
+  const toneClass = {
+    good: "bg-success/12 text-success border-success/25",
+    warn: "bg-warning/12 text-warning border-warning/25",
+    critical: "bg-critical/12 text-critical border-critical/25",
+  }[tone];
+
+  return (
+    <div className="rounded-2xl border border-border/70 bg-card p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <p className="font-sans text-3xl font-semibold tracking-[-0.04em] text-foreground">{value}</p>
+        <span className={`rounded-full border px-2 py-1 text-[11px] font-semibold ${toneClass}`}>Status</span>
+      </div>
     </div>
   );
 }
