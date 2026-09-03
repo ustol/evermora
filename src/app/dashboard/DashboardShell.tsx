@@ -11,6 +11,7 @@ import { siteConfig } from "@/config/site";
 const dashboardNavLinks = [
   { to: "/dashboard", label: "Overview", exact: true },
   { to: "/dashboard/memorials", label: "Your memorials" },
+  { to: "/dashboard/wreath-sales", label: "Wreath sales" },
   { to: "/dashboard/profile", label: "Profile" },
 ];
 

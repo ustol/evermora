@@ -5,6 +5,7 @@ const dashboardRoutes = [
   "/dashboard",
   "/dashboard/memorials",
   "/dashboard/memorials/new",
+  "/dashboard/wreath-sales",
   "/dashboard/profile",
 ]
 
